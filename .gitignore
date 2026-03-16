@@ -1,0 +1,19 @@
+# Lout build artifacts
+lout/*.o
+lout/lout
+lout/prg2lout
+lout/lout.li
+*.li
+*.ps
+*.pdf
+
+# Python
+__pycache__/
+*.pyc
+
+# Editor
+*.swp
+*~
+
+# mydefs is user-specific
+mydefs
