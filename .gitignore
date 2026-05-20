@@ -30,6 +30,18 @@ tests/out/
 tests/report.html
 tests/visual_diff.html
 
+# tests/user_guide_diff/ holds the committed PS-vs-SVG comparison
+# evidence (manifests, README, and the 10 worst-page side-by-side
+# PNGs). The runner at tests/user_guide_diff.sh regenerates the
+# transient intermediates under /tmp/userguide_compare/ -- never into
+# the repo -- so we explicitly allow the curated artefacts here in case
+# a broader ignore rule is added later.
+!tests/user_guide_diff/
+!tests/user_guide_diff/README.md
+!tests/user_guide_diff/manifest.json
+!tests/user_guide_diff/manifest.txt
+!tests/user_guide_diff/worst-*.png
+
 # examples/out/ holds committed reference renderings.
 # Ignore everything by default, then explicitly track curated HTML/PDF
 # snapshots so transient/intermediate builds don't pollute the index.
