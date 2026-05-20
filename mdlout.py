@@ -1362,6 +1362,299 @@ def _build_font_face_css() -> tuple[str, list[str]]:
     return ''.join(pieces), used
 
 
+# ---------------------------------------------------------------------------
+# Text -> outline paths (closing the last text-rasteriser gap)
+# ---------------------------------------------------------------------------
+#
+# Even with URW++ Nimbus embedded as @font-face, Chrome (Skia) and
+# rsvg-convert (Cairo) still rasterise <text> through their own pipelines,
+# which paint glyphs slightly differently from Ghostscript when laying out
+# the matching PostScript file.  The remaining drift is ~10-20% per page on
+# the User's Guide.
+#
+# To eliminate the text rasteriser entirely we replace every Lout-emitted
+# <text> element with vector <path> outlines, taken directly from the
+# URW++ Nimbus OpenType files.  Both PS (via Ghostscript's own glyph
+# outlines) and the SVG renderers then paint pure vector geometry and the
+# anti-aliasing differences shrink to a sub-pixel residue.
+#
+# Approach:  fontTools loads each Nimbus face once, walks the glyph table
+# through an SVGPathPen, and caches glyph_id -> (svg_path_d, advance) on
+# disk so repeated builds are cheap.  At convert time _convert_text_to_paths
+# scans the SVG with a regex, looks up each character's outline, and emits
+# a <g><path .../></g> tree in place of the original <text>.
+
+# Maps Lout-emitted font-family attribute + (bold,italic) tuple to a list of
+# candidate OTF paths.  First existing file wins.  Order matters: regional
+# package layouts may differ.
+_NIMBUS_FACE_CANDIDATES: dict[tuple[str, bool, bool], tuple[str, ...]] = {
+    ('Times', False, False): (
+        '/usr/share/fonts/opentype/urw-base35/NimbusRoman-Regular.otf',
+    ),
+    ('Times', True, False): (
+        '/usr/share/fonts/opentype/urw-base35/NimbusRoman-Bold.otf',
+    ),
+    ('Times', False, True): (
+        '/usr/share/fonts/opentype/urw-base35/NimbusRoman-Italic.otf',
+    ),
+    ('Times', True, True): (
+        '/usr/share/fonts/opentype/urw-base35/NimbusRoman-BoldItalic.otf',
+    ),
+    ('Helvetica', False, False): (
+        '/usr/share/fonts/opentype/urw-base35/NimbusSans-Regular.otf',
+    ),
+    ('Helvetica', True, False): (
+        '/usr/share/fonts/opentype/urw-base35/NimbusSans-Bold.otf',
+    ),
+    ('Helvetica', False, True): (
+        '/usr/share/fonts/opentype/urw-base35/NimbusSans-Italic.otf',
+    ),
+    ('Helvetica', True, True): (
+        '/usr/share/fonts/opentype/urw-base35/NimbusSans-BoldItalic.otf',
+    ),
+    ('Courier', False, False): (
+        '/usr/share/fonts/opentype/urw-base35/NimbusMonoPS-Regular.otf',
+    ),
+    ('Courier', True, False): (
+        '/usr/share/fonts/opentype/urw-base35/NimbusMonoPS-Bold.otf',
+    ),
+    ('Courier', False, True): (
+        '/usr/share/fonts/opentype/urw-base35/NimbusMonoPS-Italic.otf',
+    ),
+    ('Courier', True, True): (
+        '/usr/share/fonts/opentype/urw-base35/NimbusMonoPS-BoldItalic.otf',
+    ),
+}
+
+# Cached glyph DB shared across calls in one process.
+# Structure: { (family, bold, italic): (upem, {codepoint: (path_d, advance)}) }
+_GLYPH_DB: dict[tuple[str, bool, bool], tuple[int, dict[int, tuple[str, int]]]] | None = None
+# Set of (family, bold, italic) keys we already warned about as missing.
+_GLYPH_DB_MISSING: set[tuple[str, bool, bool]] = set()
+
+
+def _glyph_cache_path() -> str:
+    """Disk-cache path for the extracted glyph DB.  Keyed by Python+fontTools version."""
+    import platform
+    pyver = platform.python_version()
+    return f'/tmp/mdlout_glyph_cache_py{pyver}.pkl'
+
+
+def _load_glyph_db() -> dict[tuple[str, bool, bool], tuple[int, dict[int, tuple[str, int]]]]:
+    """Load (and cache) glyph outlines for the 12 Adobe-base-14 text faces.
+
+    On first call this opens each Nimbus OTF, walks its glyph table through
+    an SVGPathPen and stashes (svg-path-d, advance-width-in-em-units) for
+    every codepoint in the font's best cmap.  Result is pickled to /tmp so
+    subsequent runs reuse it (~10s -> <100ms).
+    """
+    global _GLYPH_DB
+    if _GLYPH_DB is not None:
+        return _GLYPH_DB
+
+    import pickle
+    cache = _glyph_cache_path()
+    # Validate: cache must be newer than every source font we end up loading.
+    paths_needed: list[str] = []
+    for cands in _NIMBUS_FACE_CANDIDATES.values():
+        for p in cands:
+            if os.path.isfile(p):
+                paths_needed.append(p)
+                break
+    cache_ok = False
+    if os.path.isfile(cache) and paths_needed:
+        try:
+            cache_mtime = os.path.getmtime(cache)
+            src_mtime = max(os.path.getmtime(p) for p in paths_needed)
+            if cache_mtime >= src_mtime:
+                with open(cache, 'rb') as f:
+                    _GLYPH_DB = pickle.load(f)
+                cache_ok = True
+        except (OSError, pickle.UnpicklingError, EOFError):
+            cache_ok = False
+    if cache_ok and _GLYPH_DB is not None:
+        return _GLYPH_DB
+
+    try:
+        from fontTools.ttLib import TTFont
+        from fontTools.pens.svgPathPen import SVGPathPen
+    except ImportError as e:
+        raise RuntimeError(
+            'fontTools is required for --text-as-paths but is not installed. '
+            'Install with: pip install fonttools'
+        ) from e
+
+    db: dict[tuple[str, bool, bool], tuple[int, dict[int, tuple[str, int]]]] = {}
+    for key, cands in _NIMBUS_FACE_CANDIDATES.items():
+        path = next((p for p in cands if os.path.isfile(p)), None)
+        if path is None:
+            continue
+        try:
+            font = TTFont(path)
+        except Exception:
+            continue
+        upem = font['head'].unitsPerEm
+        cmap = font.getBestCmap()
+        gs = font.getGlyphSet()
+        entries: dict[int, tuple[str, int]] = {}
+        for cp, gname in cmap.items():
+            try:
+                pen = SVGPathPen(gs)
+                gs[gname].draw(pen)
+                d = pen.getCommands()
+            except Exception:
+                continue
+            try:
+                w = int(gs[gname].width)
+            except Exception:
+                w = 0
+            entries[cp] = (d, w)
+        db[key] = (int(upem), entries)
+
+    _GLYPH_DB = db
+    try:
+        with open(cache, 'wb') as f:
+            pickle.dump(db, f, protocol=pickle.HIGHEST_PROTOCOL)
+    except OSError:
+        pass
+    return db
+
+
+# Lout-emitted text elements:
+#   <text x="0" y="0" font-family="X" font-size="N.NNN" [font-weight="bold"]
+#         [font-style="italic"] [fill="..."]>...</text>
+# We deliberately only match elements with x="0" y="0" so the texture
+# pattern's <text x="1" y="10" ...>*</text> (inside <defs>) is left alone.
+_TEXT_ELEM_RE = re.compile(
+    r'<text\s+x="0"\s+y="0"\s+font-family="(?P<family>[^"]*)"'
+    r'\s+font-size="(?P<size>[^"]*)"'
+    r'(?P<attrs>[^>]*)>'
+    r'(?P<body>[^<]*)</text>'
+)
+_ATTR_RE = re.compile(r'(\w[\w-]*)="([^"]*)"')
+
+
+def _decode_xml_entities(s: str) -> str:
+    """Reverse the five XML escapes Lout's z53.c emits in svg_emit_utf8.
+
+    Lout only emits the five reserved-name entities (&lt; &gt; &amp; &quot;
+    &apos;) and numeric character references via raw UTF-8 bytes -- there are
+    no other named entities in its output, so a tiny hand-written decoder is
+    plenty.
+    """
+    if '&' not in s:
+        return s
+    return (s.replace('&lt;', '<')
+             .replace('&gt;', '>')
+             .replace('&quot;', '"')
+             .replace('&apos;', "'")
+             .replace('&amp;', '&'))
+
+
+def _xml_attr_escape(s: str) -> str:
+    return (s.replace('&', '&amp;')
+             .replace('<', '&lt;')
+             .replace('>', '&gt;'))
+
+
+def _convert_text_to_paths(svg: str) -> tuple[str, dict[str, int]]:
+    """Replace Lout's <text> elements with vector <path> outlines.
+
+    Returns (svg_out, stats) where stats counts replaced/missing/skipped
+    text elements.  Glyphs unavailable in the Nimbus DB fall back to
+    leaving the <text> element untouched -- a graceful degradation that
+    keeps the rest of the page intact.
+    """
+    db = _load_glyph_db()
+    stats = {
+        'text_total': 0,
+        'text_converted': 0,
+        'text_skipped_face': 0,
+        'text_skipped_glyph': 0,
+        'glyphs_emitted': 0,
+    }
+
+    def _replace(m: re.Match) -> str:
+        stats['text_total'] += 1
+        family = m.group('family')
+        try:
+            size_pt = float(m.group('size'))
+        except ValueError:
+            return m.group(0)
+        attrs_blob = m.group('attrs') or ''
+        body_raw = m.group('body') or ''
+        body = _decode_xml_entities(body_raw)
+        if not body:
+            return ''
+
+        attrs = dict(_ATTR_RE.findall(attrs_blob))
+        bold = attrs.get('font-weight') == 'bold'
+        italic = attrs.get('font-style') == 'italic'
+        fill = attrs.get('fill')
+
+        key = (family, bold, italic)
+        face = db.get(key)
+        if face is None:
+            # Fall back: try regular weight/style of the same family.
+            face = db.get((family, False, False))
+            if face is None:
+                stats['text_skipped_face'] += 1
+                if key not in _GLYPH_DB_MISSING:
+                    _GLYPH_DB_MISSING.add(key)
+                return m.group(0)
+        upem, entries = face
+        scale = size_pt / upem
+
+        # Per-glyph: lookup outline by codepoint, position via cumulative
+        # advance width.  The enclosing <g transform="... scale(1,-1)">
+        # already inverts Y, so paths apply scale(s,-s) to map em-units
+        # (Y-up) back to local Y-down -> page Y-up.
+        chunks: list[str] = []
+        cursor = 0  # in em units
+        if fill is not None:
+            chunks.append(f'<g fill="{_xml_attr_escape(fill)}">')
+        else:
+            chunks.append('<g>')
+
+        any_emitted = False
+        all_missing = True
+        for ch in body:
+            cp = ord(ch)
+            entry = entries.get(cp)
+            if entry is None:
+                # Unmapped codepoint: skip, but advance by a fallback width
+                # so subsequent glyphs don't pile up at x=0.  500em-units is
+                # a decent average for Times/Helvetica.
+                cursor += 500
+                continue
+            d, w = entry
+            all_missing = False
+            if d:  # non-empty path
+                xpt = cursor * scale
+                chunks.append(
+                    f'<path transform="translate({xpt:.3f},0) '
+                    f'scale({scale:.6f},{-scale:.6f})" d="{d}"/>'
+                )
+                stats['glyphs_emitted'] += 1
+                any_emitted = True
+            cursor += w
+        chunks.append('</g>')
+
+        if all_missing:
+            # No glyph in this run could be resolved -> keep original <text>.
+            stats['text_skipped_glyph'] += 1
+            return m.group(0)
+        if not any_emitted:
+            # Whitespace-only run (every glyph resolved but had empty path).
+            stats['text_converted'] += 1
+            return ''
+        stats['text_converted'] += 1
+        return ''.join(chunks)
+
+    out = _TEXT_ELEM_RE.sub(_replace, svg)
+    return out, stats
+
+
 def _read_text_if_exists(paths: tuple[str, ...]) -> tuple[str | None, str | None]:
     """Return (contents, path) for the first existing file, else (None, None)."""
     for p in paths:
@@ -1652,6 +1945,19 @@ def _build_once(args) -> str | None:
 
             with open(svg_file, encoding='utf-8') as f:
                 svg = f.read()
+            if getattr(args, 'text_as_paths', False):
+                try:
+                    svg, tap_stats = _convert_text_to_paths(svg)
+                    print(
+                        f'  text-as-paths: converted {tap_stats["text_converted"]}/'
+                        f'{tap_stats["text_total"]} <text> elements -> '
+                        f'{tap_stats["glyphs_emitted"]} <path>s '
+                        f'(skipped face={tap_stats["text_skipped_face"]}, '
+                        f'glyph={tap_stats["text_skipped_glyph"]})',
+                        file=sys.stderr,
+                    )
+                except RuntimeError as e:
+                    print(f'  text-as-paths disabled: {e}', file=sys.stderr)
             title = frontmatter.get('title') or input_stem
             html, asset_info = _build_html_scaffold(
                 svg,
@@ -1923,6 +2229,14 @@ def main() -> None:
         help='Do not inline URW++ Nimbus @font-face web fonts into the HTML '
              '(smaller output; SVG text will fall back to system fonts and '
              'may drift slightly from the PS/PDF render)',
+    )
+    parser.add_argument(
+        '--text-as-paths', action='store_true',
+        help='Replace SVG <text> elements with <path> outlines extracted from '
+             'URW++ Nimbus (the Adobe-base-14 substitutes Ghostscript itself '
+             'uses).  Eliminates the browser/rsvg text rasteriser from the '
+             'pipeline so PS and HTML renderers paint the same vector geometry. '
+             'Increases output size noticeably; requires fontTools.',
     )
     parser.add_argument(
         '--watch', action='store_true',
