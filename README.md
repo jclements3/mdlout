@@ -13,6 +13,26 @@ Lout emits SVG drawing commands that mdlout wraps in an HTML scaffold for the
 browser), and the **legacy PDF path** (Markdown to Lout to PostScript to PDF),
 preserved bit-identically.
 
+## Quickstart
+
+New here? Walk through
+[**docs/tutorial.md**](docs/tutorial.md) for an end-to-end guide that takes
+you from a fresh clone to building HTML and PDF documents with math, music,
+diagrams, tables, and live preview. The shortest path is:
+
+```bash
+git clone https://github.com/jclements3/mdlout.git
+cd mdlout
+git submodule update --init                  # populate lout/
+cd lout && git checkout svg-backend && make lout && cd ..
+./mdlout.py examples/01_hello.md             # produces 01_hello.html
+```
+
+Then open `01_hello.html` in a browser. See the
+[tutorial](docs/tutorial.md) for the full walkthrough, or the
+[CLI](#cli) and [frontmatter reference](#frontmatter-reference) below
+for direct lookup.
+
 ## Status
 
 - HTML/SVG path: **default**. SVG back-end (`lout/z53.c`) plus three
