@@ -1,0 +1,19 @@
+###########################################################################
+#  diag_syntax - a railroad-style @SyntaxDiag exercising the trio of      #
+#  sequence / select / loop constructs. The grammar shown is the          #
+#  classic "identifier (',' identifier)*" comma-separated list.           #
+###########################################################################
+
+@SysInclude { diag }
+@SysInclude { doc }
+@Doc @Text @Begin
+
+@CentredDisplay @SyntaxDiag
+   title { id-list }
+{
+@StartRight @Loop
+   A { @ACell identifier }
+   B { @CCell "," }
+}
+
+@End @Text

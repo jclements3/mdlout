@@ -27,9 +27,15 @@ lout.lix
 
 # Test/build outputs
 tests/out/
-examples/out/
 tests/report.html
 tests/visual_diff.html
+
+# examples/out/ holds committed reference renderings.
+# Ignore everything by default, then explicitly track curated HTML/PDF
+# snapshots so transient/intermediate builds don't pollute the index.
+examples/out/*
+!examples/out/*.html
+!examples/out/*.pdf
 
 # Submodule build artifact (also covered by lout/.gitignore territory,
 # but listed here for safety in case the submodule isn't initialized).
