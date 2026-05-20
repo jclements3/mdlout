@@ -9,14 +9,23 @@ This repo is **mdlout**: a Markdown → Lout → PDF converter (`mdlout.py`) plu
 ## Repo Layout & Submodule
 
 - `mdlout.py` (repo root) — the only first-party source; the Markdown-to-Lout converter.
-- `lout/` — **git submodule** pointing at `https://github.com/william8000/lout.git` (a Lout fork). Treat it as third-party: don't make local edits unless deliberately patching upstream.
-- After cloning, initialize the submodule before building:
+- `lout/` — **git submodule** pointing at `https://github.com/jclements3/lout.git` (the maintainer's fork of william8000/lout). The working branch is `svg-backend`, which holds the new `z53.c` SVG back-end and the `svgmacros` library file. Treat the submodule as a separate project; coordinate via PRs.
+- After cloning, initialize the submodule and check out the working branch before building:
 
   ```bash
   git submodule update --init
+  cd lout && git checkout svg-backend && cd ..
   ```
 
-  Without this, `lout/` is empty and every `make` command fails.
+  Without this, `lout/` is empty (or on a default branch lacking `z53.c`) and every `make` command fails.
+
+## Build state (as of 2026-05-20)
+
+- Submodule branch: `svg-backend` (jclements3/lout fork).
+- **PDF pipeline** (`--format=pdf`): builds clean. Bit-identical to the pre-z53.c era. `z49.c` is frozen.
+- **HTML/SVG pipeline** (default): builds clean. The SVG back-end (`z53.c`) handles text, page chrome, rules, simple `@Graphic` shapes, the full `@Diag` arrowstyle gallery, `@Math` (via KaTeX), `@ABC` (via abcjsharp), and `@SVG`/`@SVGFile` passthrough.
+- **Partial / commit-not-ready**: long-tail of complex `@Diag` layouts, `@Fig`-heavy documents, and corner-case `@Eq` typesetting still diverge from the PostScript reference. These are tracked in `TODO.md` and `lout/SVG_PORTING.md`.
+- Regression suite (`bash tests/run_all.sh`): 26 snippets, 49+ rendered comparisons, current state passes the agreed thresholds (5% pixel diff for text snippets, 20% for graphics-heavy).
 
 ## Build Commands
 

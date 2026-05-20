@@ -1,97 +1,95 @@
 # mdlout
 
-**mdlout** is a Markdown to {PDF, HTML/SVG} converter built on top of a forked
-copy of the [Lout](https://github.com/william8000/lout) typesetting system (an
+**mdlout** is a Markdown to {HTML/SVG, PDF} converter built on top of a forked
+copy of the [Lout](https://github.com/jclements3/lout) typesetting system (an
 ANSI C document formatter by Jeffrey H. Kingston). It pairs Lout's
 professional-grade typesetting (galley-based line breaking, hyphenation,
 high-quality tables, equations, and the `@Graphic` / `@Diag` / `@Fig` / `@Tab`
 drawing primitives that browser-native typesetters cannot match) with two
-delivery formats: a legacy PDF path (Markdown to Lout to PostScript to PDF) and
-a new HTML/SVG path in which a new SVG back-end inside Lout itself emits SVG
-drawing commands, which mdlout then wraps in an HTML scaffold for the browser.
+delivery formats: the **default HTML/SVG path** (a new SVG back-end inside
+Lout emits SVG drawing commands that mdlout wraps in an HTML scaffold for the
+browser), and the **legacy PDF path** (Markdown to Lout to PostScript to PDF),
+preserved bit-identically.
 
 ## Status
 
-- PDF path: working today.
-- HTML/SVG path: **in progress**. A new SVG back-end (`lout/z53.c`) and three
-  passthrough macros (`@Math`, `@ABC`, `@SVG`) are being added. The HTML path
-  will become the default once it lands. The PostScript back-end is **frozen**
-  during this work; the PDF pipeline is preserved bit-identically.
+- HTML/SVG path: **default**. SVG back-end (`lout/z53.c`) plus three
+  passthrough macros (`@Math`, `@ABC`, `@SVG`). Text content, page chrome,
+  simple shapes, and the arrowstyle gallery render correctly. `@Math` via
+  KaTeX, `@ABC` via abcjsharp, and `@SVG` raw passthrough all work. The
+  long tail of complex `@Diag` / `@Fig` / `@Eq` rendering is partial — see
+  [TODO.md](TODO.md).
+- PDF path: working, frozen. PostScript back-end (`z49.c`) untouched.
 
-See [TODO.md](TODO.md) for the full roadmap and [CLAUDE.md](CLAUDE.md) for
-engineering details.
+49+ regression snippets pass via `bash tests/run_all.sh`; see
+[tests/README.md](tests/README.md).
+
+See [CLAUDE.md](CLAUDE.md) for engineering details and [TODO.md](TODO.md) for
+the current roadmap.
 
 ## Quick start
 
 ```bash
 git clone <repo-url> mdlout
 cd mdlout
-git submodule update --init        # populate lout/
-cd lout && make lout && cd ..      # build the lout binary
-./mdlout.py input.md               # produces input.pdf today
+git submodule update --init             # populate lout/
+cd lout && git checkout svg-backend     # the fork's working branch
+make lout && cd ..                      # build the lout binary
+./mdlout.py input.md                    # produces input.html (default)
+./mdlout.py input.md --format=pdf       # legacy PDF pipeline
 ```
 
-Once the HTML path lands, the default output flips to HTML:
-
-```bash
-./mdlout.py input.md               # produces input.html (planned default)
-./mdlout.py input.md --format=pdf  # legacy PDF pipeline
-```
+The submodule lives at https://github.com/jclements3/lout (the maintainer's
+fork). Its default working branch is `svg-backend`, which contains the new
+`z53.c` SVG back-end and the `svgmacros` library file. You must check out
+that branch after `git submodule update --init`.
 
 ## Requirements
 
 - Python 3.10+ (no third-party Python packages).
 - A built `lout` binary from the vendored submodule (`cd lout && make lout`).
 - `ps2pdf` (from Ghostscript) for the PDF path.
-- Optional, for richer PDF output of music/diagrams: `rsvg-convert` or
-  `inkscape`, and `node` for ABC music rendering.
-- The HTML/SVG path (planned) will pull `KaTeX` and `abcjsharp` from
-  `/home/clementsj/projects/abcjsharp/dist/` (a personal abcjs fork with
-  grand-staff support for harp music) for self-contained mode, or from CDN
-  with `--external-assets`.
+- For the HTML path: a modern browser. KaTeX and abcjsharp are inlined from a
+  local copy if found at `/usr/lib/node_modules/katex/`,
+  `/usr/share/javascript/katex/`, or `~/projects/abcjsharp/dist/`; otherwise
+  loaded from CDN, or pass `--external-assets` to force CDN.
 
 ## The two output paths
 
-### PDF (legacy, available today)
+### HTML/SVG (default)
 
 ```
-input.md ──[mdlout.py]──> input.lt ──[lout, PS back-end]──> input.ps ──[ps2pdf]──> input.pdf
-```
-
-The PostScript back-end is `lout/z49.c`. The pipeline runs `lout` up to three
-times for cross-reference resolution, then Ghostscript's `ps2pdf` for the PDF.
-
-### HTML/SVG (new default, in progress)
-
-```
-input.md ──[mdlout.py]──> input.lt ──[lout, SVG back-end z53.c]──> input.svg ──[mdlout.py wrap]──> input.html
+input.md ──[mdlout.py]──> input.lt ──[lout -G, SVG back-end z53.c]──> input.svg ──[mdlout.py wrap]──> input.html
 ```
 
 `z53.c` mirrors `z49.c` capability-for-capability, emitting SVG instead of
 PostScript. mdlout wraps the SVG in a single-file HTML page that inlines (or
 links) KaTeX and abcjsharp so the browser renders math and music client-side.
 
+### PDF (legacy)
+
+```
+input.md ──[mdlout.py]──> input.lt ──[lout, PS back-end z49.c]──> input.ps ──[ps2pdf]──> input.pdf
+```
+
+The PostScript back-end (`lout/z49.c`) is frozen. The pipeline runs `lout` up
+to three times for cross-reference resolution, then Ghostscript's `ps2pdf`.
+
 ## CLI
 
-Current flags (PDF pipeline):
-
 ```text
-./mdlout.py input.md                  # produces input.pdf
-./mdlout.py input.md -o out.pdf       # custom output path
-./mdlout.py input.md --ps             # stop at PostScript (input.ps)
-./mdlout.py input.md --lout-only      # emit Lout source to stdout
+./mdlout.py input.md                    # produces input.html (default)
+./mdlout.py input.md --format=pdf       # produces input.pdf (legacy path)
+./mdlout.py input.md -o out.html        # custom output path
+./mdlout.py input.md --ps               # stop at PostScript (input.ps)
+./mdlout.py input.md --lout-only        # emit Lout source to stdout
 ./mdlout.py input.md --lout-only -o out.lt
+./mdlout.py input.md --external-assets  # CDN for KaTeX/abcjsharp instead of inlining
+./mdlout.py input.md --no-math-engine   # omit KaTeX (smaller HTML)
+./mdlout.py input.md --no-music-engine  # omit abcjsharp (smaller HTML)
 ./mdlout.py input.md --mydefs path/to/mydefs
 ./mdlout.py input.md --lout-bin /path/to/lout
 ./mdlout.py input.md --lout-args "..."
-```
-
-Planned (HTML pipeline):
-
-```text
-./mdlout.py input.md --format=html    # default once z53.c lands
-./mdlout.py input.md --format=pdf     # legacy path, preserved bit-identically
-./mdlout.py input.md --external-assets   # link KaTeX/abcjsharp from CDN
 ```
 
 ### Live preview: `--watch` and `--serve`
@@ -102,10 +100,10 @@ Planned (HTML pipeline):
 ./mdlout.py input.md --serve 9000            # custom port
 ```
 
-`--watch` polls the input file's mtime (every 500 ms) and re-runs the
-full pipeline whenever it changes. Each rebuild prints `[rebuilt HH:MM:SS]
-PATH` to stderr. Transient build errors are caught and logged; the watcher
-keeps running.
+`--watch` polls the input file's mtime (every 500 ms) and re-runs the full
+pipeline whenever it changes. Each rebuild prints `[rebuilt HH:MM:SS] PATH`
+to stderr. Transient build errors are caught and logged; the watcher keeps
+running.
 
 `--serve [PORT]` (default port `8080`) is `--watch` plus a minimal
 single-threaded HTTP server:
@@ -171,25 +169,24 @@ headings render as styled `@Display` blocks.
 - Headings: H1-H6, ATX (`#`) and setext (`===`, `---`) forms
 - Emphasis: `**bold**`, `*italic*`, `` `inline code` ``, `~~strikethrough~~`,
   `^superscript^`
-- `[links](url)` (rendered as footnotes in the PDF path)
+- `[links](url)`
 - Images
 - Lists: bullet, numbered, task, and definition
 - Blockquotes
 - Fenced code blocks
 - Pipe tables and grid tables
 - Horizontal rules
-- Math blocks (`$$ ... $$` and ```` ```math ```` fences)
+- Math blocks (`$$ ... $$` and ```` ```math ```` fences), inline math
+  (`$..$` and `\(..\)`)
 - Admonitions: `!!! type "title"`
 - `\newpage` page breaks
 - `[TOC]` placeholders
 - HTML entities and backslash escapes
 - Raw Lout passthrough via ```` ```lout ```` fenced code blocks
 
-In HTML mode (planned), additional fence and inline routings produce the new
-macros:
+In HTML mode, additional fence and inline routings produce the new macros:
 
-- `$$ ... $$` and ```` ```math ```` → `@Math { ... }`
-- `$ ... $` inline → inline `@Math { ... }`
+- `$$ ... $$` / ```` ```math ```` / `$ ... $` / `\(..\)` → `@Math { ... }`
 - ```` ```abc ```` → `@ABC { ... }`
 - ```` ```svg ```` → `@SVG { ... }`
 - Markdown image of a `.svg` file → `@SVGFile { path }`
@@ -204,12 +201,12 @@ Use a `lout` fenced code block to inject Lout source directly:
 ```
 ````
 
-## The new macros (HTML/SVG path, planned)
+## The new macros (HTML/SVG path)
 
 | Macro       | Argument               | SVG back-end behaviour                                      | PostScript back-end behaviour                  |
 | ----------- | ---------------------- | ----------------------------------------------------------- | ---------------------------------------------- |
 | `@Math`     | LaTeX math source      | Emits `<foreignObject>` with `<span class="math">...</span>`; KaTeX renders client-side. | Stub / fallback (uses Lout `@Eq` where possible). |
-| `@ABC`      | ABC music notation     | Emits `<foreignObject>` with `<div class="abc-music" data-abc="...">`; abcjsharp renders client-side. | Stub / fallback (planned via abcjsharp + rsvg-convert when present). |
+| `@ABC`      | ABC music notation     | Emits `<foreignObject>` with `<div class="abc-music" data-abc="...">`; abcjsharp renders client-side. | Stub / fallback. |
 | `@SVG`      | Raw SVG fragment       | Emits the argument verbatim as nested SVG.                  | Not supported; emits a placeholder.            |
 | `@SVGFile`  | Path to `.svg` file    | Inlines the file's `<svg>` root as a `<g>`.                 | Converted via `rsvg-convert`/`inkscape` to EPS if available. |
 
@@ -228,22 +225,21 @@ set explicitly with `--mydefs path/to/mydefs`.
 ```
 mdlout/
   mdlout.py        # the converter (single-file Python 3.10+)
-  lout/            # git submodule: forked C Lout (with new z53.c SVG back-end)
-  examples/        # sample documents                  [planned]
-  tests/           # regression tests                  [planned]
+  lout/            # git submodule: jclements3/lout, branch svg-backend
+  examples/        # sample documents (see examples/README.md)
+  tests/           # regression tests (see tests/README.md)
   CLAUDE.md        # engineering details
-  TODO.md          # roadmap
+  TODO.md          # roadmap and current status
   README.md        # this file
 ```
-
-`examples/` and `tests/` are on the roadmap, not yet present.
 
 ## Further reading
 
 - [CLAUDE.md](CLAUDE.md) — engineering context: source architecture, build
   variables, mdlout phases, frontmatter mapping.
-- [TODO.md](TODO.md) — current roadmap: SVG back-end design, new macros, HTML
-  wrapper, examples and tests.
+- [TODO.md](TODO.md) — current roadmap, what works, what's still in flight.
+- [tests/README.md](tests/README.md) — regression test framework.
+- [examples/README.md](examples/README.md) — sample documents.
 - [lout/README](lout/README) — upstream Lout README (Jeffrey H. Kingston's
   original).
 

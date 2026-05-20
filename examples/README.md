@@ -19,6 +19,7 @@ file is meant to be built in both HTML mode (default) and PDF mode, e.g.:
 | `06_report.md`             | `type: report` frontmatter with cover, TOC, `@Section` nesting, code, math, and a raw-Lout figure block. |
 | `07_raw_lout_and_svg.md`   | ```` ```lout ```` and ```` ```svg ```` raw passthrough fences for testing `@SVG` routing. |
 | `08_kitchen_sink.md`       | Two-column `type: report` combining every feature above — canonical regression target. |
+| `diag_gallery.md`          | Exhaustive `@Diag` gallery: every arrowstyle, shape macro (`@Box`, `@CurveBox`, `@ShadowBox`, `@Square`, `@Diamond`, `@Polygon`, `@Isosceles`, `@Ellipse`, `@Circle`), and `@Tree`. Raw-Lout fences only. |
 
 ## Smoke-testing the whole set
 

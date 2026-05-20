@@ -28,3 +28,12 @@ lout.lix
 # Test/build outputs
 tests/out/
 examples/out/
+tests/report.html
+tests/visual_diff.html
+
+# Submodule build artifact (also covered by lout/.gitignore territory,
+# but listed here for safety in case the submodule isn't initialized).
+lout/doc/user/user.svg
+
+# Stray /tmp-prefixed scratch files (shouldn't end up in-repo, but ignore if they do)
+/tmp-*
