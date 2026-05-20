@@ -1,0 +1,14 @@
+@SysInclude { tbl }
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+@CentredDisplay @Tab
+   vmargin { 0.2v }
+   hmargin { 1.0c }
+   @Fmta { @Col A | @Col B | @Col C }
+{
+@Rowa A { one } B { two } C { three }
+@Rowa A { four } B { five } C { six }
+@Rowa A { seven } B { eight } C { nine }
+}
+@End @Text

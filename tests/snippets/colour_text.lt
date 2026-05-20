@@ -1,0 +1,8 @@
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+This sentence is mostly black, but here is a phrase in
+{ red @Colour { red ink coloured text } } and another in
+{ blue @Colour { blue ink coloured text } } for back-end colour
+verification.
+@End @Text

@@ -1,0 +1,15 @@
+###########################################################################
+#  diag_arrow_solid - two boxed nodes joined by a solid filled-triangle    #
+#  arrow. Smallest possible exercise of @Diag + @Link arrow { yes }.       #
+###########################################################################
+
+@SysInclude { diag }
+@SysInclude { doc }
+@Doc @Text @Begin
+
+@CentredDisplay @Diag {
+A:: @Node { A } ||1.5c B:: @Node { B }
+// @Link from { A } to { B } arrow { yes } arrowstyle { solid }
+}
+
+@End @Text

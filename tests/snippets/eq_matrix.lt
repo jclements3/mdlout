@@ -1,0 +1,8 @@
+@SysInclude { eq }
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+@CentredDisplay @Eq { M = left [ matrix
+   above { acol { 1 } { 2 } } above { acol { 3 } { 4 } }
+] right ] }
+@End @Text

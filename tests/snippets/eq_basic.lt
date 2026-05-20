@@ -1,0 +1,8 @@
+@SysInclude { eq }
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+@CentredDisplay @Eq { a sup 2 + b sup 2 = c sup 2 }
+@DP
+@CentredDisplay @Eq { x sub i + y sub i = z sub i }
+@End @Text

@@ -1,0 +1,8 @@
+@SysInclude { doc }
+@Doc @Text @Begin
+@CentredDisplay { Helvetica Base 18p } @Font { Heading One }
+@LP
+@CentredDisplay { Helvetica Base 14p } @Font { Heading Two }
+@LP
+@CentredDisplay { Helvetica Base 12p } @Font { Heading Three }
+@End @Text

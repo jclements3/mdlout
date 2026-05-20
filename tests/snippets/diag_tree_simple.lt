@@ -1,0 +1,18 @@
+###########################################################################
+#  diag_tree_simple - a root node with three children laid out by @Tree.   #
+###########################################################################
+
+@SysInclude { diag }
+@SysInclude { doc }
+@Doc @Text @Begin
+
+@CentredDisplay @Diag {
+@Tree {
+@Node { root }
+@Sub { @Node { left } }
+@Sub { @Node { middle } }
+@Sub { @Node { right } }
+}
+}
+
+@End @Text

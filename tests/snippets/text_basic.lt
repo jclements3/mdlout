@@ -1,0 +1,8 @@
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+This is a basic paragraph of plain text used to verify that the
+PostScript and SVG back ends agree on simple text layout.  It contains
+several words across a couple of lines so that line-breaking behaviour
+can be compared.
+@End @Text

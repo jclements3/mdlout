@@ -1,0 +1,9 @@
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+@WideTaggedList
+@TI { @Bullet } { First bullet item in the list. }
+@TI { @Bullet } { Second bullet item in the list. }
+@TI { @Bullet } { Third bullet item in the list. }
+@EndList
+@End @Text

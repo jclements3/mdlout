@@ -1,0 +1,16 @@
+###########################################################################
+#  diag_arrow_curved - two circles connected by a curvedsolid arrow,      #
+#  exercising the curved-arrowhead-tangent-touch geometry.                 #
+###########################################################################
+
+@SysInclude { diag }
+@SysInclude { doc }
+@Doc @Text @Begin
+
+@CentredDisplay @Diag {
+A:: @Circle //0.8c ||1.4c B:: @Circle
+// @Link from { A } to { B } arrow { yes } arrowstyle { curvedsolid }
+   pathwidth { 1p }
+}
+
+@End @Text

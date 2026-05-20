@@ -1,0 +1,17 @@
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+This snippet shows two text blocks placed side by side, simulating a
+two-column layout via horizontal composition.
+@DP
+{ 6c @Wide {
+@PP
+First column.  Lorem ipsum dolor sit amet, consectetur adipiscing
+elit, sed do eiusmod tempor incididunt ut labore et dolore magna
+aliqua.
+} } |1c| { 6c @Wide {
+@PP
+Second column.  Duis aute irure dolor in reprehenderit in voluptate
+velit esse cillum dolore eu fugiat nulla pariatur.
+} }
+@End @Text

@@ -17,3 +17,14 @@ __pycache__/
 
 # mydefs is user-specific
 mydefs
+
+# WSL alternate-data-stream metadata
+*Zone.Identifier
+
+# Lout cross-reference indices written at repo root
+lout.lix
+*.lix
+
+# Test/build outputs
+tests/out/
+examples/out/

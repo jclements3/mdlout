@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 """mdlout - Markdown to Lout converter.
 
-Converts Markdown to Lout, runs lout to produce PostScript, and converts to PDF.
+Converts Markdown to Lout, then renders to HTML (via Lout's SVG back end)
+or to PDF (via Lout's PostScript back end + ps2pdf).
 
 Usage:
-    ./mdlout input.md              # produces input.pdf
-    ./mdlout input.md -o out.pdf   # produces out.pdf
-    ./mdlout input.md --lout-only  # print Lout source to stdout
-    ./mdlout input.md --ps         # stop at PostScript (input.ps)
+    ./mdlout input.md                    # produces input.html (default)
+    ./mdlout input.md --format=pdf       # produces input.pdf
+    ./mdlout input.md -o out.html        # custom output path
+    ./mdlout input.md --lout-only        # print Lout source to stdout
+    ./mdlout input.md --ps               # stop at PostScript (input.ps)
 """
 
 from __future__ import annotations
@@ -37,12 +39,15 @@ def lout_escape(text: str) -> str:
     """Escape characters that are special to Lout.
 
     Each special char c becomes "c" (Lout's quoting mechanism).
-    Double-quote itself becomes '"\\""'.
+    Double-quote and backslash need an extra layer because '\\' is the
+    in-string escape character: '"' -> '"\\""' and '\\' -> '"\\\\"'.
     """
     def _repl(m: re.Match) -> str:
         ch = m.group(1)
         if ch == '"':
             return '"\\""'
+        if ch == '\\':
+            return '"\\\\"'
         return f'"{ch}"'
     return _LOUT_SPECIAL.sub(_repl, text)
 
@@ -58,6 +63,37 @@ def lout_escape(text: str) -> str:
 _PH_PREFIX = '\x00PH'
 _ph_counter = 0
 _ph_store: dict[str, str] = {}
+
+# Global tracker: set to True by any feature that requires the svgmacros
+# include (inline math, display math, ABC blocks, raw SVG blocks, SVG image
+# refs). Read by _generate_preamble().
+_needs_svgmacros: bool = False
+
+
+def _lout_string_encode(body: str) -> str:
+    """Encode an arbitrary string as the body of a Lout "..." literal.
+
+    Lout's lexer:
+      - bans literal newlines inside quoted strings (treated as unterminated);
+      - treats `\\` as escape: `\\NNN` is octal, anything else is literal.
+
+    So to embed a backslash we double it, a double-quote is `\\"`, and a
+    newline becomes `\\012` (octal LF). The encoded body is what goes
+    *between* the surrounding double quotes.
+    """
+    out = []
+    for ch in body:
+        if ch == '\\':
+            out.append('\\\\')
+        elif ch == '"':
+            out.append('\\"')
+        elif ch == '\n':
+            out.append('\\012')
+        elif ch == '\r':
+            out.append('\\015')
+        else:
+            out.append(ch)
+    return ''.join(out)
 
 
 def _ph_put(lout_content: str) -> str:
@@ -95,6 +131,38 @@ def _convert_inline_inner(text: str) -> str:
 
     # Phase 1: Extract protected spans (order matters)
 
+    # Inline code FIRST — before math/links/images so that `$...$` inside
+    # backticks survives as literal code, and so an inline math expression
+    # containing brackets doesn't trigger image/link parsing.
+    result = re.sub(
+        r'`([^`]+)`',
+        lambda m: _ph_put('@F { ' + lout_escape(m.group(1)) + ' }'),
+        result,
+    )
+
+    # Inline math: \(...\) — body is passed verbatim into @Math as a Lout
+    # string. We escape backslashes and double quotes so the body survives
+    # Lout's lexer (KaTeX sees the un-doubled backslashes when reading).
+    def _math_paren_repl(m: re.Match) -> str:
+        body = m.group(1)
+        global _needs_svgmacros
+        _needs_svgmacros = True
+        return _ph_put('@Math { "' + _lout_string_encode(body) + '" }')
+    result = re.sub(r'\\\((.+?)\\\)', _math_paren_repl, result, flags=re.DOTALL)
+
+    # Inline math: $...$ — single-dollar pairs. Avoid $$..$$ adjacency, and
+    # only match when the content is on one line.
+    def _math_dollar_repl(m: re.Match) -> str:
+        body = m.group(1)
+        global _needs_svgmacros
+        _needs_svgmacros = True
+        return _ph_put('@Math { "' + _lout_string_encode(body) + '" }')
+    result = re.sub(
+        r'(?<![\$\\])\$(?!\$)([^\$\n]+?)(?<!\\)\$(?!\$)',
+        _math_dollar_repl,
+        result,
+    )
+
     # Backslash escapes: \@ \* \_ \` \\ etc.
     result = re.sub(
         r'\\([\\`*_{}[\]()#+\-.!~@|>])',
@@ -102,12 +170,17 @@ def _convert_inline_inner(text: str) -> str:
         result,
     )
 
-    # Images: ![alt](url)
-    result = re.sub(
-        r'!\[([^\]]*)\]\(([^)]+)\)',
-        lambda m: _ph_put(f'@IncludeGraphic {{ "{m.group(2)}" }}'),
-        result,
-    )
+    # Images: ![alt](url) — SVG files get routed through @SVGFile (the SVG
+    # back-end inlines the file's contents verbatim); everything else falls
+    # back to @IncludeGraphic.
+    def _image_repl(m: re.Match) -> str:
+        url = m.group(2)
+        global _needs_svgmacros
+        if url.lower().endswith('.svg'):
+            _needs_svgmacros = True
+            return _ph_put(f'@SVGFile {{ "{url}" }}')
+        return _ph_put(f'@IncludeGraphic {{ "{url}" }}')
+    result = re.sub(r'!\[([^\]]*)\]\(([^)]+)\)', _image_repl, result)
 
     # Links: [text](url)
     def _link_repl(m: re.Match) -> str:
@@ -115,13 +188,6 @@ def _convert_inline_inner(text: str) -> str:
         url = m.group(2)
         return _ph_put(f'{link_text} @FootNote {{ @F {{ {lout_escape(url)} }} }}')
     result = re.sub(r'\[([^\]]+)\]\(([^)]+)\)', _link_repl, result)
-
-    # Inline code: `code`
-    result = re.sub(
-        r'`([^`]+)`',
-        lambda m: _ph_put('@F { ' + lout_escape(m.group(1)) + ' }'),
-        result,
-    )
 
     # Phase 2: Convert formatting spans (extract into placeholders so the
     # delimiters don't get escaped and the inner text is recursively processed)
@@ -237,6 +303,8 @@ class BlockType(Enum):
     TOC = auto()
     PAGE_BREAK = auto()
     ADMONITION = auto()
+    ABC = auto()
+    SVG_RAW = auto()
 
 
 @dataclass
@@ -325,8 +393,11 @@ def parse_markdown(text: str) -> list[Block]:
             ))
             continue
 
-        # Fenced code block
-        m = _FENCED_START_RE.match(stripped)
+        # Fenced code block. A fence indented 4+ spaces is not a fence
+        # (CommonMark: indented code block territory); skip the match so
+        # documentation that *shows* a fenced block by indenting it doesn't
+        # get re-interpreted as a real fence.
+        m = _FENCED_START_RE.match(stripped) if _indent_level(line) < 4 else None
         if m:
             fence_char = m.group(1)[0]
             fence_len = len(m.group(1))
@@ -346,6 +417,10 @@ def parse_markdown(text: str) -> list[Block]:
                 blocks.append(Block(type=BlockType.LOUT_RAW, content=code_text))
             elif lang in ('math', 'latex'):
                 blocks.append(Block(type=BlockType.MATH_BLOCK, content=code_text))
+            elif lang == 'abc':
+                blocks.append(Block(type=BlockType.ABC, content=code_text))
+            elif lang == 'svg':
+                blocks.append(Block(type=BlockType.SVG_RAW, content=code_text))
             else:
                 blocks.append(Block(type=BlockType.CODE_BLOCK, content=code_text, language=lang))
             continue
@@ -475,7 +550,9 @@ def parse_markdown(text: str) -> list[Block]:
             cs = cl.strip()
             if not cs:
                 break
-            if _HEADING_RE.match(cs) or _HR_RE.match(cs) or _FENCED_START_RE.match(cs):
+            if _HEADING_RE.match(cs) or _HR_RE.match(cs):
+                break
+            if _indent_level(cl) < 4 and _FENCED_START_RE.match(cs):
                 break
             if _BULLET_RE.match(cl) or _NUMBERED_RE.match(cl) or _TASK_RE.match(cl):
                 break
@@ -497,6 +574,13 @@ def parse_markdown(text: str) -> list[Block]:
 
         if para_lines:
             blocks.append(Block(type=BlockType.PARAGRAPH, content=' '.join(para_lines)))
+        elif i < n:
+            # Safety net: a non-empty line the parser couldn't classify
+            # would otherwise loop forever (paragraph loop's lookahead
+            # bailed before consuming anything). Treat it as a one-line
+            # paragraph and advance.
+            blocks.append(Block(type=BlockType.PARAGRAPH, content=stripped))
+            i += 1
 
     return blocks
 
@@ -678,7 +762,27 @@ def _generate_preamble(frontmatter: dict, blocks: list[Block]) -> list[str]:
     pkg, type_clause, type_map, _, _ = _DOC_TYPES[doc_type]
 
     needs_tbl = any(b.type == BlockType.TABLE for b in blocks)
-    needs_eq = any(b.type == BlockType.MATH_BLOCK for b in blocks)
+    # Math blocks now route through @Math (svgmacros), not @Eq — keep the
+    # @SysInclude { eq } off unless someone re-introduces a need for it.
+    needs_eq = False
+    # Auto-detect: if any raw Lout block uses @Diag/@DiagTree/@SyntaxDiag
+    # (or the diag-specific shape symbols @Ellipse/@Circle/@Diamond/@Triangle
+    # at top level), pull in the diag package. Mirrors the needs_tbl logic.
+    # Also strip any user-written `@SysInclude { diag }` from raw lout
+    # passthrough so it doesn't appear inside the document body (where it
+    # would be a parse error).
+    _diag_pat = re.compile(
+        r'@(?:Diag|DiagTree|SyntaxDiag|Ellipse|Circle|Diamond|Triangle|Node|Link)\b'
+    )
+    _diag_include_pat = re.compile(r'@SysInclude\s*\{\s*diag\s*\}')
+    needs_diag = False
+    for b in blocks:
+        if b.type == BlockType.LOUT_RAW:
+            if _diag_pat.search(b.content) or _diag_include_pat.search(b.content):
+                needs_diag = True
+            # Strip user-injected `@SysInclude { diag }`; we'll emit it ourselves
+            # in the preamble.
+            b.content = _diag_include_pat.sub('', b.content)
 
     # If no frontmatter overrides, just use @SysInclude { pkg } directly
     has_overrides = any(
@@ -691,7 +795,11 @@ def _generate_preamble(frontmatter: dict, blocks: list[Block]) -> list[str]:
             parts.append('@SysInclude { tbl }')
         if needs_eq:
             parts.append('@SysInclude { eq }')
+        if needs_diag:
+            parts.append('@SysInclude { diag }')
         parts.append(f'@SysInclude {{ {pkg} }}')
+        if _needs_svgmacros:
+            parts.append('@SysInclude { svgmacros }')
     else:
         # Generate a custom setup: include base packages, mydefs, then @Use blocks
         parts.append('@SysInclude { langdefs }')
@@ -701,10 +809,14 @@ def _generate_preamble(frontmatter: dict, blocks: list[Block]) -> list[str]:
             parts.append('@SysInclude { tbl }')
         if needs_eq:
             parts.append('@SysInclude { eq }')
+        if needs_diag:
+            parts.append('@SysInclude { diag }')
 
         # Package-specific setup include
         type_include = {'doc': 'docf', 'report': 'reportf', 'book': 'bookf', 'slides': 'slidesf'}
         parts.append(f'@SysInclude {{ {type_include[doc_type]} }}')
+        if _needs_svgmacros:
+            parts.append('@SysInclude { svgmacros }')
         parts.append('@Include { mydefs }')
         parts.append('')
 
@@ -805,18 +917,27 @@ _HEADING_GAP = {1: '@DP', 2: '@DP', 3: '@LP', 4: '@LP', 5: '@LP', 6: '@LP'}
 def generate_lout(blocks: list[Block], frontmatter: dict | None = None) -> str:
     fm = frontmatter or {}
     doc_type = fm.get('type', 'doc').lower()
-    parts: list[str] = _generate_preamble(fm, blocks)
 
+    # Generate the body first so `_needs_svgmacros` accumulates from any
+    # block that references @Math / @ABC / @SVG / @SVGFile. The preamble
+    # then reads that flag to decide whether to @SysInclude { svgmacros }.
+    global _needs_svgmacros
+    _needs_svgmacros = False
+
+    body_parts: list[str] = []
     if doc_type in ('report', 'book'):
-        parts.extend(_generate_sectioned_body(blocks, doc_type))
+        body_parts.extend(_generate_sectioned_body(blocks, doc_type))
     elif doc_type == 'slides':
-        parts.extend(_generate_slides_body(blocks))
+        body_parts.extend(_generate_slides_body(blocks))
     else:
         for block in blocks:
             lout = _block_to_lout(block)
             if lout:
-                parts.append(lout)
-                parts.append('')
+                body_parts.append(lout)
+                body_parts.append('')
+
+    parts: list[str] = _generate_preamble(fm, blocks)
+    parts.extend(body_parts)
 
     closing = _generate_closing(fm)
     if closing:
@@ -991,7 +1112,16 @@ def _block_to_lout(block: Block) -> str:
         case BlockType.FOOTNOTE_DEF:
             return f'# footnote [{block.meta.get("id", "")}]: {lout_escape(block.content)}'
         case BlockType.MATH_BLOCK:
-            return f'@LP\n@CentredDisplay @Eq {{ {block.content} }}'
+            global _needs_svgmacros
+            _needs_svgmacros = True
+            # Pass LaTeX body opaquely through @Math as one Lout string.
+            return f'@LP\n@CentredDisplay @Math {{ "{_lout_string_encode(block.content.strip())}" }}'
+        case BlockType.ABC:
+            _needs_svgmacros = True
+            return f'@LP\n@ABC {{ "{_lout_string_encode(block.content)}" }}'
+        case BlockType.SVG_RAW:
+            _needs_svgmacros = True
+            return f'@LP\n@SVG {{ "{_lout_string_encode(block.content)}" }}'
         case BlockType.TOC:
             return '# [Table of Contents placeholder]'
         case BlockType.PAGE_BREAK:
@@ -1091,6 +1221,221 @@ def _run_lout(lout_bin: str, lout_flags: list[str], lt_file: str, ps_file: str) 
         sys.exit(result.returncode)
 
 
+# ---------------------------------------------------------------------------
+# HTML scaffold (SVG output + KaTeX + abcjs)
+# ---------------------------------------------------------------------------
+
+# Candidate filesystem locations for a locally-installed copy of KaTeX's
+# stylesheet. We search these in order; the first match is inlined into the
+# generated HTML (so the page renders offline). If none match, we fall
+# back to the CDN <link> tag.
+_KATEX_CSS_CANDIDATES = (
+    '/usr/lib/node_modules/katex/dist/katex.min.css',
+    '/usr/share/javascript/katex/katex.min.css',
+    '/usr/share/nodejs/katex/dist/katex.min.css',
+)
+
+_KATEX_JS_CANDIDATES = (
+    '/usr/lib/node_modules/katex/dist/katex.min.js',
+    '/usr/share/javascript/katex/katex.min.js',
+)
+
+_KATEX_AUTORENDER_CANDIDATES = (
+    '/usr/lib/node_modules/katex/dist/contrib/auto-render.min.js',
+    '/usr/share/javascript/katex/contrib/auto-render.min.js',
+)
+
+_KATEX_CDN_BASE = 'https://cdn.jsdelivr.net/npm/katex@0.16.10/dist'
+
+# abcjsharp lives in the user's fork at ~/projects/abcjsharp.
+_ABCJS_DIST_CANDIDATES = (
+    str(Path.home() / 'projects' / 'abcjsharp' / 'dist' / 'abcjs-basic-min.js'),
+    '/usr/lib/node_modules/abcjs/dist/abcjs-basic-min.js',
+)
+
+_ABCJS_CDN = 'https://cdn.jsdelivr.net/npm/abcjs@6.4.4/dist/abcjs-basic-min.js'
+
+
+def _read_text_if_exists(paths: tuple[str, ...]) -> tuple[str | None, str | None]:
+    """Return (contents, path) for the first existing file, else (None, None)."""
+    for p in paths:
+        try:
+            if os.path.isfile(p):
+                with open(p, encoding='utf-8') as f:
+                    return f.read(), p
+        except OSError:
+            continue
+    return None, None
+
+
+def _build_html_scaffold(
+    svg: str,
+    title: str,
+    *,
+    external_assets: bool = False,
+    math_engine: bool = True,
+    music_engine: bool = True,
+) -> tuple[str, dict[str, str | None]]:
+    """Wrap raw SVG output from lout -G in a self-contained HTML5 document.
+
+    Returns (html, info) where `info` records which asset paths were used
+    (system path vs CDN vs disabled) so the CLI can report them.
+    """
+    info: dict[str, str | None] = {
+        'katex_css': None,
+        'katex_js': None,
+        'katex_autorender': None,
+        'abcjs': None,
+    }
+
+    head_parts: list[str] = [
+        '<meta charset="utf-8">',
+        f'<title>{_html_escape(title)}</title>',
+        # Print stylesheet, page boundaries, .lout-page styling, math/music
+        # sizing. Kept intentionally short — the scaffold is meant to be
+        # readable and to defer rendering work to KaTeX / abcjs.
+        '<style>'
+        'html,body{margin:0;padding:0;background:#e8e8e8;'
+        'font-family:Times,"Liberation Serif",serif}'
+        'body{padding:2em 0}'
+        '.lout-page{display:block;margin:1em auto;background:#fff;'
+        'box-shadow:0 1px 4px rgba(0,0,0,0.25);max-width:100%}'
+        'foreignObject{overflow:visible}'
+        '.math{display:inline-block}'
+        '.abc-music{display:block;width:100%}'
+        '.abc-music svg{max-width:100%;height:auto}'
+        '@media print{body{background:#fff;padding:0}'
+        '.lout-page{box-shadow:none;margin:0;page-break-after:always}}'
+        '</style>',
+    ]
+
+    # ---- KaTeX CSS + JS -----------------------------------------------------
+    if math_engine:
+        if external_assets:
+            head_parts.append(
+                f'<link rel="stylesheet" href="{_KATEX_CDN_BASE}/katex.min.css">'
+            )
+            head_parts.append(
+                f'<script defer src="{_KATEX_CDN_BASE}/katex.min.js"></script>'
+            )
+            head_parts.append(
+                f'<script defer src="{_KATEX_CDN_BASE}/contrib/auto-render.min.js"'
+                ' onload="renderMath()"></script>'
+            )
+            info['katex_css'] = f'{_KATEX_CDN_BASE}/katex.min.css (CDN)'
+            info['katex_js'] = f'{_KATEX_CDN_BASE}/katex.min.js (CDN)'
+            info['katex_autorender'] = (
+                f'{_KATEX_CDN_BASE}/contrib/auto-render.min.js (CDN)'
+            )
+        else:
+            css_text, css_path = _read_text_if_exists(_KATEX_CSS_CANDIDATES)
+            if css_text is not None:
+                head_parts.append(f'<style>{css_text}</style>')
+                info['katex_css'] = f'{css_path} (inlined)'
+            else:
+                head_parts.append(
+                    f'<link rel="stylesheet" href="{_KATEX_CDN_BASE}/katex.min.css">'
+                )
+                info['katex_css'] = f'{_KATEX_CDN_BASE}/katex.min.css (CDN fallback)'
+
+            js_text, js_path = _read_text_if_exists(_KATEX_JS_CANDIDATES)
+            if js_text is not None:
+                head_parts.append(f'<script>{js_text}</script>')
+                info['katex_js'] = f'{js_path} (inlined)'
+            else:
+                head_parts.append(
+                    f'<script defer src="{_KATEX_CDN_BASE}/katex.min.js"></script>'
+                )
+                info['katex_js'] = f'{_KATEX_CDN_BASE}/katex.min.js (CDN fallback)'
+
+            ar_text, ar_path = _read_text_if_exists(_KATEX_AUTORENDER_CANDIDATES)
+            if ar_text is not None:
+                head_parts.append(f'<script>{ar_text}</script>')
+                info['katex_autorender'] = f'{ar_path} (inlined)'
+            else:
+                head_parts.append(
+                    f'<script defer'
+                    f' src="{_KATEX_CDN_BASE}/contrib/auto-render.min.js"'
+                    ' onload="renderMath()"></script>'
+                )
+                info['katex_autorender'] = (
+                    f'{_KATEX_CDN_BASE}/contrib/auto-render.min.js (CDN fallback)'
+                )
+
+    # ---- abcjs --------------------------------------------------------------
+    if music_engine:
+        if external_assets:
+            head_parts.append(f'<script defer src="{_ABCJS_CDN}"></script>')
+            info['abcjs'] = f'{_ABCJS_CDN} (CDN)'
+        else:
+            abc_text, abc_path = _read_text_if_exists(_ABCJS_DIST_CANDIDATES)
+            if abc_text is not None:
+                head_parts.append(f'<script>{abc_text}</script>')
+                info['abcjs'] = f'{abc_path} (inlined)'
+            else:
+                head_parts.append(f'<script defer src="{_ABCJS_CDN}"></script>')
+                info['abcjs'] = f'{_ABCJS_CDN} (CDN fallback)'
+
+    # ---- Init script --------------------------------------------------------
+    # Runs once both KaTeX auto-render and abcjs are loaded. We hook
+    # DOMContentLoaded and also expose renderMath()/renderMusic() so the
+    # defer-loaded CDN scripts can call them after they arrive.
+    init_js_parts: list[str] = []
+    if math_engine:
+        init_js_parts.append(
+            "window.renderMath=function(){"
+            "if(typeof renderMathInElement!=='function')return;"
+            "renderMathInElement(document.body,{delimiters:["
+            "{left:'$$',right:'$$',display:true},"
+            "{left:'$',right:'$',display:false},"
+            "{left:'\\\\(',right:'\\\\)',display:false},"
+            "{left:'\\\\[',right:'\\\\]',display:true}"
+            "],throwOnError:false});"
+            "};"
+        )
+    if music_engine:
+        init_js_parts.append(
+            "window.renderMusic=function(){"
+            "if(typeof ABCJS==='undefined')return;"
+            "document.querySelectorAll('div.abc-music').forEach(function(d){"
+            "var src=d.dataset.abc||d.textContent||'';"
+            "d.textContent='';"
+            "try{ABCJS.renderAbc(d,src,{responsive:'resize'});}"
+            "catch(e){d.textContent='[abcjs error: '+e.message+']';}"
+            "});"
+            "};"
+        )
+    init_js_parts.append(
+        "function _mdloutInit(){"
+        + ("window.renderMath&&renderMath();" if math_engine else "")
+        + ("window.renderMusic&&renderMusic();" if music_engine else "")
+        + "}"
+        "if(document.readyState==='loading')"
+        "document.addEventListener('DOMContentLoaded',_mdloutInit);"
+        "else _mdloutInit();"
+    )
+
+    head = '\n'.join(head_parts)
+    init_js = '\n'.join(init_js_parts)
+
+    return (
+        '<!DOCTYPE html>\n'
+        f'<html lang="en">\n<head>\n{head}\n</head>\n'
+        f'<body>\n{svg}\n'
+        f'<script>{init_js}</script>\n'
+        '</body>\n</html>\n'
+    ), info
+
+
+def _html_escape(s: str) -> str:
+    return (
+        s.replace('&', '&amp;')
+         .replace('<', '&lt;')
+         .replace('>', '&gt;')
+         .replace('"', '&quot;')
+    )
+
+
 def _run_ps2pdf(ps_file: str, pdf_file: str) -> None:
     """Convert PostScript to PDF using ps2pdf (Ghostscript)."""
     ps2pdf = shutil.which('ps2pdf')
@@ -1106,38 +1451,22 @@ def _run_ps2pdf(ps_file: str, pdf_file: str) -> None:
 
 
 # ---------------------------------------------------------------------------
-# CLI
+# One-shot build (used by both single-run CLI and --watch / --serve)
 # ---------------------------------------------------------------------------
 
-def main() -> None:
-    parser = argparse.ArgumentParser(
-        prog='mdlout',
-        description='Convert Markdown → Lout → PostScript → PDF.',
-    )
-    parser.add_argument('input', help='Input Markdown file (- for stdin)')
-    parser.add_argument('-o', '--output', help='Output file (default: INPUT.pdf)')
+# Global injected into the HTML head when --serve is active so the page
+# subscribes to /events. Set from main() before _build_once() runs.
+_LIVE_RELOAD_SCRIPT: str = ''
 
-    mode = parser.add_mutually_exclusive_group()
-    mode.add_argument(
-        '--lout-only', action='store_true',
-        help='Only produce Lout source (print to stdout or -o file)',
-    )
-    mode.add_argument(
-        '--ps', action='store_true',
-        help='Stop at PostScript (do not convert to PDF)',
-    )
 
-    parser.add_argument('--lout-bin', default=None, help='Path to lout binary')
-    parser.add_argument(
-        '--mydefs', default=None,
-        help='Path to a Lout mydefs file (default: look for mydefs next to input)',
-    )
-    parser.add_argument(
-        '--lout-args', default='',
-        help='Extra arguments to pass to lout',
-    )
+def _build_once(args) -> str | None:
+    """Run the full md -> output pipeline once.
 
-    args = parser.parse_args()
+    Returns the path to the produced output file, or None if --lout-only
+    streamed to stdout. Raises on hard failures so callers (watch/serve)
+    can decide whether to abort or print-and-continue.
+    """
+    global _LIVE_RELOAD_SCRIPT
 
     # Read input
     if args.input == '-':
@@ -1159,26 +1488,20 @@ def main() -> None:
             with open(args.output, 'w', encoding='utf-8') as f:
                 f.write(lout_src)
             print(args.output, file=sys.stderr)
-        else:
-            sys.stdout.write(lout_src)
-        return
+            return args.output
+        sys.stdout.write(lout_src)
+        return None
 
-    # Full pipeline: md → .lt → .ps → .pdf
     lout_bin = _find_lout_bin(args.lout_bin)
     extra_flags = shlex.split(args.lout_args) if args.lout_args else []
     lib_flags = _find_lout_lib(lout_bin)
-
     lout_flags = lib_flags + extra_flags
 
     with tempfile.TemporaryDirectory(prefix='mdlout_') as tmpdir:
         lt_file = os.path.join(tmpdir, f'{input_stem}.lt')
-        ps_file = os.path.join(tmpdir, f'{input_stem}.ps')
-
         with open(lt_file, 'w', encoding='utf-8') as f:
             f.write(lout_src)
 
-        # Copy mydefs into the temp dir so Lout's @Include { mydefs } finds it.
-        # Priority: --mydefs flag > mydefs next to input file > (none, use library default)
         mydefs_src = None
         if args.mydefs:
             mydefs_src = Path(args.mydefs)
@@ -1189,30 +1512,312 @@ def main() -> None:
         if mydefs_src:
             shutil.copy2(mydefs_src, os.path.join(tmpdir, 'mydefs'))
 
-        # Add temp dir as an include path so Lout finds the mydefs there first,
-        # and add the input file's directory for any user @Include files
         lout_flags = ['-I', tmpdir] + lout_flags
         if args.input != '-':
             input_dir = str(Path(args.input).resolve().parent)
             if input_dir != tmpdir:
                 lout_flags = ['-I', input_dir] + lout_flags
 
+        if args.format == 'html':
+            svg_file = os.path.join(tmpdir, f'{input_stem}.svg')
+            _run_lout(lout_bin, lout_flags + ['-G'], lt_file, svg_file)
+
+            with open(svg_file, encoding='utf-8') as f:
+                svg = f.read()
+            title = frontmatter.get('title') or input_stem
+            html, asset_info = _build_html_scaffold(
+                svg,
+                title,
+                external_assets=args.external_assets,
+                math_engine=not args.no_math_engine,
+                music_engine=not args.no_music_engine,
+            )
+            # Inject the live-reload <script> just before </body> so the
+            # browser opens an EventSource to /events. Only active in
+            # --serve mode (otherwise _LIVE_RELOAD_SCRIPT is empty).
+            if _LIVE_RELOAD_SCRIPT:
+                html = html.replace(
+                    '</body>',
+                    _LIVE_RELOAD_SCRIPT + '\n</body>',
+                    1,
+                )
+
+            out = args.output or f'{input_stem}.html'
+            with open(out, 'w', encoding='utf-8') as f:
+                f.write(html)
+            for k, v in asset_info.items():
+                if v is not None:
+                    print(f'  {k}: {v}', file=sys.stderr)
+            print(out, file=sys.stderr)
+            return out
+
+        ps_file = os.path.join(tmpdir, f'{input_stem}.ps')
         _run_lout(lout_bin, lout_flags, lt_file, ps_file)
 
         if args.ps:
-            # --ps: copy PS to final destination
             out = args.output or f'{input_stem}.ps'
             shutil.copy2(ps_file, out)
             print(out, file=sys.stderr)
-            return
+            return out
 
-        # Convert PS → PDF
         pdf_file = os.path.join(tmpdir, f'{input_stem}.pdf')
         _run_ps2pdf(ps_file, pdf_file)
 
         out = args.output or f'{input_stem}.pdf'
         shutil.copy2(pdf_file, out)
         print(out, file=sys.stderr)
+        return out
+
+
+# ---------------------------------------------------------------------------
+# --watch and --serve helpers
+# ---------------------------------------------------------------------------
+
+import threading  # noqa: E402 — kept local to the watch/serve helpers
+import time       # noqa: E402
+from datetime import datetime  # noqa: E402
+
+
+def _watch_file_mtime(path: str) -> float:
+    """Return mtime of `path`, or 0.0 if missing (treat as 'no change yet')."""
+    try:
+        return os.path.getmtime(path)
+    except OSError:
+        return 0.0
+
+
+def _safe_build(args) -> str | None:
+    """Run _build_once but swallow exceptions so watch/serve keep going."""
+    try:
+        out = _build_once(args)
+        ts = datetime.now().strftime('%H:%M:%S')
+        print(f'[rebuilt {ts}] {out}', file=sys.stderr)
+        return out
+    except SystemExit as e:
+        ts = datetime.now().strftime('%H:%M:%S')
+        print(f'[error {ts}] build exited with {e.code}', file=sys.stderr)
+    except Exception as e:
+        ts = datetime.now().strftime('%H:%M:%S')
+        print(f'[error {ts}] {type(e).__name__}: {e}', file=sys.stderr)
+    return None
+
+
+def _run_watch(args) -> None:
+    """Loop: rebuild whenever args.input's mtime advances."""
+    if args.input == '-':
+        print('--watch requires a file argument (cannot watch stdin)', file=sys.stderr)
+        sys.exit(2)
+
+    last = _watch_file_mtime(args.input)
+    _safe_build(args)  # initial build
+    print(f'watching {args.input} (Ctrl-C to exit)', file=sys.stderr)
+    try:
+        while True:
+            time.sleep(0.5)
+            cur = _watch_file_mtime(args.input)
+            if cur and cur != last:
+                last = cur
+                _safe_build(args)
+    except KeyboardInterrupt:
+        print('\nwatch: bye', file=sys.stderr)
+
+
+# Used by --serve to wake every connected EventSource client.
+_serve_lock = threading.Lock()
+_serve_condition = threading.Condition(_serve_lock)
+_serve_version = 0  # monotonic build counter, bumped after each rebuild
+
+
+def _bump_serve_version() -> None:
+    global _serve_version
+    with _serve_condition:
+        _serve_version += 1
+        _serve_condition.notify_all()
+
+
+def _run_serve(args, port: int) -> None:
+    """Serve the rendered HTML at / with /events SSE live-reload."""
+    if args.input == '-':
+        print('--serve requires a file argument', file=sys.stderr)
+        sys.exit(2)
+    if args.format != 'html':
+        print('--serve only supports --format=html', file=sys.stderr)
+        sys.exit(2)
+
+    global _LIVE_RELOAD_SCRIPT
+    _LIVE_RELOAD_SCRIPT = (
+        '<script>'
+        '(function(){'
+        'try{var es=new EventSource("/events");'
+        'es.addEventListener("reload",function(){location.reload();});'
+        '}catch(e){}'
+        '})();'
+        '</script>'
+    )
+
+    out_path = _safe_build(args)
+    if not out_path:
+        print('serve: initial build failed; exiting', file=sys.stderr)
+        sys.exit(1)
+    out_path_abs = os.path.abspath(out_path)
+
+    import http.server  # noqa: E402
+
+    class Handler(http.server.BaseHTTPRequestHandler):
+        def log_message(self, fmt, *a):  # quieter default
+            pass
+
+        def do_GET(self):
+            if self.path in ('/', '/index.html'):
+                try:
+                    with open(out_path_abs, 'rb') as f:
+                        body = f.read()
+                except OSError as e:
+                    self.send_error(500, str(e))
+                    return
+                self.send_response(200)
+                self.send_header('Content-Type', 'text/html; charset=utf-8')
+                self.send_header('Cache-Control', 'no-store')
+                self.send_header('Content-Length', str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+                return
+            if self.path == '/events':
+                self.send_response(200)
+                self.send_header('Content-Type', 'text/event-stream')
+                self.send_header('Cache-Control', 'no-store')
+                self.send_header('Connection', 'keep-alive')
+                self.end_headers()
+                with _serve_condition:
+                    last_ver = _serve_version
+                try:
+                    while True:
+                        with _serve_condition:
+                            _serve_condition.wait(timeout=15.0)
+                            cur = _serve_version
+                        if cur != last_ver:
+                            last_ver = cur
+                            self.wfile.write(b'event: reload\ndata: 1\n\n')
+                        else:
+                            # heartbeat keeps the socket alive through proxies
+                            self.wfile.write(b': ping\n\n')
+                        self.wfile.flush()
+                except (BrokenPipeError, ConnectionResetError):
+                    return
+            else:
+                self.send_error(404)
+
+    class ThreadingServer(http.server.ThreadingHTTPServer):
+        daemon_threads = True
+
+    httpd = ThreadingServer(('127.0.0.1', port), Handler)
+    print(f'serving http://127.0.0.1:{port}/  (Ctrl-C to exit)', file=sys.stderr)
+
+    def _serve_forever():
+        try:
+            httpd.serve_forever()
+        except Exception:
+            pass
+
+    t = threading.Thread(target=_serve_forever, daemon=True)
+    t.start()
+
+    last = _watch_file_mtime(args.input)
+    try:
+        while True:
+            time.sleep(0.5)
+            cur = _watch_file_mtime(args.input)
+            if cur and cur != last:
+                last = cur
+                if _safe_build(args):
+                    _bump_serve_version()
+    except KeyboardInterrupt:
+        print('\nserve: bye', file=sys.stderr)
+        httpd.shutdown()
+
+
+# ---------------------------------------------------------------------------
+# CLI
+# ---------------------------------------------------------------------------
+
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        prog='mdlout',
+        description='Convert Markdown → Lout → HTML (default) or PDF.',
+    )
+    parser.add_argument('input', help='Input Markdown file (- for stdin)')
+    parser.add_argument('-o', '--output', help='Output file (default: INPUT.html or INPUT.pdf)')
+
+    parser.add_argument(
+        '--format', choices=('html', 'pdf'), default='html',
+        help='Output format: html (default, via lout -G SVG back end) or pdf',
+    )
+
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument(
+        '--lout-only', action='store_true',
+        help='Only produce Lout source (print to stdout or -o file)',
+    )
+    mode.add_argument(
+        '--ps', action='store_true',
+        help='Stop at PostScript (do not convert to PDF); implies --format=pdf',
+    )
+    mode.add_argument(
+        '--pdf', action='store_true',
+        help='Legacy alias for --format=pdf',
+    )
+
+    parser.add_argument('--lout-bin', default=None, help='Path to lout binary')
+    parser.add_argument(
+        '--mydefs', default=None,
+        help='Path to a Lout mydefs file (default: look for mydefs next to input)',
+    )
+    parser.add_argument(
+        '--lout-args', default='',
+        help='Extra arguments to pass to lout',
+    )
+    parser.add_argument(
+        '--external-assets', action='store_true',
+        help='Reference KaTeX/abcjs from CDN instead of inlining local copies '
+             '(smaller HTML, requires network at view time)',
+    )
+    parser.add_argument(
+        '--no-math-engine', action='store_true',
+        help='Omit KaTeX from the generated HTML (smaller output)',
+    )
+    parser.add_argument(
+        '--no-music-engine', action='store_true',
+        help='Omit abcjs from the generated HTML (smaller output)',
+    )
+    parser.add_argument(
+        '--watch', action='store_true',
+        help='Rebuild whenever the input .md changes on disk (Ctrl-C to exit)',
+    )
+    parser.add_argument(
+        '--serve', nargs='?', const=8080, type=int, default=None, metavar='PORT',
+        help='Serve the rendered HTML at http://127.0.0.1:PORT/ with SSE live-reload '
+             '(default port 8080; implies --watch and --format=html)',
+    )
+
+    args = parser.parse_args()
+
+    # --ps and --pdf are legacy / format-overriding flags
+    if args.ps or args.pdf:
+        args.format = 'pdf'
+
+    # --serve implies HTML and live-reload
+    if args.serve is not None:
+        if args.format != 'html':
+            print('--serve only supports --format=html (overriding)', file=sys.stderr)
+            args.format = 'html'
+        _run_serve(args, args.serve)
+        return
+
+    if args.watch:
+        _run_watch(args)
+        return
+
+    _build_once(args)
 
 
 if __name__ == '__main__':

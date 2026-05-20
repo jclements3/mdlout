@@ -1,0 +1,9 @@
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+@NumberedList
+@ListItem { First numbered item. }
+@ListItem { Second numbered item. }
+@ListItem { Third numbered item. }
+@EndList
+@End @Text

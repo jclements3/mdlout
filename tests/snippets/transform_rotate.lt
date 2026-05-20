@@ -1,0 +1,7 @@
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+Below is text rotated by thirty degrees:
+@DP
+@CentredDisplay { 30d } @Rotate { Rotated text sample }
+@End @Text

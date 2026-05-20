@@ -1,0 +1,9 @@
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+Before the shadow box.
+@DP
+@CentredDisplay @ShadowBox { Boxed phrase with drop shadow. }
+@DP
+After the shadow box.
+@End @Text

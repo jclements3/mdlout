@@ -1,0 +1,21 @@
+###########################################################################
+#  diag_multi_link - three boxed nodes with all-pairs directed links       #
+#  (a complete K3 graph rendered by @Diag).                                #
+###########################################################################
+
+@SysInclude { diag }
+@SysInclude { doc }
+@Doc @Text @Begin
+
+@CentredDisplay @Diag {
+A:: @Node //2c { A } ||3c
+B:: @Node { B }
+// @Node {}
+// C:: @Node //2c { C }
+//
+@Link from { A } to { B } arrow { yes } arrowstyle { solid }
+@Link from { B } to { C } arrow { yes } arrowstyle { solid }
+@Link from { A } to { C } arrow { yes } arrowstyle { solid }
+}
+
+@End @Text

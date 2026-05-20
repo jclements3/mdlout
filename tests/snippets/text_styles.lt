@@ -1,0 +1,7 @@
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+This sentence has a {@B bold} run, an {@I italic} run, and an
+{@II oblique} run, plus plain text between them, to compare font
+selection across back ends.
+@End @Text

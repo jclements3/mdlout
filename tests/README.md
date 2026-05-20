@@ -1,0 +1,129 @@
+# Lout PS vs SVG regression tests
+
+A side-by-side visual regression framework that exercises both Lout
+back ends -- the frozen PostScript path (`z49.c`, default) and the new
+SVG path (`z53.c`, selected via `lout -G`) -- against a fixed corpus of
+focused single-feature snippets, then produces an HTML report showing
+each pair of renders along with a diff image and pixel-level metrics.
+
+The intent is to make divergence between the two back ends easy to
+spot at a glance while the SVG back end is still being filled in.
+
+## Layout
+
+```
+tests/
+  snippets/        20 hand-written .lt source files, one feature each
+  out/             generated artefacts (PS, SVG, PNG renders, diffs)
+  run_compare.sh   per-snippet render + diff driver
+  compare.py       SSIM / pixel-ratio analysis + JSON + HTML report
+  run_all.sh       orchestrator
+  report.html      generated gallery (after run)
+```
+
+## Requirements
+
+Hard:
+- A built `lout` binary at `../lout/lout` (run `make lout` in `../lout`).
+- `gs` (Ghostscript) to rasterize PostScript.
+- `rsvg-convert` (from `librsvg`) to rasterize SVG.
+- ImageMagick `compare` + `convert` + `identify`.
+- Python 3.10+ (stdlib only).
+
+Optional (enables SSIM):
+- `scikit-image`, `numpy`, `Pillow`. If missing the framework skips SSIM
+  with a printed note; pixel-diff ratios alone still gate pass/fail.
+
+## Running
+
+```
+bash tests/run_all.sh
+```
+
+That runs every snippet through both back ends, rasterizes both at
+150dpi, diffs them with `compare -metric AE -fuzz 2%`, computes
+per-snippet metrics, writes `out/results.json`, and (re)generates
+`tests/report.html`.
+
+Open the report:
+
+```
+xdg-open tests/report.html
+```
+
+(or just point a browser at the file).
+
+## How a snippet is judged
+
+Per-snippet, the pipeline records:
+
+- `ae`  -- ImageMagick absolute-error pixel count
+- `pixel_diff_ratio` = AE / (width * height)
+- `ssim` (when scikit-image is available)
+
+Thresholds, set in `compare.py`:
+
+| Category        | Pixel diff max | SSIM min |
+|-----------------|---------------:|---------:|
+| Text snippets   |             5% |     0.95 |
+| Graphics-heavy  |            20% |     0.80 |
+
+Membership in the "graphics-heavy" set is by name (see
+`GRAPHICS_HEAVY` in `compare.py`).
+
+## Adding a snippet
+
+1. Drop a new `.lt` file into `tests/snippets/`. Keep it 5--30 lines.
+   Each snippet must be standalone Lout:
+
+   ```
+   @SysInclude { doc }
+   @Doc @Text @Begin
+   ... feature under test ...
+   @End @Text
+   ```
+
+   Use `@SysInclude { eq }` or `@SysInclude { tbl }` ahead of `doc` if
+   the snippet needs equations or tables.
+
+2. Re-run `bash tests/run_all.sh`.
+
+3. If the feature is bitmap / raw-PostScript-heavy and is expected to
+   diverge between back ends (rotated text, raw `@Graphic` blocks,
+   `@CurveBox`, ...), add the snippet's name to `GRAPHICS_HEAVY` in
+   `compare.py` to relax its threshold.
+
+## Interpreting failures
+
+`status` in the table tells you *where* a snippet failed:
+
+| status      | meaning                                              |
+|-------------|------------------------------------------------------|
+| OK          | both renders + diff produced                         |
+| PS_FAIL     | `lout` could not produce PostScript                  |
+| SVG_FAIL    | `lout -G` could not produce SVG                      |
+| GS_FAIL     | Ghostscript could not rasterize the PS               |
+| RSVG_FAIL   | `rsvg-convert` could not rasterize the SVG           |
+
+`verdict` is the pass/fail decision:
+
+| verdict | meaning                                                  |
+|---------|----------------------------------------------------------|
+| PASS    | within thresholds                                        |
+| FAIL    | rendered but exceeds the pixel-diff or SSIM threshold    |
+| SKIP    | could not render to both PNGs                            |
+
+A `FAIL` is the interesting case: open the diff image -- bright pink
+pixels show where the two renders disagree.
+
+## Notes / quirks
+
+- The SVG canvas is normalised to the PostScript canvas size via
+  `convert ... -extent` before diffing so that page-margin differences
+  do not blow up the AE count.
+- `run_compare.sh` calls `lout -s` so that crossref database side files
+  are not written into `out/`. Tests are pure first-pass rendering; no
+  forward references resolve in a single run.
+- The framework continues past per-snippet errors. A failed snippet
+  shows up as a row with status `*_FAIL` and `verdict=SKIP`, never
+  aborts the run.

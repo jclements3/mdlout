@@ -1,0 +1,9 @@
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+A horizontal line drawn through raw PostScript:
+@DP
+@CentredDisplay {
+   "0 0 moveto xsize 0 rlineto 0.5 setlinewidth stroke"
+} @Graphic { 6c @Wide 1c @High }
+@End @Text

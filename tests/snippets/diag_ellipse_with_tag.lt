@@ -1,0 +1,17 @@
+###########################################################################
+#  diag_ellipse_with_tag - @Ellipse with an external nodelabel attached    #
+#  at the north boundary. Mirrors the User's Guide page-201 figure.        #
+###########################################################################
+
+@SysInclude { diag }
+@SysInclude { doc }
+@Doc @Text @Begin
+
+@CentredDisplay @Diag {
+@Ellipse
+   nodelabel { state q0 }
+   nodelabelpos { N }
+   { start }
+}
+
+@End @Text

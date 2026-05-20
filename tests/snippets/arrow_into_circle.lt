@@ -1,0 +1,84 @@
+###########################################################################
+#                                                                         #
+#  arrow_into_circle - Lout's curved arrowheads terminating at circle     #
+#  edges, drawn at five line widths in both 'curvedsolid' and 'solid'.    #
+#  This exercises the arrowhead-tangent-touch logic that motivated the    #
+#  test (Lout's curved arrowhead barely kisses the circle boundary).      #
+#                                                                         #
+###########################################################################
+
+@SysInclude { doc }
+@SysInclude { tbl }
+@SysInclude { diag }
+@Doc @Text @Begin
+
+@CentredDisplay { Helvetica Bold } @Font {
+"Arrows into circles - curvedsolid (top) and solid (bottom)"
+}
+
+@CentredDisplay @Tbl
+    rule { yes }
+    aformat { @Cell A } bformat { @Cell B }
+    cformat { @Cell C } dformat { @Cell D }
+    eformat { @Cell E } fformat { @Cell F }
+{
+@Rowa A { @Heading 0.2 pt } B { @Heading 0.5 pt }
+      C { @Heading 1.0 pt } D { @Heading 2.0 pt } E { @Heading 4.0 pt }
+      F { @Heading style }
+@Rowa
+    A { @Diag {
+A:: @Circle //0.8c ||1.4c B:: @Circle
+// @Link from { A } to { B } path { line } arrow { yes }
+   pathwidth { 0.2p } arrowstyle { curvedsolid }
+      } }
+    B { @Diag {
+A:: @Circle //0.8c ||1.4c B:: @Circle
+// @Link from { A } to { B } path { line } arrow { yes }
+   pathwidth { 0.5p } arrowstyle { curvedsolid }
+      } }
+    C { @Diag {
+A:: @Circle //0.8c ||1.4c B:: @Circle
+// @Link from { A } to { B } path { line } arrow { yes }
+   pathwidth { 1p } arrowstyle { curvedsolid }
+      } }
+    D { @Diag {
+A:: @Circle //0.8c ||1.4c B:: @Circle
+// @Link from { A } to { B } path { line } arrow { yes }
+   pathwidth { 2p } arrowstyle { curvedsolid }
+      } }
+    E { @Diag {
+A:: @Circle //0.8c ||1.4c B:: @Circle
+// @Link from { A } to { B } path { line } arrow { yes }
+   pathwidth { 4p } arrowstyle { curvedsolid }
+      } }
+    F { curvedsolid }
+@Rowa
+    A { @Diag {
+A:: @Circle //0.8c ||1.4c B:: @Circle
+// @Link from { A } to { B } path { line } arrow { yes }
+   pathwidth { 0.2p } arrowstyle { solid }
+      } }
+    B { @Diag {
+A:: @Circle //0.8c ||1.4c B:: @Circle
+// @Link from { A } to { B } path { line } arrow { yes }
+   pathwidth { 0.5p } arrowstyle { solid }
+      } }
+    C { @Diag {
+A:: @Circle //0.8c ||1.4c B:: @Circle
+// @Link from { A } to { B } path { line } arrow { yes }
+   pathwidth { 1p } arrowstyle { solid }
+      } }
+    D { @Diag {
+A:: @Circle //0.8c ||1.4c B:: @Circle
+// @Link from { A } to { B } path { line } arrow { yes }
+   pathwidth { 2p } arrowstyle { solid }
+      } }
+    E { @Diag {
+A:: @Circle //0.8c ||1.4c B:: @Circle
+// @Link from { A } to { B } path { line } arrow { yes }
+   pathwidth { 4p } arrowstyle { solid }
+      } }
+    F { solid }
+}
+
+@End @Text

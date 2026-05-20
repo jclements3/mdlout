@@ -1,0 +1,9 @@
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+Before the curve box.
+@DP
+@CentredDisplay @CurveBox { Boxed phrase inside a curved box. }
+@DP
+After the curve box.
+@End @Text

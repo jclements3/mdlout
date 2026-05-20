@@ -1,0 +1,10 @@
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+{8p} @Font { eight point } /
+{10p} @Font { ten point } /
+{12p} @Font { twelve point } /
+{14p} @Font { fourteen point } /
+{18p} @Font { eighteen point } /
+{24p} @Font { twenty four point }
+@End @Text

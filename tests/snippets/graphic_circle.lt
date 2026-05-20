@@ -1,0 +1,10 @@
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+A filled circle drawn through raw PostScript:
+@DP
+@CentredDisplay {
+   "newpath xsize 2 div ysize 2 div xsize 2 div 4 sub 0 360 arc"
+   "closepath 0.6 setgray fill"
+} @Graphic { 3c @Wide 3c @High }
+@End @Text

@@ -1,0 +1,9 @@
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+Text above a locally scoped rule.
+@DP
+{ 6c } @Wide @LocalWidthRule
+@DP
+Text below a locally scoped rule.
+@End @Text

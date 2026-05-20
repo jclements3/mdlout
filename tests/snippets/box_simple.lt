@@ -1,0 +1,9 @@
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+Before the box.
+@DP
+@CentredDisplay @Box { Boxed phrase inside a simple box. }
+@DP
+After the box.
+@End @Text

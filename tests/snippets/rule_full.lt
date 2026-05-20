@@ -1,0 +1,9 @@
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+Text above the rule.
+@DP
+@FullWidthRule
+@DP
+Text below the rule.
+@End @Text
