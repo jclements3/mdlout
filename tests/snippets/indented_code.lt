@@ -1,0 +1,14 @@
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+The following block is rendered the way mdlout emits a CommonMark
+indented (four space prefixed) code block:
+@LP
+@IndentedDisplay @F @Verbatim @Begin
+int main() {
+    return 0;
+}
+@End @Verbatim
+@PP
+Text after the indented code block resumes normal paragraph layout.
+@End @Text

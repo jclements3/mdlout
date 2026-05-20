@@ -106,10 +106,27 @@ def _ph_put(lout_content: str) -> str:
 
 
 def _ph_restore(text: str) -> str:
-    """Replace all placeholder tokens with their stored Lout content."""
-    for key, val in _ph_store.items():
-        text = text.replace(key, val)
-    return text
+    """Replace all placeholder tokens with their stored Lout content.
+
+    Placeholders are stored in creation order. When a recursive call inside
+    an inline span (e.g. ``***x***`` or ``**a *b* c**``) builds a placeholder
+    whose stored value itself references earlier placeholders, we must
+    substitute outer (later-created) placeholders first so the inner ones
+    reappear in ``text`` and can be replaced on subsequent iterations.
+
+    A simple way to guarantee that is to iterate in reverse insertion order:
+    a later placeholder's value can only reference *earlier* placeholders
+    (they had to exist at the time it was constructed), so by the time we
+    reach an earlier key all of its references have been expanded into the
+    working text. As a defensive backstop we also loop until the text is
+    stable, in case future code introduces forward references.
+    """
+    while True:
+        before = text
+        for key, val in reversed(_ph_store.items()):
+            text = text.replace(key, val)
+        if text == before:
+            return text
 
 
 def _ph_reset() -> None:
@@ -541,6 +558,39 @@ def parse_markdown(text: str) -> list[Block]:
                     break
                 i += 1
             blocks.append(Block(type=BlockType.BLOCKQUOTE, content='\n'.join(bq_lines).strip()))
+            continue
+
+        # Indented code block (CommonMark): at a block boundary, a run of
+        # lines indented by 4+ spaces (with blank lines optionally between
+        # them) is a code block. The leading 4 spaces are stripped from each
+        # line. Trailing blank lines are not included in the block.
+        if _indent_level(line) >= 4:
+            code_lines: list[str] = []
+            pending_blanks: list[str] = []
+            while i < n:
+                cl = lines[i]
+                if cl.strip() == '':
+                    # Blank lines join the block only if more indented code
+                    # follows; otherwise they end it.
+                    pending_blanks.append('')
+                    i += 1
+                    continue
+                if _indent_level(cl) >= 4:
+                    if pending_blanks:
+                        code_lines.extend(pending_blanks)
+                        pending_blanks = []
+                    code_lines.append(cl[4:])
+                    i += 1
+                    continue
+                break
+            # Roll back over any trailing blanks we consumed but didn't
+            # attribute to the block, so a following block sees them.
+            if pending_blanks:
+                i -= len(pending_blanks)
+            blocks.append(Block(
+                type=BlockType.CODE_BLOCK,
+                content='\n'.join(code_lines),
+            ))
             continue
 
         # Paragraph
