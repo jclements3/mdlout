@@ -41,6 +41,12 @@ tests/visual_diff.html
 !tests/user_guide_diff/manifest.json
 !tests/user_guide_diff/manifest.txt
 !tests/user_guide_diff/worst-*.png
+# tests/chromium_diff.sh writes its own manifest and worst-NN panels next
+# to the rsvg artefacts so both pipelines stay browseable side-by-side.
+!tests/user_guide_diff/chromium_manifest.txt
+!tests/user_guide_diff/chromium_README.md
+!tests/user_guide_diff/chromium/
+!tests/user_guide_diff/chromium/worst-*.png
 
 # examples/out/ holds committed reference renderings.
 # Ignore everything by default, then explicitly track curated HTML/PDF
