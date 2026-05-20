@@ -38,20 +38,45 @@ Working:
 
 Partial / lower priority:
 
-  - Pagination drift on long prose pages: same content lays out on
-    slightly different page boundaries because Ghostscript and
-    librsvg pick slightly different glyph widths.  Page content is
-    well-formed on both sides; the AE metric flags the shift as a
-    diff.  Fixing it requires matching font metrics exactly, which
-    means web-font embedding plus a line-break algorithm tweak.
-  - `@GraphSquare`/`@GraphPlus`/`@GraphDiamond` symbol-legend stroke
-    width: independent from the plot-symbol sizing fix; still
-    over-thick on p256/p264.
+  - Pagination drift on long prose pages between the rsvg-rendered
+    SVG and the Ghostscript-rendered PS.  Both back-ends emit
+    IDENTICAL line breaks (same Lout galley engine, same font
+    metrics) so the page COUNTS match (327 = 327), but the
+    rasterisers pick subtly different glyphs for "Times" /
+    "Helvetica" via OS font fallback, leaving cumulative pixel
+    drift visible to the AE metric.
+
+    Mitigation landed: mdlout's HTML wrapper now embeds the URW++
+    Nimbus base-35 fonts as @font-face data URLs mapped to Times /
+    Helvetica / Courier (Adobe metric equivalents that Ghostscript
+    itself uses).  Browser rendering of mdlout's HTML output will
+    therefore use the same metrics PS uses, eliminating the drift.
+    The rsvg-convert pipeline used by `tests/user_guide_diff.sh`
+    can't honour @font-face data URLs and so still shows the drift
+    in that report.
+
   - Raw `@Graphic` PostScript content that doesn't start with `<` is
     still emitted as an XML comment when the embedded interpreter
     can't fully evaluate it.  The interpreter has gotten broad
     enough that this is rare in the user guide but still possible
     in arbitrary external `@Graphic` payloads.
+
+Recently fixed (this overnight session):
+
+  - 21-page bibliography/references/index gap (SVG_NullBackEnd
+    rewire).
+  - @Graph plot-symbol sizing (~5x bug) on user-guide pages 248,
+    262.
+  - @GraphSquare/Plus/Diamond/Circle/Triangle symbol-legend
+    stroke-width on user-guide pages 256, 264 (was 5-25pt, now
+    hairline).
+  - Dict-pool leak via tag-dicts causing thin connector strokes to
+    drop out on later @Diag pages (mark-and-sweep GC).
+  - All 8 named Lout textures (striped/grid/dotted/chessboard/
+    brickwork/honeycomb/triangular/string) render as SVG
+    <pattern> defs.
+  - Colour propagation through @Graphic blocks (chapter 8 colour
+    gallery, @Box paint{...}, math fraction bars and radicals).
 
 Frozen / explicitly preserved:
 
