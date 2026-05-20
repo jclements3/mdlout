@@ -4,34 +4,54 @@ Roadmap for the SVG/HTML output path of mdlout, driven by the new SVG
 back-end (`z53.c`) in the C Lout fork (`jclements3/lout`, branch
 `svg-backend`).
 
-## Status as of 2026-05-20
+## Status as of 2026-05-20 (overnight session close)
 
-Working today:
+Working:
 
   - Text content -- font family, size, weight, slope, colour, kerning,
     word spacing -- through the SVG back-end.
   - Page chrome -- `<svg>` per page, viewBox in points, coordinate flip.
-  - Simple shapes from `@Graphic` (lines, circles, rectangles, basic paths).
-  - The full `@Diag` arrowstyle gallery (solid / hollow / curved / etc.).
+  - Cross-references converge in SVG mode (bibliography / references /
+    index back-matter all present); 327 SVG pages = 327 PS pages.
+  - Shapes from `@Graphic`: lines, arcs, circles, rectangles, paths,
+    arrows, curved boxes, shadow boxes -- all via the embedded PS
+    interpreter inside z53.c (with mark-and-sweep dict GC).
+  - The full `@Diag` arrowstyle gallery (solid / open / halfopen /
+    curvedsolid / curvedopen / curvedhalfopen / solidwithbar / circle
+    / box / many).
+  - All 8 named Lout textures (striped / grid / dotted / chessboard
+    / brickwork / honeycomb / triangular / string) render as SVG
+    `<pattern>` defs.
+  - `@Graph` plot symbols at the right size (font-scale propagates).
+  - Colour propagation through `@Graphic` blocks (colour gallery,
+    paint{}, fraction bars, painted boxes).
   - `@Math` passthrough via KaTeX (client-side render in HTML mode).
   - `@ABC` passthrough via abcjsharp (client-side render in HTML mode).
   - `@SVG` and `@SVGFile` raw passthrough.
   - HTML wrapper, `--format` flag, `--watch`, `--serve [PORT]`.
   - mdlout markdown routing to all three new macros.
-  - 26-snippet regression suite under `tests/` (`bash tests/run_all.sh`).
-  - 9 example documents under `examples/`.
+  - 27-snippet regression suite under `tests/` (`bash tests/run_all.sh`).
+  - 10 example documents under `examples/`, 18 reference outputs
+    committed under `examples/out/`.
+  - Per-page User's Guide diff report under `tests/user_guide_diff/`
+    (327/327 pages, 0 BAD, 0 missing, 36 at <5%, 291 at 5-20%).
 
-Partial / in flight:
+Partial / lower priority:
 
-  - Long-tail of complex `@Diag` layouts (nested trees, dense link
-    crossings, custom `@Node` shapes).
-  - Graphics-heavy `@Fig` documents from `lout/doc/user`.
-  - Corner-case `@Eq` typesetting (large matrices, multi-line aligned
-    equations, hand-tuned spacing).
-  - Raw PostScript-in-`@Graphic` translation (currently emitted as
-    XML comment; only `<...>`-prefixed raw SVG passes through).
-  - Pixel-parity tightening: graphics-heavy snippets are above the
-    5% threshold but below the 20% relaxed bar.
+  - Pagination drift on long prose pages: same content lays out on
+    slightly different page boundaries because Ghostscript and
+    librsvg pick slightly different glyph widths.  Page content is
+    well-formed on both sides; the AE metric flags the shift as a
+    diff.  Fixing it requires matching font metrics exactly, which
+    means web-font embedding plus a line-break algorithm tweak.
+  - `@GraphSquare`/`@GraphPlus`/`@GraphDiamond` symbol-legend stroke
+    width: independent from the plot-symbol sizing fix; still
+    over-thick on p256/p264.
+  - Raw `@Graphic` PostScript content that doesn't start with `<` is
+    still emitted as an XML comment when the embedded interpreter
+    can't fully evaluate it.  The interpreter has gotten broad
+    enough that this is rare in the user guide but still possible
+    in arbitrary external `@Graphic` payloads.
 
 Frozen / explicitly preserved:
 
