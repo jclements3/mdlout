@@ -1,5 +1,7 @@
 # mdlout
 
+[![CI](https://github.com/jclements3/mdlout/actions/workflows/ci.yml/badge.svg)](https://github.com/jclements3/mdlout/actions/workflows/ci.yml)
+
 **mdlout** is a Markdown to {HTML/SVG, PDF} converter built on top of a forked
 copy of the [Lout](https://github.com/jclements3/lout) typesetting system (an
 ANSI C document formatter by Jeffrey H. Kingston). It pairs Lout's
