@@ -1256,6 +1256,112 @@ _ABCJS_DIST_CANDIDATES = (
 _ABCJS_CDN = 'https://cdn.jsdelivr.net/npm/abcjs@6.4.4/dist/abcjs-basic-min.js'
 
 
+# ---------------------------------------------------------------------------
+# Font embedding (PS/SVG metric alignment)
+# ---------------------------------------------------------------------------
+#
+# Lout's PostScript back-end references the 14 Adobe base fonts (Times,
+# Helvetica, Courier and their bold/italic variants) using Adobe AFM metrics
+# from lout/font/.  Ghostscript ships matching outlines (URW++ Nimbus) so the
+# rendered PS pages use those metrics.  Lout's SVG back-end (z53.c) emits
+# `font-family="Times"` / `Helvetica` / `Courier` with `font-weight="bold"`
+# and `font-style="italic"` attributes — but browsers and librsvg map those
+# generic names to whatever system "Times" the OS exposes (Liberation /
+# DejaVu / etc.), whose metrics differ slightly from Adobe's.  Cumulative
+# drift across a page = misaligned text wraps even though Lout itself
+# already broke the lines identically (z37 is the shared font service for
+# both back-ends, so positions are byte-identical).
+#
+# Fix: embed URW++ Nimbus (which Ghostscript itself uses to render the
+# Adobe base 14) as @font-face web fonts in the HTML wrapper, mapped to the
+# family names the SVG actually references.  Nimbus Roman / Sans / MonoPS
+# are open-source equivalents of Adobe Times / Helvetica / Courier with
+# nearly identical metrics.
+#
+# Each entry: (css_family, css_style, css_weight, font_path_candidates).
+# Order within each candidate tuple is preferred-first.
+
+_FONT_EMBED_SPECS: tuple[tuple[str, str, str, tuple[str, ...]], ...] = (
+    # ---- Times / Nimbus Roman --------------------------------------------
+    ('Times', 'normal', 'normal', (
+        '/usr/share/fonts/opentype/urw-base35/NimbusRoman-Regular.otf',
+    )),
+    ('Times', 'normal', 'bold', (
+        '/usr/share/fonts/opentype/urw-base35/NimbusRoman-Bold.otf',
+    )),
+    ('Times', 'italic', 'normal', (
+        '/usr/share/fonts/opentype/urw-base35/NimbusRoman-Italic.otf',
+    )),
+    ('Times', 'italic', 'bold', (
+        '/usr/share/fonts/opentype/urw-base35/NimbusRoman-BoldItalic.otf',
+    )),
+    # ---- Helvetica / Nimbus Sans -----------------------------------------
+    ('Helvetica', 'normal', 'normal', (
+        '/usr/share/fonts/opentype/urw-base35/NimbusSans-Regular.otf',
+    )),
+    ('Helvetica', 'normal', 'bold', (
+        '/usr/share/fonts/opentype/urw-base35/NimbusSans-Bold.otf',
+    )),
+    ('Helvetica', 'italic', 'normal', (
+        '/usr/share/fonts/opentype/urw-base35/NimbusSans-Italic.otf',
+    )),
+    ('Helvetica', 'italic', 'bold', (
+        '/usr/share/fonts/opentype/urw-base35/NimbusSans-BoldItalic.otf',
+    )),
+    # ---- Courier / Nimbus Mono PS ----------------------------------------
+    ('Courier', 'normal', 'normal', (
+        '/usr/share/fonts/opentype/urw-base35/NimbusMonoPS-Regular.otf',
+    )),
+    ('Courier', 'normal', 'bold', (
+        '/usr/share/fonts/opentype/urw-base35/NimbusMonoPS-Bold.otf',
+    )),
+    ('Courier', 'italic', 'normal', (
+        '/usr/share/fonts/opentype/urw-base35/NimbusMonoPS-Italic.otf',
+    )),
+    ('Courier', 'italic', 'bold', (
+        '/usr/share/fonts/opentype/urw-base35/NimbusMonoPS-BoldItalic.otf',
+    )),
+)
+
+
+def _build_font_face_css() -> tuple[str, list[str]]:
+    """Build @font-face CSS embedding Nimbus fonts as base64 data URLs.
+
+    Returns (css, used_paths).  If no source files are available the CSS is
+    empty and used_paths is [].  Each face is mapped to the Adobe family
+    name Lout's SVG back-end references ("Times" / "Helvetica" / "Courier"),
+    so an SVG `<text font-family="Times" font-weight="bold">` resolves to
+    the embedded Nimbus Roman Bold outlines (Ghostscript's own metric
+    source for the Adobe base 14).
+    """
+    import base64
+
+    pieces: list[str] = []
+    used: list[str] = []
+    for family, style, weight, candidates in _FONT_EMBED_SPECS:
+        path = next((p for p in candidates if os.path.isfile(p)), None)
+        if path is None:
+            continue
+        try:
+            with open(path, 'rb') as f:
+                raw = f.read()
+        except OSError:
+            continue
+        fmt = 'opentype' if path.endswith('.otf') else 'truetype'
+        b64 = base64.b64encode(raw).decode('ascii')
+        pieces.append(
+            "@font-face{"
+            f"font-family:'{family}';"
+            f"font-style:{style};"
+            f"font-weight:{weight};"
+            "font-display:block;"
+            f"src:url(data:font/{fmt};base64,{b64}) format('{fmt}');"
+            "}"
+        )
+        used.append(path)
+    return ''.join(pieces), used
+
+
 def _read_text_if_exists(paths: tuple[str, ...]) -> tuple[str | None, str | None]:
     """Return (contents, path) for the first existing file, else (None, None)."""
     for p in paths:
@@ -1275,6 +1381,7 @@ def _build_html_scaffold(
     external_assets: bool = False,
     math_engine: bool = True,
     music_engine: bool = True,
+    embed_fonts: bool = True,
 ) -> tuple[str, dict[str, str | None]]:
     """Wrap raw SVG output from lout -G in a self-contained HTML5 document.
 
@@ -1286,11 +1393,32 @@ def _build_html_scaffold(
         'katex_js': None,
         'katex_autorender': None,
         'abcjs': None,
+        'embedded_fonts': None,
     }
 
     head_parts: list[str] = [
         '<meta charset="utf-8">',
         f'<title>{_html_escape(title)}</title>',
+    ]
+
+    # ---- @font-face: align SVG glyph metrics with PostScript ----------------
+    # Lout's SVG back-end emits font-family="Times" / "Helvetica" / "Courier"
+    # (the Adobe base-14 names).  Without @font-face, browsers and librsvg
+    # substitute system "Times" etc. whose metrics drift from Adobe's AFMs —
+    # causing per-line glyph-advance mismatches between the PS and SVG renders
+    # of the same Lout output (Lout itself already broke lines identically).
+    # Embedding URW++ Nimbus (Ghostscript's own substitution for the Adobe
+    # base 14) at the family names the SVG references closes that gap.
+    if embed_fonts:
+        font_css, font_paths = _build_font_face_css()
+        if font_css:
+            head_parts.append(f'<style>{font_css}</style>')
+            info['embedded_fonts'] = (
+                f'{len(font_paths)} face(s) from '
+                f'{os.path.dirname(font_paths[0])} (inlined base64)'
+            )
+
+    head_parts.append(
         # Print stylesheet, page boundaries, .lout-page styling, math/music
         # sizing. Kept intentionally short — the scaffold is meant to be
         # readable and to defer rendering work to KaTeX / abcjs.
@@ -1306,8 +1434,8 @@ def _build_html_scaffold(
         '.abc-music svg{max-width:100%;height:auto}'
         '@media print{body{background:#fff;padding:0}'
         '.lout-page{box-shadow:none;margin:0;page-break-after:always}}'
-        '</style>',
-    ]
+        '</style>'
+    )
 
     # ---- KaTeX CSS + JS -----------------------------------------------------
     if math_engine:
@@ -1531,6 +1659,7 @@ def _build_once(args) -> str | None:
                 external_assets=args.external_assets,
                 math_engine=not args.no_math_engine,
                 music_engine=not args.no_music_engine,
+                embed_fonts=not args.no_font_embedding,
             )
             # Inject the live-reload <script> just before </body> so the
             # browser opens an EventSource to /events. Only active in
@@ -1788,6 +1917,12 @@ def main() -> None:
     parser.add_argument(
         '--no-music-engine', action='store_true',
         help='Omit abcjs from the generated HTML (smaller output)',
+    )
+    parser.add_argument(
+        '--no-font-embedding', action='store_true',
+        help='Do not inline URW++ Nimbus @font-face web fonts into the HTML '
+             '(smaller output; SVG text will fall back to system fonts and '
+             'may drift slightly from the PS/PDF render)',
     )
     parser.add_argument(
         '--watch', action='store_true',
