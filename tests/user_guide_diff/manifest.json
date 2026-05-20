@@ -1,62 +1,62 @@
 {
   "metadata": {
-    "generated_utc": "2026-05-20T10:19:27Z",
-    "lout_submodule_sha": "f423e35a34b213032f9a5ab5b8ee374637b73260",
+    "generated_utc": "2026-05-20T11:41:49Z",
+    "lout_submodule_sha": "c618ce34ef88cca20b1d1a6f30676bb1a32d7e26",
     "render_dpi": 100,
     "fuzz_percent": 5,
     "compare_metric": "AE",
     "ps_passes": 7,
     "svg_passes": 7,
     "ps_source": "lout/doc/user/all -> /tmp/user.ps",
-    "svg_source": "lout/doc/user/all -> /tmp/user.svg (pass 5 used; cross-reference passes alternated full/truncated output)"
+    "svg_source": "lout/doc/user/all -> /tmp/user.svg (largest converged pass)"
   },
   "summary": {
     "total_pages": 327,
-    "ok_lt_5pct": 3,
-    "diff_5_to_20pct": 298,
-    "bad_gt_20pct": 5,
-    "missing_svg_pages": 21
+    "ok_lt_5pct": 36,
+    "diff_5_to_20pct": 291,
+    "bad_gt_20pct": 0,
+    "missing_svg_pages": 0
   },
   "worst10": [
     {
-      "page": "015",
-      "diff_ratio": 0.2813
-    },
-    {
-      "page": "019",
-      "diff_ratio": 0.2715
-    },
-    {
-      "page": "303",
-      "diff_ratio": 0.2493
-    },
-    {
-      "page": "304",
-      "diff_ratio": 0.2325
-    },
-    {
-      "page": "244",
-      "diff_ratio": 0.2252
-    },
-    {
-      "page": "056",
-      "diff_ratio": 0.1943
-    },
-    {
-      "page": "082",
-      "diff_ratio": 0.1939
-    },
-    {
-      "page": "057",
-      "diff_ratio": 0.1903
+      "page": "248",
+      "diff_ratio": 0.1948
     },
     {
       "page": "086",
-      "diff_ratio": 0.1902
+      "diff_ratio": 0.1462
     },
     {
-      "page": "302",
-      "diff_ratio": 0.1861
+      "page": "090",
+      "diff_ratio": 0.1404
+    },
+    {
+      "page": "262",
+      "diff_ratio": 0.1345
+    },
+    {
+      "page": "056",
+      "diff_ratio": 0.122
+    },
+    {
+      "page": "063",
+      "diff_ratio": 0.1213
+    },
+    {
+      "page": "094",
+      "diff_ratio": 0.1183
+    },
+    {
+      "page": "095",
+      "diff_ratio": 0.1182
+    },
+    {
+      "page": "075",
+      "diff_ratio": 0.1165
+    },
+    {
+      "page": "019",
+      "diff_ratio": 0.1138
     }
   ],
   "pages": [
@@ -64,2617 +64,2617 @@
       "page": "001",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 31602,
-      "diff_ratio": 0.0327,
+      "diff_pixels": 14048,
+      "diff_ratio": 0.0145,
       "verdict": "OK"
     },
     {
       "page": "002",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 154998,
-      "diff_ratio": 0.1602,
+      "diff_pixels": 87894,
+      "diff_ratio": 0.0908,
       "verdict": "DIFF"
     },
     {
       "page": "003",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 40836,
-      "diff_ratio": 0.0422,
+      "diff_pixels": 40499,
+      "diff_ratio": 0.0419,
       "verdict": "OK"
     },
     {
       "page": "004",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 46403,
-      "diff_ratio": 0.048,
+      "diff_pixels": 47910,
+      "diff_ratio": 0.0495,
       "verdict": "OK"
     },
     {
       "page": "005",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 89133,
-      "diff_ratio": 0.0921,
-      "verdict": "DIFF"
+      "diff_pixels": 38516,
+      "diff_ratio": 0.0398,
+      "verdict": "OK"
     },
     {
       "page": "006",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 132891,
-      "diff_ratio": 0.1373,
+      "diff_pixels": 52783,
+      "diff_ratio": 0.0546,
       "verdict": "DIFF"
     },
     {
       "page": "007",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 104503,
-      "diff_ratio": 0.108,
-      "verdict": "DIFF"
+      "diff_pixels": 4827,
+      "diff_ratio": 0.005,
+      "verdict": "OK"
     },
     {
       "page": "008",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 73842,
-      "diff_ratio": 0.0763,
-      "verdict": "DIFF"
+      "diff_pixels": 0,
+      "diff_ratio": 0.0,
+      "verdict": "OK"
     },
     {
       "page": "009",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 120633,
-      "diff_ratio": 0.1247,
+      "diff_pixels": 53975,
+      "diff_ratio": 0.0558,
       "verdict": "DIFF"
     },
     {
       "page": "010",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 153638,
-      "diff_ratio": 0.1588,
+      "diff_pixels": 99623,
+      "diff_ratio": 0.103,
       "verdict": "DIFF"
     },
     {
       "page": "011",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 165073,
-      "diff_ratio": 0.1706,
+      "diff_pixels": 102870,
+      "diff_ratio": 0.1063,
       "verdict": "DIFF"
     },
     {
       "page": "012",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 113529,
-      "diff_ratio": 0.1173,
+      "diff_pixels": 71757,
+      "diff_ratio": 0.0742,
       "verdict": "DIFF"
     },
     {
       "page": "013",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 153660,
-      "diff_ratio": 0.1588,
+      "diff_pixels": 80315,
+      "diff_ratio": 0.083,
       "verdict": "DIFF"
     },
     {
       "page": "014",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 148787,
-      "diff_ratio": 0.1538,
+      "diff_pixels": 76894,
+      "diff_ratio": 0.0795,
       "verdict": "DIFF"
     },
     {
       "page": "015",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 272228,
-      "diff_ratio": 0.2813,
-      "verdict": "BAD"
+      "diff_pixels": 83415,
+      "diff_ratio": 0.0862,
+      "verdict": "DIFF"
     },
     {
       "page": "016",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 101046,
-      "diff_ratio": 0.1044,
-      "verdict": "DIFF"
+      "diff_pixels": 47954,
+      "diff_ratio": 0.0496,
+      "verdict": "OK"
     },
     {
       "page": "017",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 151636,
-      "diff_ratio": 0.1567,
+      "diff_pixels": 88492,
+      "diff_ratio": 0.0915,
       "verdict": "DIFF"
     },
     {
       "page": "018",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 162823,
-      "diff_ratio": 0.1683,
+      "diff_pixels": 96875,
+      "diff_ratio": 0.1001,
       "verdict": "DIFF"
     },
     {
       "page": "019",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 262714,
-      "diff_ratio": 0.2715,
-      "verdict": "BAD"
+      "diff_pixels": 110108,
+      "diff_ratio": 0.1138,
+      "verdict": "DIFF"
     },
     {
       "page": "020",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 117624,
-      "diff_ratio": 0.1216,
+      "diff_pixels": 60425,
+      "diff_ratio": 0.0624,
       "verdict": "DIFF"
     },
     {
       "page": "021",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 159357,
-      "diff_ratio": 0.1647,
+      "diff_pixels": 78230,
+      "diff_ratio": 0.0809,
       "verdict": "DIFF"
     },
     {
       "page": "022",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 162221,
-      "diff_ratio": 0.1677,
+      "diff_pixels": 90108,
+      "diff_ratio": 0.0931,
       "verdict": "DIFF"
     },
     {
       "page": "023",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 127565,
-      "diff_ratio": 0.1318,
+      "diff_pixels": 76042,
+      "diff_ratio": 0.0786,
       "verdict": "DIFF"
     },
     {
       "page": "024",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 115968,
-      "diff_ratio": 0.1199,
+      "diff_pixels": 75074,
+      "diff_ratio": 0.0776,
       "verdict": "DIFF"
     },
     {
       "page": "025",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 138207,
-      "diff_ratio": 0.1428,
+      "diff_pixels": 98823,
+      "diff_ratio": 0.1021,
       "verdict": "DIFF"
     },
     {
       "page": "026",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 150606,
-      "diff_ratio": 0.1557,
+      "diff_pixels": 91271,
+      "diff_ratio": 0.0943,
       "verdict": "DIFF"
     },
     {
       "page": "027",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 125971,
-      "diff_ratio": 0.1302,
+      "diff_pixels": 64678,
+      "diff_ratio": 0.0668,
       "verdict": "DIFF"
     },
     {
       "page": "028",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 101892,
-      "diff_ratio": 0.1053,
+      "diff_pixels": 48984,
+      "diff_ratio": 0.0506,
       "verdict": "DIFF"
     },
     {
       "page": "029",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 103926,
-      "diff_ratio": 0.1074,
+      "diff_pixels": 58201,
+      "diff_ratio": 0.0602,
       "verdict": "DIFF"
     },
     {
       "page": "030",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 143458,
-      "diff_ratio": 0.1483,
+      "diff_pixels": 77912,
+      "diff_ratio": 0.0805,
       "verdict": "DIFF"
     },
     {
       "page": "031",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 124055,
-      "diff_ratio": 0.1282,
+      "diff_pixels": 76090,
+      "diff_ratio": 0.0786,
       "verdict": "DIFF"
     },
     {
       "page": "032",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 114348,
-      "diff_ratio": 0.1182,
+      "diff_pixels": 63062,
+      "diff_ratio": 0.0652,
       "verdict": "DIFF"
     },
     {
       "page": "033",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 133160,
-      "diff_ratio": 0.1376,
+      "diff_pixels": 72403,
+      "diff_ratio": 0.0748,
       "verdict": "DIFF"
     },
     {
       "page": "034",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 136554,
-      "diff_ratio": 0.1411,
+      "diff_pixels": 77048,
+      "diff_ratio": 0.0796,
       "verdict": "DIFF"
     },
     {
       "page": "035",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 126094,
-      "diff_ratio": 0.1303,
+      "diff_pixels": 65127,
+      "diff_ratio": 0.0673,
       "verdict": "DIFF"
     },
     {
       "page": "036",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 85817,
-      "diff_ratio": 0.0887,
+      "diff_pixels": 64178,
+      "diff_ratio": 0.0663,
       "verdict": "DIFF"
     },
     {
       "page": "037",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 142718,
-      "diff_ratio": 0.1475,
+      "diff_pixels": 75927,
+      "diff_ratio": 0.0785,
       "verdict": "DIFF"
     },
     {
       "page": "038",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 121695,
-      "diff_ratio": 0.1258,
+      "diff_pixels": 69648,
+      "diff_ratio": 0.072,
       "verdict": "DIFF"
     },
     {
       "page": "039",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 137073,
-      "diff_ratio": 0.1417,
+      "diff_pixels": 76565,
+      "diff_ratio": 0.0791,
       "verdict": "DIFF"
     },
     {
       "page": "040",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 93874,
-      "diff_ratio": 0.097,
-      "verdict": "DIFF"
+      "diff_pixels": 26153,
+      "diff_ratio": 0.027,
+      "verdict": "OK"
     },
     {
       "page": "041",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 150818,
-      "diff_ratio": 0.1559,
+      "diff_pixels": 86638,
+      "diff_ratio": 0.0895,
       "verdict": "DIFF"
     },
     {
       "page": "042",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 128798,
-      "diff_ratio": 0.1331,
+      "diff_pixels": 67143,
+      "diff_ratio": 0.0694,
       "verdict": "DIFF"
     },
     {
       "page": "043",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 158606,
-      "diff_ratio": 0.1639,
+      "diff_pixels": 76191,
+      "diff_ratio": 0.0787,
       "verdict": "DIFF"
     },
     {
       "page": "044",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 127512,
-      "diff_ratio": 0.1318,
+      "diff_pixels": 72851,
+      "diff_ratio": 0.0753,
       "verdict": "DIFF"
     },
     {
       "page": "045",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 141409,
-      "diff_ratio": 0.1461,
+      "diff_pixels": 86838,
+      "diff_ratio": 0.0897,
       "verdict": "DIFF"
     },
     {
       "page": "046",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 159302,
-      "diff_ratio": 0.1646,
+      "diff_pixels": 80431,
+      "diff_ratio": 0.0831,
       "verdict": "DIFF"
     },
     {
       "page": "047",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 171545,
-      "diff_ratio": 0.1773,
+      "diff_pixels": 96612,
+      "diff_ratio": 0.0998,
       "verdict": "DIFF"
     },
     {
       "page": "048",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 138532,
-      "diff_ratio": 0.1432,
+      "diff_pixels": 70884,
+      "diff_ratio": 0.0733,
       "verdict": "DIFF"
     },
     {
       "page": "049",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 140442,
-      "diff_ratio": 0.1451,
+      "diff_pixels": 76490,
+      "diff_ratio": 0.0791,
       "verdict": "DIFF"
     },
     {
       "page": "050",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 172444,
-      "diff_ratio": 0.1782,
+      "diff_pixels": 99172,
+      "diff_ratio": 0.1025,
       "verdict": "DIFF"
     },
     {
       "page": "051",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 171463,
-      "diff_ratio": 0.1772,
+      "diff_pixels": 91393,
+      "diff_ratio": 0.0945,
       "verdict": "DIFF"
     },
     {
       "page": "052",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 172654,
-      "diff_ratio": 0.1784,
+      "diff_pixels": 83500,
+      "diff_ratio": 0.0863,
       "verdict": "DIFF"
     },
     {
       "page": "053",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 165512,
-      "diff_ratio": 0.1711,
+      "diff_pixels": 84479,
+      "diff_ratio": 0.0873,
       "verdict": "DIFF"
     },
     {
       "page": "054",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 167189,
-      "diff_ratio": 0.1728,
+      "diff_pixels": 96995,
+      "diff_ratio": 0.1002,
       "verdict": "DIFF"
     },
     {
       "page": "055",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 154565,
-      "diff_ratio": 0.1597,
+      "diff_pixels": 101939,
+      "diff_ratio": 0.1054,
       "verdict": "DIFF"
     },
     {
       "page": "056",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 187998,
-      "diff_ratio": 0.1943,
+      "diff_pixels": 118068,
+      "diff_ratio": 0.122,
       "verdict": "DIFF"
     },
     {
       "page": "057",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 184117,
-      "diff_ratio": 0.1903,
+      "diff_pixels": 108174,
+      "diff_ratio": 0.1118,
       "verdict": "DIFF"
     },
     {
       "page": "058",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 152259,
-      "diff_ratio": 0.1574,
+      "diff_pixels": 98291,
+      "diff_ratio": 0.1016,
       "verdict": "DIFF"
     },
     {
       "page": "059",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 166857,
-      "diff_ratio": 0.1724,
+      "diff_pixels": 73593,
+      "diff_ratio": 0.0761,
       "verdict": "DIFF"
     },
     {
       "page": "060",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 177140,
-      "diff_ratio": 0.1831,
+      "diff_pixels": 106734,
+      "diff_ratio": 0.1103,
       "verdict": "DIFF"
     },
     {
       "page": "061",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 177410,
-      "diff_ratio": 0.1834,
+      "diff_pixels": 96999,
+      "diff_ratio": 0.1002,
       "verdict": "DIFF"
     },
     {
       "page": "062",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 148701,
-      "diff_ratio": 0.1537,
+      "diff_pixels": 81212,
+      "diff_ratio": 0.0839,
       "verdict": "DIFF"
     },
     {
       "page": "063",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 174041,
-      "diff_ratio": 0.1799,
+      "diff_pixels": 117381,
+      "diff_ratio": 0.1213,
       "verdict": "DIFF"
     },
     {
       "page": "064",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 165182,
-      "diff_ratio": 0.1707,
+      "diff_pixels": 97114,
+      "diff_ratio": 0.1004,
       "verdict": "DIFF"
     },
     {
       "page": "065",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 151842,
-      "diff_ratio": 0.1569,
+      "diff_pixels": 96979,
+      "diff_ratio": 0.1002,
       "verdict": "DIFF"
     },
     {
       "page": "066",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 165572,
-      "diff_ratio": 0.1711,
+      "diff_pixels": 86105,
+      "diff_ratio": 0.089,
       "verdict": "DIFF"
     },
     {
       "page": "067",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 144902,
-      "diff_ratio": 0.1498,
+      "diff_pixels": 94669,
+      "diff_ratio": 0.0978,
       "verdict": "DIFF"
     },
     {
       "page": "068",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 140890,
-      "diff_ratio": 0.1456,
+      "diff_pixels": 92026,
+      "diff_ratio": 0.0951,
       "verdict": "DIFF"
     },
     {
       "page": "069",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 152768,
-      "diff_ratio": 0.1579,
+      "diff_pixels": 76766,
+      "diff_ratio": 0.0793,
       "verdict": "DIFF"
     },
     {
       "page": "070",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 146064,
-      "diff_ratio": 0.151,
+      "diff_pixels": 95560,
+      "diff_ratio": 0.0988,
       "verdict": "DIFF"
     },
     {
       "page": "071",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 159908,
-      "diff_ratio": 0.1653,
+      "diff_pixels": 71817,
+      "diff_ratio": 0.0742,
       "verdict": "DIFF"
     },
     {
       "page": "072",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 151429,
-      "diff_ratio": 0.1565,
+      "diff_pixels": 69882,
+      "diff_ratio": 0.0722,
       "verdict": "DIFF"
     },
     {
       "page": "073",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 156390,
-      "diff_ratio": 0.1616,
+      "diff_pixels": 99240,
+      "diff_ratio": 0.1026,
       "verdict": "DIFF"
     },
     {
       "page": "074",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 151065,
-      "diff_ratio": 0.1561,
+      "diff_pixels": 72619,
+      "diff_ratio": 0.0751,
       "verdict": "DIFF"
     },
     {
       "page": "075",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 111081,
-      "diff_ratio": 0.1148,
+      "diff_pixels": 112709,
+      "diff_ratio": 0.1165,
       "verdict": "DIFF"
     },
     {
       "page": "076",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 123452,
-      "diff_ratio": 0.1276,
+      "diff_pixels": 100497,
+      "diff_ratio": 0.1039,
       "verdict": "DIFF"
     },
     {
       "page": "077",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 152997,
-      "diff_ratio": 0.1581,
+      "diff_pixels": 77286,
+      "diff_ratio": 0.0799,
       "verdict": "DIFF"
     },
     {
       "page": "078",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 132217,
-      "diff_ratio": 0.1366,
+      "diff_pixels": 106009,
+      "diff_ratio": 0.1096,
       "verdict": "DIFF"
     },
     {
       "page": "079",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 138396,
-      "diff_ratio": 0.143,
+      "diff_pixels": 55454,
+      "diff_ratio": 0.0573,
       "verdict": "DIFF"
     },
     {
       "page": "080",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 118558,
-      "diff_ratio": 0.1225,
+      "diff_pixels": 66964,
+      "diff_ratio": 0.0692,
       "verdict": "DIFF"
     },
     {
       "page": "081",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 149518,
-      "diff_ratio": 0.1545,
+      "diff_pixels": 109608,
+      "diff_ratio": 0.1133,
       "verdict": "DIFF"
     },
     {
       "page": "082",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 187571,
-      "diff_ratio": 0.1939,
+      "diff_pixels": 78147,
+      "diff_ratio": 0.0808,
       "verdict": "DIFF"
     },
     {
       "page": "083",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 117736,
-      "diff_ratio": 0.1217,
+      "diff_pixels": 92520,
+      "diff_ratio": 0.0956,
       "verdict": "DIFF"
     },
     {
       "page": "084",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 151969,
-      "diff_ratio": 0.1571,
+      "diff_pixels": 78101,
+      "diff_ratio": 0.0807,
       "verdict": "DIFF"
     },
     {
       "page": "085",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 121739,
-      "diff_ratio": 0.1258,
+      "diff_pixels": 96505,
+      "diff_ratio": 0.0997,
       "verdict": "DIFF"
     },
     {
       "page": "086",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 184032,
-      "diff_ratio": 0.1902,
+      "diff_pixels": 141495,
+      "diff_ratio": 0.1462,
       "verdict": "DIFF"
     },
     {
       "page": "087",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 146493,
-      "diff_ratio": 0.1514,
+      "diff_pixels": 66156,
+      "diff_ratio": 0.0684,
       "verdict": "DIFF"
     },
     {
       "page": "088",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 107159,
-      "diff_ratio": 0.1107,
+      "diff_pixels": 100517,
+      "diff_ratio": 0.1039,
       "verdict": "DIFF"
     },
     {
       "page": "089",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 128261,
-      "diff_ratio": 0.1326,
+      "diff_pixels": 81009,
+      "diff_ratio": 0.0837,
       "verdict": "DIFF"
     },
     {
       "page": "090",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 157602,
-      "diff_ratio": 0.1629,
+      "diff_pixels": 135862,
+      "diff_ratio": 0.1404,
       "verdict": "DIFF"
     },
     {
       "page": "091",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 160361,
-      "diff_ratio": 0.1657,
+      "diff_pixels": 97936,
+      "diff_ratio": 0.1012,
       "verdict": "DIFF"
     },
     {
       "page": "092",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 150050,
-      "diff_ratio": 0.1551,
+      "diff_pixels": 56126,
+      "diff_ratio": 0.058,
       "verdict": "DIFF"
     },
     {
       "page": "093",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 147809,
-      "diff_ratio": 0.1528,
+      "diff_pixels": 78047,
+      "diff_ratio": 0.0807,
       "verdict": "DIFF"
     },
     {
       "page": "094",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 131660,
-      "diff_ratio": 0.1361,
+      "diff_pixels": 114455,
+      "diff_ratio": 0.1183,
       "verdict": "DIFF"
     },
     {
       "page": "095",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 123299,
-      "diff_ratio": 0.1274,
+      "diff_pixels": 114328,
+      "diff_ratio": 0.1182,
       "verdict": "DIFF"
     },
     {
       "page": "096",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 148464,
-      "diff_ratio": 0.1534,
+      "diff_pixels": 109403,
+      "diff_ratio": 0.1131,
       "verdict": "DIFF"
     },
     {
       "page": "097",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 131776,
-      "diff_ratio": 0.1362,
+      "diff_pixels": 97887,
+      "diff_ratio": 0.1012,
       "verdict": "DIFF"
     },
     {
       "page": "098",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 124563,
-      "diff_ratio": 0.1287,
+      "diff_pixels": 85802,
+      "diff_ratio": 0.0887,
       "verdict": "DIFF"
     },
     {
       "page": "099",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 144820,
-      "diff_ratio": 0.1497,
+      "diff_pixels": 75725,
+      "diff_ratio": 0.0783,
       "verdict": "DIFF"
     },
     {
       "page": "100",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 155400,
-      "diff_ratio": 0.1606,
+      "diff_pixels": 105323,
+      "diff_ratio": 0.1089,
       "verdict": "DIFF"
     },
     {
       "page": "101",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 129423,
-      "diff_ratio": 0.1338,
+      "diff_pixels": 83024,
+      "diff_ratio": 0.0858,
       "verdict": "DIFF"
     },
     {
       "page": "102",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 121816,
-      "diff_ratio": 0.1259,
+      "diff_pixels": 73592,
+      "diff_ratio": 0.0761,
       "verdict": "DIFF"
     },
     {
       "page": "103",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 133713,
-      "diff_ratio": 0.1382,
+      "diff_pixels": 97067,
+      "diff_ratio": 0.1003,
       "verdict": "DIFF"
     },
     {
       "page": "104",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 129418,
-      "diff_ratio": 0.1338,
+      "diff_pixels": 105233,
+      "diff_ratio": 0.1088,
       "verdict": "DIFF"
     },
     {
       "page": "105",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 122308,
-      "diff_ratio": 0.1264,
+      "diff_pixels": 78467,
+      "diff_ratio": 0.0811,
       "verdict": "DIFF"
     },
     {
       "page": "106",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 126558,
-      "diff_ratio": 0.1308,
+      "diff_pixels": 71049,
+      "diff_ratio": 0.0734,
       "verdict": "DIFF"
     },
     {
       "page": "107",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 117876,
-      "diff_ratio": 0.1218,
+      "diff_pixels": 79189,
+      "diff_ratio": 0.0818,
       "verdict": "DIFF"
     },
     {
       "page": "108",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 120794,
-      "diff_ratio": 0.1248,
+      "diff_pixels": 91618,
+      "diff_ratio": 0.0947,
       "verdict": "DIFF"
     },
     {
       "page": "109",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 117001,
-      "diff_ratio": 0.1209,
+      "diff_pixels": 77917,
+      "diff_ratio": 0.0805,
       "verdict": "DIFF"
     },
     {
       "page": "110",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 95843,
-      "diff_ratio": 0.0991,
+      "diff_pixels": 76073,
+      "diff_ratio": 0.0786,
       "verdict": "DIFF"
     },
     {
       "page": "111",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 139347,
-      "diff_ratio": 0.144,
+      "diff_pixels": 69926,
+      "diff_ratio": 0.0723,
       "verdict": "DIFF"
     },
     {
       "page": "112",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 133260,
-      "diff_ratio": 0.1377,
+      "diff_pixels": 67901,
+      "diff_ratio": 0.0702,
       "verdict": "DIFF"
     },
     {
       "page": "113",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 135568,
-      "diff_ratio": 0.1401,
+      "diff_pixels": 70605,
+      "diff_ratio": 0.073,
       "verdict": "DIFF"
     },
     {
       "page": "114",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 135629,
-      "diff_ratio": 0.1402,
-      "verdict": "DIFF"
+      "diff_pixels": 45626,
+      "diff_ratio": 0.0472,
+      "verdict": "OK"
     },
     {
       "page": "115",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 120704,
-      "diff_ratio": 0.1247,
+      "diff_pixels": 94712,
+      "diff_ratio": 0.0979,
       "verdict": "DIFF"
     },
     {
       "page": "116",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 137920,
-      "diff_ratio": 0.1425,
+      "diff_pixels": 86567,
+      "diff_ratio": 0.0895,
       "verdict": "DIFF"
     },
     {
       "page": "117",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 142338,
-      "diff_ratio": 0.1471,
+      "diff_pixels": 94602,
+      "diff_ratio": 0.0978,
       "verdict": "DIFF"
     },
     {
       "page": "118",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 132830,
-      "diff_ratio": 0.1373,
+      "diff_pixels": 91441,
+      "diff_ratio": 0.0945,
       "verdict": "DIFF"
     },
     {
       "page": "119",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 136808,
-      "diff_ratio": 0.1414,
+      "diff_pixels": 65265,
+      "diff_ratio": 0.0675,
       "verdict": "DIFF"
     },
     {
       "page": "120",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 139940,
-      "diff_ratio": 0.1446,
+      "diff_pixels": 83237,
+      "diff_ratio": 0.086,
       "verdict": "DIFF"
     },
     {
       "page": "121",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 133275,
-      "diff_ratio": 0.1377,
+      "diff_pixels": 96301,
+      "diff_ratio": 0.0995,
       "verdict": "DIFF"
     },
     {
       "page": "122",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 122935,
-      "diff_ratio": 0.1271,
+      "diff_pixels": 81570,
+      "diff_ratio": 0.0843,
       "verdict": "DIFF"
     },
     {
       "page": "123",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 123159,
-      "diff_ratio": 0.1273,
+      "diff_pixels": 84957,
+      "diff_ratio": 0.0878,
       "verdict": "DIFF"
     },
     {
       "page": "124",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 136277,
-      "diff_ratio": 0.1408,
+      "diff_pixels": 93216,
+      "diff_ratio": 0.0963,
       "verdict": "DIFF"
     },
     {
       "page": "125",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 140217,
-      "diff_ratio": 0.1449,
+      "diff_pixels": 88873,
+      "diff_ratio": 0.0918,
       "verdict": "DIFF"
     },
     {
       "page": "126",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 151968,
-      "diff_ratio": 0.1571,
+      "diff_pixels": 76447,
+      "diff_ratio": 0.079,
       "verdict": "DIFF"
     },
     {
       "page": "127",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 131596,
-      "diff_ratio": 0.136,
+      "diff_pixels": 80817,
+      "diff_ratio": 0.0835,
       "verdict": "DIFF"
     },
     {
       "page": "128",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 133063,
-      "diff_ratio": 0.1375,
+      "diff_pixels": 84770,
+      "diff_ratio": 0.0876,
       "verdict": "DIFF"
     },
     {
       "page": "129",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 114232,
-      "diff_ratio": 0.1181,
+      "diff_pixels": 91612,
+      "diff_ratio": 0.0947,
       "verdict": "DIFF"
     },
     {
       "page": "130",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 130447,
-      "diff_ratio": 0.1348,
+      "diff_pixels": 99474,
+      "diff_ratio": 0.1028,
       "verdict": "DIFF"
     },
     {
       "page": "131",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 112883,
-      "diff_ratio": 0.1167,
+      "diff_pixels": 83743,
+      "diff_ratio": 0.0865,
       "verdict": "DIFF"
     },
     {
       "page": "132",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 122379,
-      "diff_ratio": 0.1265,
+      "diff_pixels": 96788,
+      "diff_ratio": 0.1,
       "verdict": "DIFF"
     },
     {
       "page": "133",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 101890,
-      "diff_ratio": 0.1053,
+      "diff_pixels": 55233,
+      "diff_ratio": 0.0571,
       "verdict": "DIFF"
     },
     {
       "page": "134",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 99723,
-      "diff_ratio": 0.1031,
+      "diff_pixels": 78248,
+      "diff_ratio": 0.0809,
       "verdict": "DIFF"
     },
     {
       "page": "135",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 140715,
-      "diff_ratio": 0.1454,
+      "diff_pixels": 54146,
+      "diff_ratio": 0.056,
       "verdict": "DIFF"
     },
     {
       "page": "136",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 119401,
-      "diff_ratio": 0.1234,
+      "diff_pixels": 64439,
+      "diff_ratio": 0.0666,
       "verdict": "DIFF"
     },
     {
       "page": "137",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 136979,
-      "diff_ratio": 0.1416,
-      "verdict": "DIFF"
+      "diff_pixels": 48283,
+      "diff_ratio": 0.0499,
+      "verdict": "OK"
     },
     {
       "page": "138",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 121212,
-      "diff_ratio": 0.1253,
-      "verdict": "DIFF"
+      "diff_pixels": 42153,
+      "diff_ratio": 0.0436,
+      "verdict": "OK"
     },
     {
       "page": "139",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 113270,
-      "diff_ratio": 0.1171,
+      "diff_pixels": 53394,
+      "diff_ratio": 0.0552,
       "verdict": "DIFF"
     },
     {
       "page": "140",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 101008,
-      "diff_ratio": 0.1044,
+      "diff_pixels": 60067,
+      "diff_ratio": 0.0621,
       "verdict": "DIFF"
     },
     {
       "page": "141",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 103607,
-      "diff_ratio": 0.1071,
+      "diff_pixels": 63189,
+      "diff_ratio": 0.0653,
       "verdict": "DIFF"
     },
     {
       "page": "142",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 117436,
-      "diff_ratio": 0.1214,
+      "diff_pixels": 64018,
+      "diff_ratio": 0.0662,
       "verdict": "DIFF"
     },
     {
       "page": "143",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 113380,
-      "diff_ratio": 0.1172,
+      "diff_pixels": 59906,
+      "diff_ratio": 0.0619,
       "verdict": "DIFF"
     },
     {
       "page": "144",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 133955,
-      "diff_ratio": 0.1384,
-      "verdict": "DIFF"
+      "diff_pixels": 47189,
+      "diff_ratio": 0.0488,
+      "verdict": "OK"
     },
     {
       "page": "145",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 116730,
-      "diff_ratio": 0.1206,
+      "diff_pixels": 50336,
+      "diff_ratio": 0.052,
       "verdict": "DIFF"
     },
     {
       "page": "146",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 140950,
-      "diff_ratio": 0.1457,
+      "diff_pixels": 70878,
+      "diff_ratio": 0.0733,
       "verdict": "DIFF"
     },
     {
       "page": "147",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 115524,
-      "diff_ratio": 0.1194,
+      "diff_pixels": 60879,
+      "diff_ratio": 0.0629,
       "verdict": "DIFF"
     },
     {
       "page": "148",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 124484,
-      "diff_ratio": 0.1287,
+      "diff_pixels": 84436,
+      "diff_ratio": 0.0873,
       "verdict": "DIFF"
     },
     {
       "page": "149",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 115404,
-      "diff_ratio": 0.1193,
+      "diff_pixels": 73323,
+      "diff_ratio": 0.0758,
       "verdict": "DIFF"
     },
     {
       "page": "150",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 115852,
-      "diff_ratio": 0.1197,
+      "diff_pixels": 86419,
+      "diff_ratio": 0.0893,
       "verdict": "DIFF"
     },
     {
       "page": "151",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 76474,
-      "diff_ratio": 0.079,
+      "diff_pixels": 65955,
+      "diff_ratio": 0.0682,
       "verdict": "DIFF"
     },
     {
       "page": "152",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 119660,
-      "diff_ratio": 0.1237,
+      "diff_pixels": 76389,
+      "diff_ratio": 0.0789,
       "verdict": "DIFF"
     },
     {
       "page": "153",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 116427,
-      "diff_ratio": 0.1203,
+      "diff_pixels": 62388,
+      "diff_ratio": 0.0645,
       "verdict": "DIFF"
     },
     {
       "page": "154",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 121471,
-      "diff_ratio": 0.1255,
+      "diff_pixels": 61439,
+      "diff_ratio": 0.0635,
       "verdict": "DIFF"
     },
     {
       "page": "155",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 127012,
-      "diff_ratio": 0.1313,
-      "verdict": "DIFF"
+      "diff_pixels": 12534,
+      "diff_ratio": 0.013,
+      "verdict": "OK"
     },
     {
       "page": "156",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 108580,
-      "diff_ratio": 0.1122,
+      "diff_pixels": 61074,
+      "diff_ratio": 0.0631,
       "verdict": "DIFF"
     },
     {
       "page": "157",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 111221,
-      "diff_ratio": 0.1149,
+      "diff_pixels": 62558,
+      "diff_ratio": 0.0647,
       "verdict": "DIFF"
     },
     {
       "page": "158",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 134117,
-      "diff_ratio": 0.1386,
+      "diff_pixels": 65438,
+      "diff_ratio": 0.0676,
       "verdict": "DIFF"
     },
     {
       "page": "159",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 137784,
-      "diff_ratio": 0.1424,
+      "diff_pixels": 76832,
+      "diff_ratio": 0.0794,
       "verdict": "DIFF"
     },
     {
       "page": "160",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 113020,
-      "diff_ratio": 0.1168,
+      "diff_pixels": 51201,
+      "diff_ratio": 0.0529,
       "verdict": "DIFF"
     },
     {
       "page": "161",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 116121,
-      "diff_ratio": 0.12,
+      "diff_pixels": 50311,
+      "diff_ratio": 0.052,
       "verdict": "DIFF"
     },
     {
       "page": "162",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 110448,
-      "diff_ratio": 0.1141,
+      "diff_pixels": 81856,
+      "diff_ratio": 0.0846,
       "verdict": "DIFF"
     },
     {
       "page": "163",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 128709,
-      "diff_ratio": 0.133,
+      "diff_pixels": 89748,
+      "diff_ratio": 0.0928,
       "verdict": "DIFF"
     },
     {
       "page": "164",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 95220,
-      "diff_ratio": 0.0984,
+      "diff_pixels": 63163,
+      "diff_ratio": 0.0653,
       "verdict": "DIFF"
     },
     {
       "page": "165",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 118387,
-      "diff_ratio": 0.1224,
+      "diff_pixels": 60622,
+      "diff_ratio": 0.0627,
       "verdict": "DIFF"
     },
     {
       "page": "166",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 118239,
-      "diff_ratio": 0.1222,
+      "diff_pixels": 49162,
+      "diff_ratio": 0.0508,
       "verdict": "DIFF"
     },
     {
       "page": "167",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 120450,
-      "diff_ratio": 0.1245,
+      "diff_pixels": 74153,
+      "diff_ratio": 0.0766,
       "verdict": "DIFF"
     },
     {
       "page": "168",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 94254,
-      "diff_ratio": 0.0974,
-      "verdict": "DIFF"
+      "diff_pixels": 33842,
+      "diff_ratio": 0.035,
+      "verdict": "OK"
     },
     {
       "page": "169",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 145645,
-      "diff_ratio": 0.1505,
+      "diff_pixels": 62374,
+      "diff_ratio": 0.0645,
       "verdict": "DIFF"
     },
     {
       "page": "170",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 117489,
-      "diff_ratio": 0.1214,
+      "diff_pixels": 63064,
+      "diff_ratio": 0.0652,
       "verdict": "DIFF"
     },
     {
       "page": "171",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 137158,
-      "diff_ratio": 0.1418,
+      "diff_pixels": 63593,
+      "diff_ratio": 0.0657,
       "verdict": "DIFF"
     },
     {
       "page": "172",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 147994,
-      "diff_ratio": 0.153,
-      "verdict": "DIFF"
+      "diff_pixels": 32950,
+      "diff_ratio": 0.0341,
+      "verdict": "OK"
     },
     {
       "page": "173",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 118967,
-      "diff_ratio": 0.123,
+      "diff_pixels": 60347,
+      "diff_ratio": 0.0624,
       "verdict": "DIFF"
     },
     {
       "page": "174",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 144938,
-      "diff_ratio": 0.1498,
+      "diff_pixels": 64674,
+      "diff_ratio": 0.0668,
       "verdict": "DIFF"
     },
     {
       "page": "175",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 128140,
-      "diff_ratio": 0.1324,
+      "diff_pixels": 83809,
+      "diff_ratio": 0.0866,
       "verdict": "DIFF"
     },
     {
       "page": "176",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 128891,
-      "diff_ratio": 0.1332,
+      "diff_pixels": 94075,
+      "diff_ratio": 0.0972,
       "verdict": "DIFF"
     },
     {
       "page": "177",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 104003,
-      "diff_ratio": 0.1075,
+      "diff_pixels": 63399,
+      "diff_ratio": 0.0655,
       "verdict": "DIFF"
     },
     {
       "page": "178",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 131004,
-      "diff_ratio": 0.1354,
+      "diff_pixels": 88684,
+      "diff_ratio": 0.0917,
       "verdict": "DIFF"
     },
     {
       "page": "179",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 113802,
-      "diff_ratio": 0.1176,
+      "diff_pixels": 74877,
+      "diff_ratio": 0.0774,
       "verdict": "DIFF"
     },
     {
       "page": "180",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 109692,
-      "diff_ratio": 0.1134,
+      "diff_pixels": 73765,
+      "diff_ratio": 0.0762,
       "verdict": "DIFF"
     },
     {
       "page": "181",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 153401,
-      "diff_ratio": 0.1585,
-      "verdict": "DIFF"
+      "diff_pixels": 46002,
+      "diff_ratio": 0.0475,
+      "verdict": "OK"
     },
     {
       "page": "182",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 121503,
-      "diff_ratio": 0.1256,
+      "diff_pixels": 67157,
+      "diff_ratio": 0.0694,
       "verdict": "DIFF"
     },
     {
       "page": "183",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 116665,
-      "diff_ratio": 0.1206,
+      "diff_pixels": 58984,
+      "diff_ratio": 0.061,
       "verdict": "DIFF"
     },
     {
       "page": "184",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 132855,
-      "diff_ratio": 0.1373,
+      "diff_pixels": 57460,
+      "diff_ratio": 0.0594,
       "verdict": "DIFF"
     },
     {
       "page": "185",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 128924,
-      "diff_ratio": 0.1332,
+      "diff_pixels": 105013,
+      "diff_ratio": 0.1085,
       "verdict": "DIFF"
     },
     {
       "page": "186",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 95859,
-      "diff_ratio": 0.0991,
+      "diff_pixels": 67289,
+      "diff_ratio": 0.0695,
       "verdict": "DIFF"
     },
     {
       "page": "187",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 113546,
-      "diff_ratio": 0.1173,
+      "diff_pixels": 57913,
+      "diff_ratio": 0.0599,
       "verdict": "DIFF"
     },
     {
       "page": "188",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 130049,
-      "diff_ratio": 0.1344,
+      "diff_pixels": 79743,
+      "diff_ratio": 0.0824,
       "verdict": "DIFF"
     },
     {
       "page": "189",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 130099,
-      "diff_ratio": 0.1345,
+      "diff_pixels": 76080,
+      "diff_ratio": 0.0786,
       "verdict": "DIFF"
     },
     {
       "page": "190",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 129549,
-      "diff_ratio": 0.1339,
-      "verdict": "DIFF"
+      "diff_pixels": 33909,
+      "diff_ratio": 0.035,
+      "verdict": "OK"
     },
     {
       "page": "191",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 116027,
-      "diff_ratio": 0.1199,
+      "diff_pixels": 56870,
+      "diff_ratio": 0.0588,
       "verdict": "DIFF"
     },
     {
       "page": "192",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 133614,
-      "diff_ratio": 0.1381,
+      "diff_pixels": 79863,
+      "diff_ratio": 0.0825,
       "verdict": "DIFF"
     },
     {
       "page": "193",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 119902,
-      "diff_ratio": 0.1239,
+      "diff_pixels": 74535,
+      "diff_ratio": 0.077,
       "verdict": "DIFF"
     },
     {
       "page": "194",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 121342,
-      "diff_ratio": 0.1254,
+      "diff_pixels": 78475,
+      "diff_ratio": 0.0811,
       "verdict": "DIFF"
     },
     {
       "page": "195",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 121768,
-      "diff_ratio": 0.1258,
+      "diff_pixels": 58976,
+      "diff_ratio": 0.061,
       "verdict": "DIFF"
     },
     {
       "page": "196",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 126597,
-      "diff_ratio": 0.1308,
+      "diff_pixels": 73064,
+      "diff_ratio": 0.0755,
       "verdict": "DIFF"
     },
     {
       "page": "197",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 113209,
-      "diff_ratio": 0.117,
+      "diff_pixels": 63032,
+      "diff_ratio": 0.0651,
       "verdict": "DIFF"
     },
     {
       "page": "198",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 117877,
-      "diff_ratio": 0.1218,
+      "diff_pixels": 63041,
+      "diff_ratio": 0.0652,
       "verdict": "DIFF"
     },
     {
       "page": "199",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 107033,
-      "diff_ratio": 0.1106,
+      "diff_pixels": 71099,
+      "diff_ratio": 0.0735,
       "verdict": "DIFF"
     },
     {
       "page": "200",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 127759,
-      "diff_ratio": 0.132,
+      "diff_pixels": 68527,
+      "diff_ratio": 0.0708,
       "verdict": "DIFF"
     },
     {
       "page": "201",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 125654,
-      "diff_ratio": 0.1299,
+      "diff_pixels": 54518,
+      "diff_ratio": 0.0563,
       "verdict": "DIFF"
     },
     {
       "page": "202",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 138084,
-      "diff_ratio": 0.1427,
+      "diff_pixels": 72872,
+      "diff_ratio": 0.0753,
       "verdict": "DIFF"
     },
     {
       "page": "203",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 143541,
-      "diff_ratio": 0.1483,
+      "diff_pixels": 52652,
+      "diff_ratio": 0.0544,
       "verdict": "DIFF"
     },
     {
       "page": "204",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 104491,
-      "diff_ratio": 0.108,
+      "diff_pixels": 77793,
+      "diff_ratio": 0.0804,
       "verdict": "DIFF"
     },
     {
       "page": "205",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 121885,
-      "diff_ratio": 0.126,
+      "diff_pixels": 77836,
+      "diff_ratio": 0.0804,
       "verdict": "DIFF"
     },
     {
       "page": "206",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 100127,
-      "diff_ratio": 0.1035,
+      "diff_pixels": 83063,
+      "diff_ratio": 0.0858,
       "verdict": "DIFF"
     },
     {
       "page": "207",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 125449,
-      "diff_ratio": 0.1297,
+      "diff_pixels": 90698,
+      "diff_ratio": 0.0937,
       "verdict": "DIFF"
     },
     {
       "page": "208",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 113622,
-      "diff_ratio": 0.1174,
+      "diff_pixels": 52137,
+      "diff_ratio": 0.0539,
       "verdict": "DIFF"
     },
     {
       "page": "209",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 119546,
-      "diff_ratio": 0.1236,
+      "diff_pixels": 67196,
+      "diff_ratio": 0.0694,
       "verdict": "DIFF"
     },
     {
       "page": "210",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 128841,
-      "diff_ratio": 0.1332,
+      "diff_pixels": 50045,
+      "diff_ratio": 0.0517,
       "verdict": "DIFF"
     },
     {
       "page": "211",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 124703,
-      "diff_ratio": 0.1289,
+      "diff_pixels": 75254,
+      "diff_ratio": 0.0778,
       "verdict": "DIFF"
     },
     {
       "page": "212",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 126346,
-      "diff_ratio": 0.1306,
+      "diff_pixels": 61358,
+      "diff_ratio": 0.0634,
       "verdict": "DIFF"
     },
     {
       "page": "213",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 118029,
-      "diff_ratio": 0.122,
+      "diff_pixels": 71792,
+      "diff_ratio": 0.0742,
       "verdict": "DIFF"
     },
     {
       "page": "214",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 101050,
-      "diff_ratio": 0.1044,
+      "diff_pixels": 71188,
+      "diff_ratio": 0.0736,
       "verdict": "DIFF"
     },
     {
       "page": "215",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 122061,
-      "diff_ratio": 0.1261,
+      "diff_pixels": 70401,
+      "diff_ratio": 0.0728,
       "verdict": "DIFF"
     },
     {
       "page": "216",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 110927,
-      "diff_ratio": 0.1146,
+      "diff_pixels": 72541,
+      "diff_ratio": 0.075,
       "verdict": "DIFF"
     },
     {
       "page": "217",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 145281,
-      "diff_ratio": 0.1501,
+      "diff_pixels": 64149,
+      "diff_ratio": 0.0663,
       "verdict": "DIFF"
     },
     {
       "page": "218",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 142444,
-      "diff_ratio": 0.1472,
+      "diff_pixels": 48477,
+      "diff_ratio": 0.0501,
       "verdict": "DIFF"
     },
     {
       "page": "219",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 120477,
-      "diff_ratio": 0.1245,
+      "diff_pixels": 70982,
+      "diff_ratio": 0.0734,
       "verdict": "DIFF"
     },
     {
       "page": "220",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 127293,
-      "diff_ratio": 0.1316,
+      "diff_pixels": 63170,
+      "diff_ratio": 0.0653,
       "verdict": "DIFF"
     },
     {
       "page": "221",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 105009,
-      "diff_ratio": 0.1085,
+      "diff_pixels": 95423,
+      "diff_ratio": 0.0986,
       "verdict": "DIFF"
     },
     {
       "page": "222",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 128694,
-      "diff_ratio": 0.133,
+      "diff_pixels": 65803,
+      "diff_ratio": 0.068,
       "verdict": "DIFF"
     },
     {
       "page": "223",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 117476,
-      "diff_ratio": 0.1214,
+      "diff_pixels": 55376,
+      "diff_ratio": 0.0572,
       "verdict": "DIFF"
     },
     {
       "page": "224",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 127559,
-      "diff_ratio": 0.1318,
+      "diff_pixels": 74814,
+      "diff_ratio": 0.0773,
       "verdict": "DIFF"
     },
     {
       "page": "225",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 117625,
-      "diff_ratio": 0.1216,
+      "diff_pixels": 54306,
+      "diff_ratio": 0.0561,
       "verdict": "DIFF"
     },
     {
       "page": "226",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 125679,
-      "diff_ratio": 0.1299,
+      "diff_pixels": 70179,
+      "diff_ratio": 0.0725,
       "verdict": "DIFF"
     },
     {
       "page": "227",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 132019,
-      "diff_ratio": 0.1364,
+      "diff_pixels": 64182,
+      "diff_ratio": 0.0663,
       "verdict": "DIFF"
     },
     {
       "page": "228",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 96702,
-      "diff_ratio": 0.0999,
+      "diff_pixels": 75210,
+      "diff_ratio": 0.0777,
       "verdict": "DIFF"
     },
     {
       "page": "229",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 88267,
-      "diff_ratio": 0.0912,
+      "diff_pixels": 50647,
+      "diff_ratio": 0.0523,
       "verdict": "DIFF"
     },
     {
       "page": "230",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 88419,
-      "diff_ratio": 0.0914,
-      "verdict": "DIFF"
+      "diff_pixels": 46822,
+      "diff_ratio": 0.0484,
+      "verdict": "OK"
     },
     {
       "page": "231",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 87739,
-      "diff_ratio": 0.0907,
+      "diff_pixels": 77395,
+      "diff_ratio": 0.08,
       "verdict": "DIFF"
     },
     {
       "page": "232",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 106517,
-      "diff_ratio": 0.1101,
-      "verdict": "DIFF"
+      "diff_pixels": 46425,
+      "diff_ratio": 0.048,
+      "verdict": "OK"
     },
     {
       "page": "233",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 124161,
-      "diff_ratio": 0.1283,
-      "verdict": "DIFF"
+      "diff_pixels": 37861,
+      "diff_ratio": 0.0391,
+      "verdict": "OK"
     },
     {
       "page": "234",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 126787,
-      "diff_ratio": 0.131,
-      "verdict": "DIFF"
+      "diff_pixels": 37065,
+      "diff_ratio": 0.0383,
+      "verdict": "OK"
     },
     {
       "page": "235",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 100232,
-      "diff_ratio": 0.1036,
-      "verdict": "DIFF"
+      "diff_pixels": 39050,
+      "diff_ratio": 0.0404,
+      "verdict": "OK"
     },
     {
       "page": "236",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 93461,
-      "diff_ratio": 0.0966,
+      "diff_pixels": 58699,
+      "diff_ratio": 0.0607,
       "verdict": "DIFF"
     },
     {
       "page": "237",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 124244,
-      "diff_ratio": 0.1284,
+      "diff_pixels": 69625,
+      "diff_ratio": 0.072,
       "verdict": "DIFF"
     },
     {
       "page": "238",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 124761,
-      "diff_ratio": 0.1289,
+      "diff_pixels": 79524,
+      "diff_ratio": 0.0822,
       "verdict": "DIFF"
     },
     {
       "page": "239",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 126890,
-      "diff_ratio": 0.1311,
-      "verdict": "DIFF"
+      "diff_pixels": 43288,
+      "diff_ratio": 0.0447,
+      "verdict": "OK"
     },
     {
       "page": "240",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 115412,
-      "diff_ratio": 0.1193,
-      "verdict": "DIFF"
+      "diff_pixels": 36215,
+      "diff_ratio": 0.0374,
+      "verdict": "OK"
     },
     {
       "page": "241",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 86304,
-      "diff_ratio": 0.0892,
+      "diff_pixels": 68709,
+      "diff_ratio": 0.071,
       "verdict": "DIFF"
     },
     {
       "page": "242",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 134590,
-      "diff_ratio": 0.1391,
+      "diff_pixels": 67240,
+      "diff_ratio": 0.0695,
       "verdict": "DIFF"
     },
     {
       "page": "243",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 142572,
-      "diff_ratio": 0.1473,
+      "diff_pixels": 72100,
+      "diff_ratio": 0.0745,
       "verdict": "DIFF"
     },
     {
       "page": "244",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 217890,
-      "diff_ratio": 0.2252,
-      "verdict": "BAD"
+      "diff_pixels": 59099,
+      "diff_ratio": 0.0611,
+      "verdict": "DIFF"
     },
     {
       "page": "245",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 114275,
-      "diff_ratio": 0.1181,
-      "verdict": "DIFF"
+      "diff_pixels": 26511,
+      "diff_ratio": 0.0274,
+      "verdict": "OK"
     },
     {
       "page": "246",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 99495,
-      "diff_ratio": 0.1028,
+      "diff_pixels": 82951,
+      "diff_ratio": 0.0857,
       "verdict": "DIFF"
     },
     {
       "page": "247",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 112839,
-      "diff_ratio": 0.1166,
+      "diff_pixels": 95300,
+      "diff_ratio": 0.0985,
       "verdict": "DIFF"
     },
     {
       "page": "248",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 124778,
-      "diff_ratio": 0.129,
+      "diff_pixels": 188520,
+      "diff_ratio": 0.1948,
       "verdict": "DIFF"
     },
     {
       "page": "249",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 108380,
-      "diff_ratio": 0.112,
+      "diff_pixels": 62583,
+      "diff_ratio": 0.0647,
       "verdict": "DIFF"
     },
     {
       "page": "250",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 91538,
-      "diff_ratio": 0.0946,
-      "verdict": "DIFF"
+      "diff_pixels": 44306,
+      "diff_ratio": 0.0458,
+      "verdict": "OK"
     },
     {
       "page": "251",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 137340,
-      "diff_ratio": 0.1419,
+      "diff_pixels": 55971,
+      "diff_ratio": 0.0578,
       "verdict": "DIFF"
     },
     {
       "page": "252",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 111733,
-      "diff_ratio": 0.1155,
+      "diff_pixels": 72653,
+      "diff_ratio": 0.0751,
       "verdict": "DIFF"
     },
     {
       "page": "253",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 97154,
-      "diff_ratio": 0.1004,
+      "diff_pixels": 82339,
+      "diff_ratio": 0.0851,
       "verdict": "DIFF"
     },
     {
       "page": "254",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 99013,
-      "diff_ratio": 0.1023,
+      "diff_pixels": 50083,
+      "diff_ratio": 0.0518,
       "verdict": "DIFF"
     },
     {
       "page": "255",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 112792,
-      "diff_ratio": 0.1166,
+      "diff_pixels": 90923,
+      "diff_ratio": 0.094,
       "verdict": "DIFF"
     },
     {
       "page": "256",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 104434,
-      "diff_ratio": 0.1079,
+      "diff_pixels": 59617,
+      "diff_ratio": 0.0616,
       "verdict": "DIFF"
     },
     {
       "page": "257",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 139507,
-      "diff_ratio": 0.1442,
-      "verdict": "DIFF"
+      "diff_pixels": 38476,
+      "diff_ratio": 0.0398,
+      "verdict": "OK"
     },
     {
       "page": "258",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 162163,
-      "diff_ratio": 0.1676,
+      "diff_pixels": 65026,
+      "diff_ratio": 0.0672,
       "verdict": "DIFF"
     },
     {
       "page": "259",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 108413,
-      "diff_ratio": 0.112,
+      "diff_pixels": 66281,
+      "diff_ratio": 0.0685,
       "verdict": "DIFF"
     },
     {
       "page": "260",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 123525,
-      "diff_ratio": 0.1277,
+      "diff_pixels": 52339,
+      "diff_ratio": 0.0541,
       "verdict": "DIFF"
     },
     {
       "page": "261",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 140063,
-      "diff_ratio": 0.1448,
+      "diff_pixels": 93460,
+      "diff_ratio": 0.0966,
       "verdict": "DIFF"
     },
     {
       "page": "262",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 115263,
-      "diff_ratio": 0.1191,
+      "diff_pixels": 130179,
+      "diff_ratio": 0.1345,
       "verdict": "DIFF"
     },
     {
       "page": "263",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 141226,
-      "diff_ratio": 0.146,
+      "diff_pixels": 56586,
+      "diff_ratio": 0.0585,
       "verdict": "DIFF"
     },
     {
       "page": "264",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 103097,
-      "diff_ratio": 0.1066,
+      "diff_pixels": 71888,
+      "diff_ratio": 0.0743,
       "verdict": "DIFF"
     },
     {
       "page": "265",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 93053,
-      "diff_ratio": 0.0962,
+      "diff_pixels": 86792,
+      "diff_ratio": 0.0897,
       "verdict": "DIFF"
     },
     {
       "page": "266",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 107057,
-      "diff_ratio": 0.1106,
+      "diff_pixels": 65929,
+      "diff_ratio": 0.0681,
       "verdict": "DIFF"
     },
     {
       "page": "267",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 119844,
-      "diff_ratio": 0.1239,
+      "diff_pixels": 89759,
+      "diff_ratio": 0.0928,
       "verdict": "DIFF"
     },
     {
       "page": "268",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 123945,
-      "diff_ratio": 0.1281,
+      "diff_pixels": 49276,
+      "diff_ratio": 0.0509,
       "verdict": "DIFF"
     },
     {
       "page": "269",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 128887,
-      "diff_ratio": 0.1332,
-      "verdict": "DIFF"
+      "diff_pixels": 34573,
+      "diff_ratio": 0.0357,
+      "verdict": "OK"
     },
     {
       "page": "270",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 116060,
-      "diff_ratio": 0.1199,
-      "verdict": "DIFF"
+      "diff_pixels": 36512,
+      "diff_ratio": 0.0377,
+      "verdict": "OK"
     },
     {
       "page": "271",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 145465,
-      "diff_ratio": 0.1503,
+      "diff_pixels": 75310,
+      "diff_ratio": 0.0778,
       "verdict": "DIFF"
     },
     {
       "page": "272",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 127614,
-      "diff_ratio": 0.1319,
+      "diff_pixels": 75541,
+      "diff_ratio": 0.0781,
       "verdict": "DIFF"
     },
     {
       "page": "273",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 130392,
-      "diff_ratio": 0.1348,
+      "diff_pixels": 59261,
+      "diff_ratio": 0.0612,
       "verdict": "DIFF"
     },
     {
       "page": "274",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 119460,
-      "diff_ratio": 0.1235,
+      "diff_pixels": 63962,
+      "diff_ratio": 0.0661,
       "verdict": "DIFF"
     },
     {
       "page": "275",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 114253,
-      "diff_ratio": 0.1181,
+      "diff_pixels": 55871,
+      "diff_ratio": 0.0577,
       "verdict": "DIFF"
     },
     {
       "page": "276",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 125161,
-      "diff_ratio": 0.1294,
+      "diff_pixels": 64880,
+      "diff_ratio": 0.0671,
       "verdict": "DIFF"
     },
     {
       "page": "277",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 110560,
-      "diff_ratio": 0.1143,
+      "diff_pixels": 82777,
+      "diff_ratio": 0.0855,
       "verdict": "DIFF"
     },
     {
       "page": "278",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 122813,
-      "diff_ratio": 0.1269,
+      "diff_pixels": 67818,
+      "diff_ratio": 0.0701,
       "verdict": "DIFF"
     },
     {
       "page": "279",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 123033,
-      "diff_ratio": 0.1272,
+      "diff_pixels": 54849,
+      "diff_ratio": 0.0567,
       "verdict": "DIFF"
     },
     {
       "page": "280",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 144792,
-      "diff_ratio": 0.1496,
-      "verdict": "DIFF"
+      "diff_pixels": 44803,
+      "diff_ratio": 0.0463,
+      "verdict": "OK"
     },
     {
       "page": "281",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 124325,
-      "diff_ratio": 0.1285,
+      "diff_pixels": 61590,
+      "diff_ratio": 0.0637,
       "verdict": "DIFF"
     },
     {
       "page": "282",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 144839,
-      "diff_ratio": 0.1497,
+      "diff_pixels": 54880,
+      "diff_ratio": 0.0567,
       "verdict": "DIFF"
     },
     {
       "page": "283",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 102344,
-      "diff_ratio": 0.1058,
+      "diff_pixels": 76053,
+      "diff_ratio": 0.0786,
       "verdict": "DIFF"
     },
     {
       "page": "284",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 126399,
-      "diff_ratio": 0.1306,
+      "diff_pixels": 82362,
+      "diff_ratio": 0.0851,
       "verdict": "DIFF"
     },
     {
       "page": "285",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 111960,
-      "diff_ratio": 0.1157,
+      "diff_pixels": 72540,
+      "diff_ratio": 0.075,
       "verdict": "DIFF"
     },
     {
       "page": "286",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 163159,
-      "diff_ratio": 0.1686,
+      "diff_pixels": 93850,
+      "diff_ratio": 0.097,
       "verdict": "DIFF"
     },
     {
       "page": "287",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 125671,
-      "diff_ratio": 0.1299,
-      "verdict": "DIFF"
+      "diff_pixels": 45669,
+      "diff_ratio": 0.0472,
+      "verdict": "OK"
     },
     {
       "page": "288",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 135228,
-      "diff_ratio": 0.1398,
+      "diff_pixels": 76660,
+      "diff_ratio": 0.0792,
       "verdict": "DIFF"
     },
     {
       "page": "289",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 132414,
-      "diff_ratio": 0.1368,
+      "diff_pixels": 66830,
+      "diff_ratio": 0.0691,
       "verdict": "DIFF"
     },
     {
       "page": "290",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 136453,
-      "diff_ratio": 0.141,
+      "diff_pixels": 108334,
+      "diff_ratio": 0.112,
       "verdict": "DIFF"
     },
     {
       "page": "291",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 128417,
-      "diff_ratio": 0.1327,
+      "diff_pixels": 72317,
+      "diff_ratio": 0.0747,
       "verdict": "DIFF"
     },
     {
       "page": "292",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 144066,
-      "diff_ratio": 0.1489,
+      "diff_pixels": 80547,
+      "diff_ratio": 0.0832,
       "verdict": "DIFF"
     },
     {
       "page": "293",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 152181,
-      "diff_ratio": 0.1573,
+      "diff_pixels": 78184,
+      "diff_ratio": 0.0808,
       "verdict": "DIFF"
     },
     {
       "page": "294",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 104387,
-      "diff_ratio": 0.1079,
+      "diff_pixels": 83294,
+      "diff_ratio": 0.0861,
       "verdict": "DIFF"
     },
     {
       "page": "295",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 96964,
-      "diff_ratio": 0.1002,
+      "diff_pixels": 80982,
+      "diff_ratio": 0.0837,
       "verdict": "DIFF"
     },
     {
       "page": "296",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 93079,
-      "diff_ratio": 0.0962,
+      "diff_pixels": 91653,
+      "diff_ratio": 0.0947,
       "verdict": "DIFF"
     },
     {
       "page": "297",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 96905,
-      "diff_ratio": 0.1002,
+      "diff_pixels": 105241,
+      "diff_ratio": 0.1088,
       "verdict": "DIFF"
     },
     {
       "page": "298",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 116663,
-      "diff_ratio": 0.1206,
-      "verdict": "DIFF"
+      "diff_pixels": 41385,
+      "diff_ratio": 0.0428,
+      "verdict": "OK"
     },
     {
       "page": "299",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 109047,
-      "diff_ratio": 0.1127,
-      "verdict": "DIFF"
+      "diff_pixels": 36489,
+      "diff_ratio": 0.0377,
+      "verdict": "OK"
     },
     {
       "page": "300",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 137239,
-      "diff_ratio": 0.1418,
-      "verdict": "DIFF"
+      "diff_pixels": 36016,
+      "diff_ratio": 0.0372,
+      "verdict": "OK"
     },
     {
       "page": "301",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 106486,
-      "diff_ratio": 0.1101,
-      "verdict": "DIFF"
+      "diff_pixels": 35091,
+      "diff_ratio": 0.0363,
+      "verdict": "OK"
     },
     {
       "page": "302",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 180083,
-      "diff_ratio": 0.1861,
+      "diff_pixels": 65593,
+      "diff_ratio": 0.0678,
       "verdict": "DIFF"
     },
     {
       "page": "303",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 241181,
-      "diff_ratio": 0.2493,
-      "verdict": "BAD"
+      "diff_pixels": 57293,
+      "diff_ratio": 0.0592,
+      "verdict": "DIFF"
     },
     {
       "page": "304",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 224980,
-      "diff_ratio": 0.2325,
-      "verdict": "BAD"
+      "diff_pixels": 82472,
+      "diff_ratio": 0.0852,
+      "verdict": "DIFF"
     },
     {
       "page": "305",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 125192,
-      "diff_ratio": 0.1294,
+      "diff_pixels": 49828,
+      "diff_ratio": 0.0515,
       "verdict": "DIFF"
     },
     {
       "page": "306",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 67114,
-      "diff_ratio": 0.0694,
+      "diff_pixels": 81985,
+      "diff_ratio": 0.0847,
       "verdict": "DIFF"
     },
     {
       "page": "307",
-      "ps_pixels": 34957,
-      "svg_pixels": "MISSING",
-      "diff_pixels": 34957,
-      "diff_ratio": 0.0361,
-      "verdict": "MISSING"
+      "ps_pixels": 967590,
+      "svg_pixels": 967590,
+      "diff_pixels": 89766,
+      "diff_ratio": 0.0928,
+      "verdict": "DIFF"
     },
     {
       "page": "308",
-      "ps_pixels": 34957,
-      "svg_pixels": "MISSING",
-      "diff_pixels": 34957,
-      "diff_ratio": 0.0361,
-      "verdict": "MISSING"
+      "ps_pixels": 967590,
+      "svg_pixels": 967590,
+      "diff_pixels": 87425,
+      "diff_ratio": 0.0904,
+      "verdict": "DIFF"
     },
     {
       "page": "309",
-      "ps_pixels": 34957,
-      "svg_pixels": "MISSING",
-      "diff_pixels": 34957,
-      "diff_ratio": 0.0361,
-      "verdict": "MISSING"
+      "ps_pixels": 967590,
+      "svg_pixels": 967590,
+      "diff_pixels": 33606,
+      "diff_ratio": 0.0347,
+      "verdict": "OK"
     },
     {
       "page": "310",
-      "ps_pixels": 34957,
-      "svg_pixels": "MISSING",
-      "diff_pixels": 34957,
-      "diff_ratio": 0.0361,
-      "verdict": "MISSING"
+      "ps_pixels": 967590,
+      "svg_pixels": 967590,
+      "diff_pixels": 48494,
+      "diff_ratio": 0.0501,
+      "verdict": "DIFF"
     },
     {
       "page": "311",
-      "ps_pixels": 34957,
-      "svg_pixels": "MISSING",
-      "diff_pixels": 34957,
-      "diff_ratio": 0.0361,
-      "verdict": "MISSING"
+      "ps_pixels": 967590,
+      "svg_pixels": 967590,
+      "diff_pixels": 63121,
+      "diff_ratio": 0.0652,
+      "verdict": "DIFF"
     },
     {
       "page": "312",
-      "ps_pixels": 34957,
-      "svg_pixels": "MISSING",
-      "diff_pixels": 34957,
-      "diff_ratio": 0.0361,
-      "verdict": "MISSING"
+      "ps_pixels": 967590,
+      "svg_pixels": 967590,
+      "diff_pixels": 69333,
+      "diff_ratio": 0.0717,
+      "verdict": "DIFF"
     },
     {
       "page": "313",
-      "ps_pixels": 34957,
-      "svg_pixels": "MISSING",
-      "diff_pixels": 34957,
-      "diff_ratio": 0.0361,
-      "verdict": "MISSING"
+      "ps_pixels": 967590,
+      "svg_pixels": 967590,
+      "diff_pixels": 71098,
+      "diff_ratio": 0.0735,
+      "verdict": "DIFF"
     },
     {
       "page": "314",
-      "ps_pixels": 34957,
-      "svg_pixels": "MISSING",
-      "diff_pixels": 34957,
-      "diff_ratio": 0.0361,
-      "verdict": "MISSING"
+      "ps_pixels": 967590,
+      "svg_pixels": 967590,
+      "diff_pixels": 65919,
+      "diff_ratio": 0.0681,
+      "verdict": "DIFF"
     },
     {
       "page": "315",
-      "ps_pixels": 34957,
-      "svg_pixels": "MISSING",
-      "diff_pixels": 34957,
-      "diff_ratio": 0.0361,
-      "verdict": "MISSING"
+      "ps_pixels": 967590,
+      "svg_pixels": 967590,
+      "diff_pixels": 62460,
+      "diff_ratio": 0.0646,
+      "verdict": "DIFF"
     },
     {
       "page": "316",
-      "ps_pixels": 34957,
-      "svg_pixels": "MISSING",
-      "diff_pixels": 34957,
-      "diff_ratio": 0.0361,
-      "verdict": "MISSING"
+      "ps_pixels": 967590,
+      "svg_pixels": 967590,
+      "diff_pixels": 93287,
+      "diff_ratio": 0.0964,
+      "verdict": "DIFF"
     },
     {
       "page": "317",
-      "ps_pixels": 34957,
-      "svg_pixels": "MISSING",
-      "diff_pixels": 34957,
-      "diff_ratio": 0.0361,
-      "verdict": "MISSING"
+      "ps_pixels": 967590,
+      "svg_pixels": 967590,
+      "diff_pixels": 61909,
+      "diff_ratio": 0.064,
+      "verdict": "DIFF"
     },
     {
       "page": "318",
-      "ps_pixels": 34957,
-      "svg_pixels": "MISSING",
-      "diff_pixels": 34957,
-      "diff_ratio": 0.0361,
-      "verdict": "MISSING"
+      "ps_pixels": 967590,
+      "svg_pixels": 967590,
+      "diff_pixels": 67409,
+      "diff_ratio": 0.0697,
+      "verdict": "DIFF"
     },
     {
       "page": "319",
-      "ps_pixels": 34957,
-      "svg_pixels": "MISSING",
-      "diff_pixels": 34957,
-      "diff_ratio": 0.0361,
-      "verdict": "MISSING"
+      "ps_pixels": 967590,
+      "svg_pixels": 967590,
+      "diff_pixels": 61843,
+      "diff_ratio": 0.0639,
+      "verdict": "DIFF"
     },
     {
       "page": "320",
-      "ps_pixels": 34957,
-      "svg_pixels": "MISSING",
-      "diff_pixels": 34957,
-      "diff_ratio": 0.0361,
-      "verdict": "MISSING"
+      "ps_pixels": 967590,
+      "svg_pixels": 967590,
+      "diff_pixels": 65377,
+      "diff_ratio": 0.0676,
+      "verdict": "DIFF"
     },
     {
       "page": "321",
-      "ps_pixels": 34957,
-      "svg_pixels": "MISSING",
-      "diff_pixels": 34957,
-      "diff_ratio": 0.0361,
-      "verdict": "MISSING"
+      "ps_pixels": 967590,
+      "svg_pixels": 967590,
+      "diff_pixels": 73305,
+      "diff_ratio": 0.0758,
+      "verdict": "DIFF"
     },
     {
       "page": "322",
-      "ps_pixels": 34957,
-      "svg_pixels": "MISSING",
-      "diff_pixels": 34957,
-      "diff_ratio": 0.0361,
-      "verdict": "MISSING"
+      "ps_pixels": 967590,
+      "svg_pixels": 967590,
+      "diff_pixels": 71279,
+      "diff_ratio": 0.0737,
+      "verdict": "DIFF"
     },
     {
       "page": "323",
-      "ps_pixels": 34957,
-      "svg_pixels": "MISSING",
-      "diff_pixels": 34957,
-      "diff_ratio": 0.0361,
-      "verdict": "MISSING"
+      "ps_pixels": 967590,
+      "svg_pixels": 967590,
+      "diff_pixels": 68924,
+      "diff_ratio": 0.0712,
+      "verdict": "DIFF"
     },
     {
       "page": "324",
-      "ps_pixels": 34957,
-      "svg_pixels": "MISSING",
-      "diff_pixels": 34957,
-      "diff_ratio": 0.0361,
-      "verdict": "MISSING"
+      "ps_pixels": 967590,
+      "svg_pixels": 967590,
+      "diff_pixels": 77084,
+      "diff_ratio": 0.0797,
+      "verdict": "DIFF"
     },
     {
       "page": "325",
-      "ps_pixels": 34957,
-      "svg_pixels": "MISSING",
-      "diff_pixels": 34957,
-      "diff_ratio": 0.0361,
-      "verdict": "MISSING"
+      "ps_pixels": 967590,
+      "svg_pixels": 967590,
+      "diff_pixels": 70163,
+      "diff_ratio": 0.0725,
+      "verdict": "DIFF"
     },
     {
       "page": "326",
-      "ps_pixels": 34957,
-      "svg_pixels": "MISSING",
-      "diff_pixels": 34957,
-      "diff_ratio": 0.0361,
-      "verdict": "MISSING"
+      "ps_pixels": 967590,
+      "svg_pixels": 967590,
+      "diff_pixels": 66836,
+      "diff_ratio": 0.0691,
+      "verdict": "DIFF"
     },
     {
       "page": "327",
-      "ps_pixels": 34957,
-      "svg_pixels": "MISSING",
-      "diff_pixels": 34957,
-      "diff_ratio": 0.0361,
-      "verdict": "MISSING"
+      "ps_pixels": 967590,
+      "svg_pixels": 967590,
+      "diff_pixels": 59689,
+      "diff_ratio": 0.0617,
+      "verdict": "DIFF"
     }
   ]
 }
