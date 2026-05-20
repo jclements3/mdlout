@@ -10,6 +10,18 @@ It exists so anyone tracking SVG-backend parity work has a concrete,
 inspectable artefact showing how close the two outputs currently are
 and which pages still diverge most.
 
+> **Note on freshness (2026-05-20).** The numbers and worst-page table
+> below were captured against `svg-backend` SHA `611dcb2`, when the
+> SVG output was 306 pages because non-final cross-reference passes
+> were running heavy emission callbacks instead of true no-ops. SHA
+> `c618ce3` rewired `SVG_NullBackEnd` to dedicated stubs and the SVG
+> output now converges to **327 pages**, matching PS. The bibliography
+> / references / index back-matter that was reported as "missing in
+> SVG (21 pages)" is now present. Re-running `tests/user_guide_diff.sh`
+> will regenerate the manifest against the current converged output —
+> we have intentionally not refreshed the committed artefacts because
+> they document the state at the time of the worst-page analysis.
+
 ## Methodology
 
 1. **Build both renders.** From `lout/doc/user/`, delete every `.li`
