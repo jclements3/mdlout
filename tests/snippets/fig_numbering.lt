@@ -1,0 +1,32 @@
+@SysInclude { tbl }
+@SysInclude { doc }
+
+@Doc @Text @Begin
+
+@PP
+We refer the reader to 1 and Table 1 below.
+
+@PP
+@CentredDisplay { @IncludeGraphic { "diagram.png" } }
+@CentredDisplay @B { Figure 1. } A simple diagram of the system
+
+@LP
+@DP
+@Tbl
+  rule { yes }
+  aformat { @Cell A | @Cell B }
+{
+@Rowa A { @B { Trial } } B { @B { Outcome } }
+@Rowa A { 1 } B { pass }
+@Rowa A { 2 } B { fail }
+}
+@CentredDisplay @B { Table 1. }
+
+@PP
+A follow-up illustration appears in 2.
+
+@PP
+@CentredDisplay { @IncludeGraphic { "detail.png" } }
+@CentredDisplay @B { Figure 2. } Closer view
+
+@End @Text

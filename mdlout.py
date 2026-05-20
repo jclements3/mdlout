@@ -70,6 +70,159 @@ _ph_store: dict[str, str] = {}
 _needs_svgmacros: bool = False
 
 
+# ---------------------------------------------------------------------------
+# Citation, figure, and table cross-reference registries
+# ---------------------------------------------------------------------------
+# These are populated by a pre-pass over the markdown before block parsing
+# and read by convert_inline / generate_lout. Cleared at the start of every
+# top-level conversion via _reset_xref_state().
+
+# Maps citation key -> sequence number (1-based, first-appearance order)
+_cite_order: dict[str, int] = {}
+# Maps citation key -> bibliography body markdown string (None if no entry)
+_cite_bib: dict[str, str] = {}
+# Format ('numeric' or 'alpha'): numeric -> "1", alpha -> "a"
+_cite_format: str = 'numeric'
+
+# Maps fig:label -> assigned label string (e.g. "1" or "2.3")
+_fig_labels: dict[str, str] = {}
+# Maps tab:label -> assigned label string
+_tab_labels: dict[str, str] = {}
+
+
+def _reset_xref_state() -> None:
+    _cite_order.clear()
+    _cite_bib.clear()
+    _fig_labels.clear()
+    _tab_labels.clear()
+    global _cite_format
+    _cite_format = 'numeric'
+
+
+def _cite_render_number(n: int) -> str:
+    """Render a 1-based citation number per the configured format."""
+    if _cite_format == 'alpha':
+        # 1 -> a, 2 -> b, ... 26 -> z, 27 -> aa, etc.
+        s = ''
+        x = n
+        while x > 0:
+            x, r = divmod(x - 1, 26)
+            s = chr(ord('a') + r) + s
+        return s
+    return str(n)
+
+
+# Patterns for citation pre-scanning. Inline cite: [@key] or [@key, locator].
+# Bibliography entry (whole line): [@key]: text...
+_CITE_BIB_RE = re.compile(r'^\s*\[@([A-Za-z0-9_][A-Za-z0-9_-]*)\]:\s*(.*)$')
+_CITE_INLINE_RE = re.compile(r'\[@([A-Za-z0-9_][A-Za-z0-9_-]*)(?:,\s*([^\]]+))?\]')
+
+
+def _scan_citations(md_text: str) -> str:
+    """Pre-scan markdown for [@key] cites and [@key]: bibliography entries.
+
+    Side effects:
+      - populates _cite_order with first-appearance order of inline cites
+      - populates _cite_bib with key -> body for explicit bib entries
+    Returns markdown with bibliography lines stripped out (we re-emit them
+    later, in cite-order, under the References/Bibliography section). The
+    inline [@key] tokens are left in place; convert_inline turns them into
+    the rendered number / fallback.
+    """
+    out_lines: list[str] = []
+    for line in md_text.split('\n'):
+        m = _CITE_BIB_RE.match(line)
+        if m:
+            key = m.group(1)
+            body = m.group(2).rstrip()
+            _cite_bib[key] = body
+            # Drop the line entirely; rendering happens via the bib block.
+            continue
+        # Record inline cite order (first appearance wins).
+        for cm in _CITE_INLINE_RE.finditer(line):
+            ck = cm.group(1)
+            if ck not in _cite_order:
+                _cite_order[ck] = len(_cite_order) + 1
+        out_lines.append(line)
+    return '\n'.join(out_lines)
+
+
+# Figure label tag: appears immediately after a markdown image, e.g.
+#   ![cap](url){#fig:label}
+# We only support the leading anchor form (no extra attrs).
+_FIG_LABEL_TAG_RE = re.compile(r'\{#(fig:[A-Za-z0-9_-]+)\}')
+# Image-with-label pattern: ![alt](url){#fig:label}
+_IMG_WITH_LABEL_RE = re.compile(
+    r'!\[([^\]]*)\]\(([^)]+)\)\s*\{#(fig:[A-Za-z0-9_-]+)\}'
+)
+# Table label tag: stand-alone line after a pipe table, e.g. [#tab:label]
+_TAB_LABEL_LINE_RE = re.compile(r'^\s*\[#(tab:[A-Za-z0-9_-]+)\]\s*$')
+
+
+def _scan_fig_tab_labels(md_text: str, doc_type: str) -> None:
+    """Walk markdown once to assign figure / table numbers.
+
+    For type='report' or 'book' we prefix the chapter / section-1 counter:
+    Figure 2.3 = third figure within the second top-level # heading.
+    For other doc types numbers are flat (Figure 1, Figure 2, ...).
+    """
+    is_sectioned = doc_type in ('report', 'book')
+    section_counter = 0
+    fig_counter = 0  # in-section count when sectioned, global otherwise
+    tab_counter = 0
+
+    lines = md_text.split('\n')
+    in_fence = False
+    fence_marker = ''
+    for raw in lines:
+        line = raw.rstrip('\n')
+        stripped = line.strip()
+        # Track fenced code blocks so labels inside them aren't picked up.
+        if not in_fence:
+            fm = _FENCED_START_RE.match(stripped) if _indent_level(line) < 4 else None
+            if fm:
+                in_fence = True
+                fence_marker = fm.group(1)[0]
+                continue
+        else:
+            if stripped and stripped[0] == fence_marker and set(stripped) == {fence_marker} and len(stripped) >= 3:
+                in_fence = False
+            continue
+
+        # Top-level heading bumps the section counter and resets per-section.
+        hm = _HEADING_RE.match(stripped)
+        if hm and len(hm.group(1)) == 1 and is_sectioned:
+            section_counter += 1
+            fig_counter = 0
+            tab_counter = 0
+            continue
+
+        # Figure labels — count every image-with-label occurrence on the line.
+        for fm2 in _IMG_WITH_LABEL_RE.finditer(line):
+            label = fm2.group(3)
+            fig_counter += 1
+            if is_sectioned and section_counter > 0:
+                _fig_labels[label] = f'{section_counter}.{fig_counter}'
+            else:
+                _fig_labels[label] = str(fig_counter)
+
+        # Table label: a [#tab:label] line directly after the pipe table.
+        tm = _TAB_LABEL_LINE_RE.match(line)
+        if tm:
+            label = tm.group(1)
+            tab_counter += 1
+            if is_sectioned and section_counter > 0:
+                _tab_labels[label] = f'{section_counter}.{tab_counter}'
+            else:
+                _tab_labels[label] = str(tab_counter)
+
+
+# Cross-ref pattern in inline text: @fig:label or @tab:label.
+# Trailing punctuation (.,;:!?) is excluded from the label so "see @fig:x."
+# leaves the period intact.
+_XREF_RE = re.compile(r'@((?:fig|tab):[A-Za-z0-9_-]+(?::[A-Za-z0-9_-]+)*)')
+
+
 def _lout_string_encode(body: str) -> str:
     """Encode an arbitrary string as the body of a Lout "..." literal.
 
@@ -187,6 +340,28 @@ def _convert_inline_inner(text: str) -> str:
         result,
     )
 
+    # Images-with-label: ![caption](url){#fig:label} — auto-numbered figure.
+    # We render a centred display containing the image followed by a
+    # caption line "Figure N. <caption>".
+    def _labelled_image_repl(m: re.Match) -> str:
+        alt = m.group(1)
+        url = m.group(2)
+        label = m.group(3)
+        num = _fig_labels.get(label, '?')
+        global _needs_svgmacros
+        if url.lower().endswith('.svg'):
+            _needs_svgmacros = True
+            graphic = f'@SVGFile {{ "{url}" }}'
+        else:
+            graphic = f'@IncludeGraphic {{ "{url}" }}'
+        cap_inner = _convert_inline_inner(alt) if alt else ''
+        cap = (
+            f'@CentredDisplay {{ {graphic} }}\n'
+            f'@CentredDisplay @B {{ Figure {num}. }} {cap_inner}'
+        )
+        return _ph_put(cap)
+    result = _IMG_WITH_LABEL_RE.sub(_labelled_image_repl, result)
+
     # Images: ![alt](url) — SVG files get routed through @SVGFile (the SVG
     # back-end inlines the file's contents verbatim); everything else falls
     # back to @IncludeGraphic.
@@ -198,6 +373,34 @@ def _convert_inline_inner(text: str) -> str:
             return _ph_put(f'@SVGFile {{ "{url}" }}')
         return _ph_put(f'@IncludeGraphic {{ "{url}" }}')
     result = re.sub(r'!\[([^\]]*)\]\(([^)]+)\)', _image_repl, result)
+
+    # Pandoc-style citations: [@key] or [@key, locator]. We replace with a
+    # superscripted number rendered per _cite_format. If the cite key has
+    # no bibliography entry we still number it (the bib block falls back to
+    # the cite key in brackets).
+    def _cite_repl(m: re.Match) -> str:
+        key = m.group(1)
+        n = _cite_order.get(key)
+        if n is None:
+            # Defensive — _scan_citations should have already registered it.
+            n = len(_cite_order) + 1
+            _cite_order[key] = n
+        label = _cite_render_number(n)
+        # Numbered superscript: "[1]" raised. Lout's @Sup raises its left arg.
+        rendered = '{ "[' + label + ']" } @Sup {}'
+        return _ph_put(rendered)
+    result = _CITE_INLINE_RE.sub(_cite_repl, result)
+
+    # Cross-references: @fig:label / @tab:label resolved to the assigned
+    # number. Unresolved refs render as the literal token so authors notice.
+    def _xref_repl(m: re.Match) -> str:
+        key = m.group(1)
+        if key.startswith('fig:'):
+            return _ph_put(_fig_labels.get(key, '?'))
+        if key.startswith('tab:'):
+            return _ph_put(_tab_labels.get(key, '?'))
+        return m.group(0)
+    result = _XREF_RE.sub(_xref_repl, result)
 
     # Links: [text](url)
     def _link_repl(m: re.Match) -> str:
@@ -502,7 +705,18 @@ def parse_markdown(text: str) -> list[Block]:
             while i < n and (_TABLE_ROW_RE.match(lines[i].strip()) or _TABLE_SEP_RE.match(lines[i].strip())):
                 table_lines.append(lines[i].strip())
                 i += 1
-            blocks.append(_parse_pipe_table(table_lines))
+            tbl = _parse_pipe_table(table_lines)
+            # Optional trailing label: a [#tab:label] line directly after.
+            # Skip a single blank line between the table and its label.
+            j = i
+            if j < n and lines[j].strip() == '':
+                j += 1
+            if j < n:
+                tm = _TAB_LABEL_LINE_RE.match(lines[j])
+                if tm:
+                    tbl.meta['label'] = tm.group(1)
+                    i = j + 1
+            blocks.append(tbl)
             continue
 
         # Task list
@@ -708,15 +922,65 @@ def parse_frontmatter(text: str) -> tuple[dict, str]:
     yaml_block = text[3:end].strip()
     rest = text[end + 4:]  # skip past closing ---
 
-    # Simple YAML parser — handles key: value pairs (no nesting needed)
+    # Simple YAML parser — key: value pairs, plus `key: |` literal blocks for
+    # multi-line values (e.g. abstract). The literal block consumes all
+    # subsequent indented lines until a less-indented line appears.
     fm: dict[str, str] = {}
-    for line in yaml_block.split('\n'):
-        line = line.strip()
-        if not line or line.startswith('#'):
+    raw_lines = yaml_block.split('\n')
+    i = 0
+    while i < len(raw_lines):
+        line = raw_lines[i]
+        stripped = line.strip()
+        if not stripped or stripped.startswith('#'):
+            i += 1
             continue
-        if ':' in line:
-            key, _, val = line.partition(':')
-            fm[key.strip().lower()] = val.strip().strip('"').strip("'")
+        if ':' in stripped:
+            key, _, val = stripped.partition(':')
+            key = key.strip().lower()
+            val = val.strip()
+            # Literal block: `key: |` (optionally with -/+ chomping marker we ignore)
+            if val in ('|', '|-', '|+', '>', '>-', '>+'):
+                # Determine base indent from the first non-blank child line.
+                fold = val.startswith('>')
+                child_lines: list[str] = []
+                base_indent = None
+                i += 1
+                while i < len(raw_lines):
+                    child = raw_lines[i]
+                    if child.strip() == '':
+                        child_lines.append('')
+                        i += 1
+                        continue
+                    ind = len(child) - len(child.lstrip())
+                    if base_indent is None:
+                        base_indent = ind
+                    if ind < base_indent:
+                        break
+                    child_lines.append(child[base_indent:] if ind >= base_indent else child)
+                    i += 1
+                # Trim trailing blank lines (default chomp '|' keeps one).
+                while child_lines and child_lines[-1] == '':
+                    child_lines.pop()
+                if fold:
+                    # Folded: blank line -> newline, other newlines -> space.
+                    text_out: list[str] = []
+                    buf: list[str] = []
+                    for cl in child_lines:
+                        if cl == '':
+                            if buf:
+                                text_out.append(' '.join(buf))
+                                buf = []
+                            text_out.append('')
+                        else:
+                            buf.append(cl)
+                    if buf:
+                        text_out.append(' '.join(buf))
+                    fm[key] = '\n'.join(text_out)
+                else:
+                    fm[key] = '\n'.join(child_lines)
+                continue
+            fm[key] = val.strip('"').strip("'")
+        i += 1
     return fm, rest
 
 
@@ -799,6 +1063,70 @@ def _generate_use_block(clause_name: str, option_map: dict, frontmatter: dict) -
     if opts:
         return f'@Use {{ @{clause_name}\n' + '\n'.join(opts) + '\n}'
     return ''
+
+
+def _abstract_to_lout(abstract: str) -> str:
+    """Convert an abstract value (possibly multi-paragraph) to Lout markup.
+
+    Paragraphs are separated by blank lines and joined with @PP so they fit
+    inside an @Abstract { ... } argument. Inline markdown formatting is
+    routed through convert_inline so emphasis / cites / xrefs work.
+    """
+    paras = [p.strip() for p in re.split(r'\n\s*\n', abstract) if p.strip()]
+    if not paras:
+        return ''
+    out = convert_inline(' '.join(paras[0].split()))
+    for p in paras[1:]:
+        out += '\n@PP\n' + convert_inline(' '.join(p.split()))
+    return out
+
+
+# Heading content that, if seen, indicates the bibliography section where
+# auto-generated cite entries should be appended. Case-insensitive.
+_BIB_HEADINGS = ('references', 'bibliography', 'works cited')
+
+
+def _inject_bibliography(blocks: list[Block]) -> list[Block]:
+    """Append a numbered list of cited works after the References heading.
+
+    If the markdown contains any [@key] cites, we build a NUMBERED_LIST
+    block whose items are the bib bodies in cite-order. The list is
+    inserted directly after the last `# References` / `# Bibliography`
+    heading. If no such heading exists but we do have cites, we append a
+    new H1 plus the list at the end of the document.
+
+    Cites without a matching [@key]: entry render as the literal `[key]`.
+    """
+    if not _cite_order:
+        return blocks
+    # Build the list items in cite-order.
+    items: list[Block] = []
+    for key, _n in sorted(_cite_order.items(), key=lambda kv: kv[1]):
+        body = _cite_bib.get(key)
+        if body is None:
+            body = f'\\[{key}\\]'  # fallback: literal cite key in brackets
+        items.append(Block(type=BlockType.NUMBERED_LIST, content=body))
+    bib_list = Block(type=BlockType.NUMBERED_LIST, children=items)
+
+    # Find the last References/Bibliography heading.
+    insert_after = -1
+    for idx, b in enumerate(blocks):
+        if b.type == BlockType.HEADING and b.level == 1:
+            title_lc = b.content.strip().lower()
+            if title_lc in _BIB_HEADINGS:
+                insert_after = idx
+    if insert_after >= 0:
+        # Insert the list right after this heading, replacing any
+        # subsequent paragraph blocks that were left over from stripped
+        # [@key]: lines (the lines are already gone but stray manually
+        # written "[1] ..." paragraphs would still be present — we leave
+        # them alone so existing hand-curated reference lists survive).
+        return blocks[:insert_after + 1] + [bib_list] + blocks[insert_after + 1:]
+    # No References heading: append one.
+    return blocks + [
+        Block(type=BlockType.HEADING, level=1, content='References'),
+        bib_list,
+    ]
 
 
 def _generate_preamble(frontmatter: dict, blocks: list[Block]) -> list[str]:
@@ -902,6 +1230,7 @@ def _generate_preamble(frontmatter: dict, blocks: list[Block]) -> list[str]:
         title = frontmatter.get('title', '')
         author = frontmatter.get('author', '')
         institution = frontmatter.get('institution', '')
+        abstract = frontmatter.get('abstract', '')
         entry = '@Report'
         if title:
             entry += f'\n  @Title {{ {title} }}'
@@ -909,16 +1238,25 @@ def _generate_preamble(frontmatter: dict, blocks: list[Block]) -> list[str]:
             entry += f'\n  @Author {{ {author} }}'
         if institution:
             entry += f'\n  @Institution {{ {institution} }}'
+        if abstract:
+            # Convert markdown inline formatting in the abstract; paragraphs
+            # separated by blank lines become @PP-joined.
+            abs_lout = _abstract_to_lout(abstract)
+            entry += f'\n  @Abstract {{ {abs_lout} }}'
         entry += '\n//'
         parts.append(entry)
     elif doc_type == 'book':
         title = frontmatter.get('title', '')
         author = frontmatter.get('author', '')
+        abstract = frontmatter.get('abstract', '')
         entry = '@Book'
         if title:
             entry += f'\n  @Title {{ {title} }}'
         if author:
             entry += f'\n  @Author {{ {author} }}'
+        if abstract:
+            abs_lout = _abstract_to_lout(abstract)
+            entry += f'\n  @Abstract {{ {abs_lout} }}'
         entry += '\n//'
         parts.append(entry)
     elif doc_type == 'slides':
@@ -1196,6 +1534,7 @@ def _table_to_lout(block: Block) -> str:
         return ''
     num_cols = max(len(row) for row in block.rows)
     has_header = block.meta.get('has_header', False)
+    label = block.meta.get('label')
     cols = [chr(ord('A') + i) for i in range(min(num_cols, 26))]
     fmt = ' | '.join(f'@Cell {c}' for c in cols[:num_cols])
 
@@ -1211,6 +1550,9 @@ def _table_to_lout(block: Block) -> str:
             cells.append(f'{cols[ci]} {{ {val} }}')
         parts.append(f'@Rowa {" ".join(cells)}')
     parts.append('}')
+    if label:
+        num = _tab_labels.get(label, '?')
+        parts.append(f'@CentredDisplay @B {{ Table {num}. }}')
     return '\n'.join(parts)
 
 
@@ -1950,7 +2292,21 @@ def _build_once(args) -> str | None:
 
     # Parse and generate Lout source
     frontmatter, md_text = parse_frontmatter(md_text)
+    # Citation + figure/table pre-pass — populates the module-level
+    # registries that convert_inline reads while emitting Lout markup, and
+    # strips [@key]: bibliography lines so they don't show up as stray
+    # paragraphs after the References heading.
+    _reset_xref_state()
+    global _cite_format
+    _cite_format = (frontmatter.get('references_format')
+                    or frontmatter.get('references-format')
+                    or 'numeric').lower()
+    if _cite_format not in ('numeric', 'alpha'):
+        _cite_format = 'numeric'
+    md_text = _scan_citations(md_text)
+    _scan_fig_tab_labels(md_text, frontmatter.get('type', 'doc').lower())
     blocks = parse_markdown(md_text)
+    blocks = _inject_bibliography(blocks)
     lout_src = generate_lout(blocks, frontmatter)
 
     # --lout-only: just emit Lout source

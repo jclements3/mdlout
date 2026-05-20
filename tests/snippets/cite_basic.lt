@@ -1,0 +1,17 @@
+@SysInclude { doc }
+
+@Doc @Text @Begin
+
+@PP
+This paper builds on Knuth's foundational work { "[1]" } @Sup {} and a later survey { "[2]" } @Sup {}.
+
+@DP
+@Display { Helvetica Bold } @Font { +6p } @Font { References }
+
+@LP
+@NumberedList
+@ListItem { Knuth, D. (1968). @I { The Art of Computer Programming }. Addison-Wesley. }
+@ListItem { Kingston, J. H. (1993). The design and implementation of the Lout document formatting language. }
+@EndList
+
+@End @Text
