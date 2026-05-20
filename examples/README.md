@@ -21,6 +21,7 @@ file is meant to be built in both HTML mode (default) and PDF mode, e.g.:
 | `08_kitchen_sink.md`       | Two-column `type: report` combining every feature above — canonical regression target. |
 | `diag_gallery.md`          | Exhaustive `@Diag` gallery: every arrowstyle, shape macro (`@Box`, `@CurveBox`, `@ShadowBox`, `@Square`, `@Diamond`, `@Polygon`, `@Isosceles`, `@Ellipse`, `@Circle`), and `@Tree`. Raw-Lout fences only. |
 | `complex_diag.md`          | Demanding follow-up to `diag_gallery.md`: an arithmetic-expression grammar as `@SyntaxDiag` railroad diagrams, a binary search tree, a `paint`-filled subsystem box, a flowchart with five distinct arrowstyles in one `@Diag`, and a composite figure mixing `@Tree` with embedded `@SyntaxDiag`. |
+| `scientific_paper.md`      | A short workshop-style paper comparing the composite trapezoidal and Simpson's rules. `type: report` frontmatter, abstract / introduction / methods / results / discussion / references layout, display and inline `@Math`, two pipe tables of numerical error data, a `@Diag` figure with caption, and a manual bibliography. Use as a template for real scientific writing. |
 
 ## Smoke-testing the whole set
 
