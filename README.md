@@ -257,6 +257,9 @@ mdlout/
 
 ## Further reading
 
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — project architecture and
+  design overview (audience: users picking mdlout for a real document, and
+  prospective contributors).
 - [CLAUDE.md](CLAUDE.md) — engineering context: source architecture, build
   variables, mdlout phases, frontmatter mapping.
 - [TODO.md](TODO.md) — current roadmap, what works, what's still in flight.
