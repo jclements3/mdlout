@@ -1,0 +1,37 @@
+###########################################################################
+#  diag_labels_complex - @Diag with a node carrying nodelabel and clabel,#
+#  plus a directed @Link bearing alabel, blabel and linklabel. Exercises #
+#  the full set of automatic label-placement codepaths.                   #
+###########################################################################
+
+@SysInclude { diag }
+@SysInclude { doc }
+@Doc @Text @Begin
+
+@CentredDisplay @Diag {
+A:: @Node
+       nodelabel { state q0 }
+       nodelabelpos { N }
+       clabel { initial }
+       clabelpos { S }
+       { start }
+   ||3c
+B:: @Node
+       nodelabel { state q1 }
+       nodelabelpos { N }
+       clabel { accept }
+       clabelpos { S }
+       { final }
+//
+@Link from { A } to { B }
+   arrow { yes }
+   arrowstyle { solid }
+   alabel { src }
+   alabelpos { NW }
+   blabel { dst }
+   blabelpos { NE }
+   linklabel { transition }
+   linklabelpos { C }
+}
+
+@End @Text

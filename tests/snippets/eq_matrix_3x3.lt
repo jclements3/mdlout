@@ -1,0 +1,15 @@
+###########################################################################
+#  eq_matrix_3x3 - @Eq with a 3x3 matrix, exercising the matrix layout    #
+#  with three rows of three columns each.                                 #
+###########################################################################
+
+@SysInclude { eq }
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+@CentredDisplay @Eq { M = left [ matrix
+   above { acol { 1 } { 2 } { 3 } }
+   above { acol { 4 } { 5 } { 6 } }
+   above { acol { 7 } { 8 } { 9 } }
+] right ] }
+@End @Text

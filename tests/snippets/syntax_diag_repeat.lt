@@ -1,0 +1,17 @@
+###########################################################################
+#  syntax_diag_repeat - a railroad-style @SyntaxDiag exercising the       #
+#  @Repeat construct (a degenerate @Loop where the back-arc is empty,    #
+#  yielding the standard "one or more" syntax-diagram shape).             #
+###########################################################################
+
+@SysInclude { diag }
+@SysInclude { doc }
+@Doc @Text @Begin
+
+@CentredDisplay @SyntaxDiag
+   title { digit-sequence }
+{
+@StartRight @Repeat { @ACell digit }
+}
+
+@End @Text

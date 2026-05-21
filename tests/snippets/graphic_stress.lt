@@ -1,0 +1,39 @@
+###########################################################################
+#  graphic_stress - raw @Graphic with complex PostScript: arcs, curves,   #
+#  fills, strokes and CTM transforms (translate, rotate, scale) all       #
+#  combined in a single graphics state.                                   #
+###########################################################################
+
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+A composite raw-PostScript figure:
+@DP
+@CentredDisplay {
+   "gsave"
+   "  0.85 0.85 0.95 setrgbcolor"
+   "  newpath 0 0 moveto xsize 0 lineto xsize ysize lineto 0 ysize lineto"
+   "  closepath fill"
+   "grestore"
+   "gsave"
+   "  xsize 2 div ysize 2 div translate"
+   "  30 rotate"
+   "  0.9 1.0 scale"
+   "  newpath 0 0 30 0 270 arc"
+   "  0.2 0.5 0.8 setrgbcolor 1.2 setlinewidth stroke"
+   "grestore"
+   "gsave"
+   "  xsize 2 div ysize 2 div translate"
+   "  newpath -40 -20 moveto"
+   "  -10 40 30 -40 60 20 curveto"
+   "  0.8 0.2 0.2 setrgbcolor 1.5 setlinewidth stroke"
+   "grestore"
+   "gsave"
+   "  newpath 10 10 moveto"
+   "  xsize 30 sub 10 lineto"
+   "  xsize 30 sub ysize 30 sub lineto"
+   "  10 ysize 30 sub lineto closepath"
+   "  0.1 0.6 0.2 setrgbcolor 0.5 setlinewidth stroke"
+   "grestore"
+} @Graphic { 7c @Wide 5c @High }
+@End @Text

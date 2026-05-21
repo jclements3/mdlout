@@ -1,0 +1,19 @@
+###########################################################################
+#  fig_multi - three @Fig figures laid out side-by-side using horizontal  #
+#  concatenation. Each figure is a small shape so the side-by-side       #
+#  layout is visible.                                                    #
+###########################################################################
+
+@SysInclude { fig }
+@SysInclude { doc }
+@Doc @Text @Begin
+
+@CentredDisplay {
+   @Fig { @Box { left } }
+   ||1c
+   @Fig { @Circle { middle } }
+   ||1c
+   @Fig { @Ellipse { right } }
+}
+
+@End @Text

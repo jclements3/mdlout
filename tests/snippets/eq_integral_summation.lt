@@ -1,0 +1,22 @@
+###########################################################################
+#  eq_integral_summation - display equations exercising the int / sum /   #
+#  fraction operators together.                                           #
+###########################################################################
+
+@SysInclude { eq }
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+@CentredDisplay @Eq {
+   int from 0 to infinity { e sup { - x } } d x = 1
+}
+@DP
+@CentredDisplay @Eq {
+   sum from { i = 1 } to n { 1 over { i sup 2 } } = { pi sup 2 } over 6
+}
+@DP
+@CentredDisplay @Eq {
+   { d over { d x } } left ( { f ( x ) } over { g ( x ) } right )
+      = { f prime ( x ) g ( x ) - f ( x ) g prime ( x ) } over { g ( x ) sup 2 }
+}
+@End @Text

@@ -1,0 +1,28 @@
+###########################################################################
+#  tree_deep - a @Tree nested four levels deep, exercising recursive      #
+#  @Sub layout and tree-vertical-separation propagation through depth.    #
+###########################################################################
+
+@SysInclude { diag }
+@SysInclude { doc }
+@Doc @Text @Begin
+
+@CentredDisplay @Diag {
+@Tree {
+   @Node { root }
+   @Sub { @Node { A }
+      @Sub { @Node { A1 }
+         @Sub { @Node { A1a } }
+         @Sub { @Node { A1b } }
+      }
+      @Sub { @Node { A2 } }
+   }
+   @Sub { @Node { B }
+      @Sub { @Node { B1 }
+         @Sub { @Node { B1a } }
+      }
+   }
+}
+}
+
+@End @Text

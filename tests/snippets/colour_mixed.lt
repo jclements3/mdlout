@@ -1,0 +1,21 @@
+###########################################################################
+#  colour_mixed - text, @Box and a raw-PS line each rendered in a         #
+#  different colour. Verifies that the colour state pushed for one        #
+#  element does not leak into the next.                                   #
+###########################################################################
+
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+{ red @Colour { This sentence is set entirely in red. } }
+@DP
+@CentredDisplay { green @Colour { @Box { A green-bordered box } } }
+@DP
+@CentredDisplay {
+   "0 ysize 2 div moveto xsize 0 rlineto"
+   "1.5 setlinewidth 0 0 1 setrgbcolor stroke"
+} @Graphic { 6c @Wide 1c @High }
+@DP
+Ordinary black trailing paragraph to confirm the colour state has been
+restored after each coloured element.
+@End @Text

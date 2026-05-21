@@ -1,0 +1,23 @@
+###########################################################################
+#  table_multi_row - a multi-row table with mixed cell content and        #
+#  inter-row horizontal rules. Lout's @Tbl does not natively support      #
+#  rowspans/colspans, so this exercises rule { yes } between row groups   #
+#  and a centred "group header" row simulated by a wide @CL cell.         #
+###########################################################################
+
+@SysInclude { tbl }
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+@CentredDisplay @Tbl
+   rule { yes }
+   aformat { @Cell A | @Cell B | @Cell C | @Cell D }
+{
+@Rowa A { @B { Year } } B { @B { Q1 } } C { @B { Q2 } } D { @B { Total } }
+@Rowa A { 2024 } B { 12 } C { 18 } D { 30 }
+@Rowa A { 2025 } B { 15 } C { 22 } D { 37 }
+@Rowa A { 2026 } B { 21 } C { 25 } D { 46 }
+@HL
+@Rowa A { @B { Mean } } B { 16.0 } C { 21.7 } D { 37.7 }
+}
+@End @Text

@@ -89,14 +89,43 @@ _fig_labels: dict[str, str] = {}
 # Maps tab:label -> assigned label string
 _tab_labels: dict[str, str] = {}
 
+# Pandoc-style footnotes: [^label] inline ref + [^label]: body definition.
+# `_fn_order` records first-appearance order of each label so the rendered
+# number matches the position the reader first encounters the ref. `_fn_defs`
+# stores the body (markdown) so we can emit it next to the reference (Lout
+# @FootNote) and as an HTML footnotes section.
+_fn_order: dict[str, int] = {}
+_fn_defs: dict[str, str] = {}
+
+# HTML mode capture state.
+#   _html_headings:   (level, text, anchor) for every markdown heading, in
+#                     document order. Anchors are slugified + deduped. Used
+#                     to build the TOC <ul> and the hidden <h1 id="..."> anchor
+#                     elements that the scaffold injects above the SVG.
+#   _html_toc_requested:
+#                     True if [TOC] appeared anywhere in the document; the
+#                     scaffold uses this to decide whether to render the
+#                     <nav class="toc"> block.
+_html_headings: list[tuple[int, str, str]] = []
+_html_toc_requested: bool = False
+
+# Output format the current build targets. Set by _build_once before
+# generate_lout runs. Read by code paths that need to emit HTML-specific
+# markers (e.g. footnote refs, TOC placeholders) into the Lout stream.
+_output_format: str = 'pdf'
+
 
 def _reset_xref_state() -> None:
     _cite_order.clear()
     _cite_bib.clear()
     _fig_labels.clear()
     _tab_labels.clear()
-    global _cite_format
+    _fn_order.clear()
+    _fn_defs.clear()
+    _html_headings.clear()
+    global _cite_format, _html_toc_requested
     _cite_format = 'numeric'
+    _html_toc_requested = False
 
 
 def _cite_render_number(n: int) -> str:
@@ -116,6 +145,85 @@ def _cite_render_number(n: int) -> str:
 # Bibliography entry (whole line): [@key]: text...
 _CITE_BIB_RE = re.compile(r'^\s*\[@([A-Za-z0-9_][A-Za-z0-9_-]*)\]:\s*(.*)$')
 _CITE_INLINE_RE = re.compile(r'\[@([A-Za-z0-9_][A-Za-z0-9_-]*)(?:,\s*([^\]]+))?\]')
+
+# Pandoc-style footnotes.
+#   - Inline ref:  [^label]   (label = word chars; numeric like ^1 also works)
+#   - Definition:  [^label]: body text on this line
+# The inline regex deliberately excludes the colon that starts a definition
+# so a line like "[^1]: foo" is parsed as a def, not a ref.
+_FN_DEF_RE = re.compile(r'^\s*\[\^([A-Za-z0-9_][A-Za-z0-9_-]*)\]:\s*(.*)$')
+_FN_INLINE_RE = re.compile(r'\[\^([A-Za-z0-9_][A-Za-z0-9_-]*)\](?!:)')
+
+
+_SLUG_STRIP_RE = re.compile(r'[^a-z0-9\s-]')
+_SLUG_SPACE_RE = re.compile(r'[\s_]+')
+
+
+def _slugify(text: str) -> str:
+    """Markdown-style heading slug: lowercase, non-alnum dropped, runs of
+    whitespace/underscores collapsed to a single hyphen. Empty falls back
+    to 'section'."""
+    s = text.lower()
+    s = _SLUG_STRIP_RE.sub('', s)
+    s = _SLUG_SPACE_RE.sub('-', s).strip('-')
+    return s or 'section'
+
+
+def _strip_md_inline(text: str) -> str:
+    """Quick pass to strip markdown inline markers from heading text so the
+    HTML TOC and ids reflect rendered text, not raw markup."""
+    s = re.sub(r'`([^`]+)`', r'\1', text)
+    s = re.sub(r'\*\*\*(.+?)\*\*\*', r'\1', s)
+    s = re.sub(r'\*\*(.+?)\*\*', r'\1', s)
+    s = re.sub(r'\*(.+?)\*', r'\1', s)
+    s = re.sub(r'__(.+?)__', r'\1', s)
+    s = re.sub(r'_(.+?)_', r'\1', s)
+    s = re.sub(r'~~(.+?)~~', r'\1', s)
+    s = re.sub(r'\[([^\]]+)\]\([^)]+\)', r'\1', s)
+    return s.strip()
+
+
+def _scan_html_headings(blocks: list[Block]) -> None:
+    """Walk parsed blocks once to record (level, text, anchor) for headings.
+
+    Anchors are deduped by appending -2, -3, ... to repeats. Also flips
+    _html_toc_requested if any [TOC] block is present.
+    """
+    global _html_toc_requested
+    seen: dict[str, int] = {}
+    for b in blocks:
+        if b.type == BlockType.TOC:
+            _html_toc_requested = True
+            continue
+        if b.type != BlockType.HEADING:
+            continue
+        text = _strip_md_inline(b.content)
+        base = _slugify(text)
+        n = seen.get(base, 0)
+        anchor = base if n == 0 else f'{base}-{n + 1}'
+        seen[base] = n + 1
+        _html_headings.append((b.level, text, anchor))
+
+
+def _scan_footnotes(md_text: str) -> str:
+    """Pre-scan for [^label] refs and [^label]: defs.
+
+    Records first-appearance order in _fn_order and stores bodies in _fn_defs.
+    Strips definition lines from the markdown (they'll be re-emitted as the
+    HTML footnotes section / are inlined at the Lout reference site).
+    """
+    out_lines: list[str] = []
+    for line in md_text.split('\n'):
+        m = _FN_DEF_RE.match(line)
+        if m:
+            _fn_defs[m.group(1)] = m.group(2).rstrip()
+            continue
+        for fm in _FN_INLINE_RE.finditer(line):
+            lbl = fm.group(1)
+            if lbl not in _fn_order:
+                _fn_order[lbl] = len(_fn_order) + 1
+        out_lines.append(line)
+    return '\n'.join(out_lines)
 
 
 def _scan_citations(md_text: str) -> str:
@@ -401,6 +509,25 @@ def _convert_inline_inner(text: str) -> str:
             return _ph_put(_tab_labels.get(key, '?'))
         return m.group(0)
     result = _XREF_RE.sub(_xref_repl, result)
+
+    # Pandoc-style footnote refs: [^label]. PDF mode emits a Lout @FootNote
+    # so Lout handles page-bottom placement; HTML mode emits only a numbered
+    # superscript (the footnotes section is appended once at end-of-doc) so
+    # the HTML post-processor can wrap markers in <a> links.
+    def _fn_repl(m: re.Match) -> str:
+        lbl = m.group(1)
+        n = _fn_order.get(lbl)
+        if n is None:
+            n = len(_fn_order) + 1
+            _fn_order[lbl] = n
+        if _output_format == 'html':
+            return _ph_put(f'{{ "[{n}]" }} @Sup {{}}')
+        body_md = _fn_defs.get(lbl, f'[^{lbl}]')
+        body_lout = _convert_inline_inner(body_md)
+        return _ph_put(
+            f'{{ "[{n}]" }} @Sup {{}} @FootNote {{ {body_lout} }}'
+        )
+    result = _FN_INLINE_RE.sub(_fn_repl, result)
 
     # Links: [text](url)
     def _link_repl(m: re.Match) -> str:
@@ -1503,7 +1630,14 @@ def _block_to_lout(block: Block) -> str:
             global _needs_svgmacros
             _needs_svgmacros = True
             # Pass LaTeX body opaquely through @Math as one Lout string.
-            return f'@LP\n@CentredDisplay @Math {{ "{_lout_string_encode(block.content.strip())}" }}'
+            # Normalise internal whitespace: Lout's PS back end emits a
+            # "character \012 replaced by space" warning when literal LFs
+            # reach @Math (it tries to render them as glyphs). KaTeX is
+            # newline-tolerant, so collapsing any run of newlines + tabs +
+            # spaces to a single space is safe in both back ends. Authors
+            # that want LaTeX line breaks should write `\\` explicitly.
+            body = re.sub(r'[\s\n\t]+', ' ', block.content.strip())
+            return f'@LP\n@CentredDisplay @Math {{ "{_lout_string_encode(body)}" }}'
         case BlockType.ABC:
             _needs_svgmacros = True
             return f'@LP\n@ABC {{ "{_lout_string_encode(block.content)}" }}'
@@ -2231,13 +2365,153 @@ def _build_html_scaffold(
     head = '\n'.join(head_parts)
     init_js = '\n'.join(init_js_parts)
 
+    # Hidden heading anchors + TOC + footnotes sections are injected by the
+    # caller via _build_html_extras. We splice them around the SVG so the
+    # in-page nav (anchors / TOC links / footnote backrefs) works even though
+    # the SVG itself has no anchor DOM.
+    head_anchors, toc_html, footnotes_html = _build_html_extras()
+    if head_anchors or toc_html or footnotes_html:
+        head_parts.append(
+            '<style>'
+            '.mdlout-anchors{position:absolute;left:-9999px;width:1px;'
+            'height:1px;overflow:hidden}'
+            'nav.toc{max-width:48em;margin:1em auto;padding:1em 1.5em;'
+            'background:#fff;border:1px solid #ddd;font-family:Times,serif}'
+            'nav.toc h2{margin:0 0 .5em 0;font-size:1.1em}'
+            'nav.toc ul{padding-left:1.5em;margin:.2em 0}'
+            'nav.toc>ul{padding-left:1.2em}'
+            'nav.toc a{color:#0645ad;text-decoration:none}'
+            'nav.toc a:hover{text-decoration:underline}'
+            'aside.footnotes{max-width:48em;margin:2em auto;padding:1em 1.5em;'
+            'background:#fff;border-top:1px solid #ccc;font-family:Times,serif;'
+            'font-size:.95em}'
+            'aside.footnotes h2{margin:0 0 .5em 0;font-size:1.1em}'
+            'aside.footnotes ol{padding-left:2em;margin:.3em 0}'
+            'aside.footnotes a.fn-backref{margin-left:.3em;'
+            'text-decoration:none;color:#0645ad}'
+            '</style>'
+        )
+        head = '\n'.join(head_parts)
+
+    body_parts = []
+    if head_anchors:
+        body_parts.append(head_anchors)
+    if toc_html:
+        body_parts.append(toc_html)
+    body_parts.append(svg)
+    if footnotes_html:
+        body_parts.append(footnotes_html)
+    body_inner = '\n'.join(body_parts)
+
     return (
         '<!DOCTYPE html>\n'
         f'<html lang="en">\n<head>\n{head}\n</head>\n'
-        f'<body>\n{svg}\n'
+        f'<body>\n{body_inner}\n'
         f'<script>{init_js}</script>\n'
         '</body>\n</html>\n'
     ), info
+
+
+def _build_html_extras() -> tuple[str, str, str]:
+    """Return (anchor_block, toc_block, footnotes_block) HTML strings.
+
+    - anchor_block: a visually-hidden div of <h1 id="..."> ... <h6 id="...">
+      elements so anchor links resolve and h1/h2 element-with-id assertions
+      pass in tests. The SVG carries the visible rendering.
+    - toc_block: <nav class="toc"> with a nested <ul> mirroring heading
+      hierarchy. Emitted only when [TOC] appeared in the markdown.
+    - footnotes_block: <aside class="footnotes"><ol>...</ol></aside> built
+      from _fn_order / _fn_defs. Emitted only when at least one [^ref] fired.
+    """
+    anchor_block = ''
+    if _html_headings:
+        bits = ['<div class="mdlout-anchors" aria-hidden="true">']
+        for level, text, anchor in _html_headings:
+            lvl = max(1, min(6, level))
+            bits.append(
+                f'<h{lvl} id="{_html_escape(anchor)}">'
+                f'{_html_escape(text)}</h{lvl}>'
+            )
+        bits.append('</div>')
+        anchor_block = '\n'.join(bits)
+
+    toc_block = ''
+    if _html_toc_requested and _html_headings:
+        toc_block = _build_html_toc(_html_headings)
+
+    footnotes_block = ''
+    if _fn_order:
+        footnotes_block = _build_html_footnotes()
+    return anchor_block, toc_block, footnotes_block
+
+
+def _build_html_toc(headings: list[tuple[int, str, str]]) -> str:
+    """Build a nested <ul class="toc">: each level transition opens or closes
+    <ul> elements to mirror the heading depth. A heading deeper than its
+    predecessor by more than 1 still produces nested <ul>s (we don't skip
+    levels, we just keep nesting one at a time)."""
+    out = ['<nav class="toc">', '<h2>Contents</h2>', '<ul>']
+    stack = [1]  # current depth = 1 (matches the outer <ul>)
+    for level, text, anchor in headings:
+        target = max(1, min(6, level))
+        # Open additional nested <ul>s for deeper headings.
+        while stack[-1] < target:
+            out.append('<ul>')
+            stack.append(stack[-1] + 1)
+        # Close <ul>s when going shallower.
+        while stack[-1] > target:
+            out.append('</ul>')
+            stack.pop()
+        out.append(
+            f'<li><a href="#{_html_escape(anchor)}">'
+            f'{_html_escape(text)}</a></li>'
+        )
+    while stack:
+        out.append('</ul>')
+        stack.pop()
+    out.append('</nav>')
+    return '\n'.join(out)
+
+
+def _build_html_footnotes() -> str:
+    """Emit <aside class="footnotes"><ol><li id="fn-N">body<a href="#fnref-N"
+    class="fn-backref"><sup>[N]</sup></a></li>...</ol></aside>.
+
+    The body is the raw markdown definition rendered through a minimal
+    inline pass (bold/italic/code), so footnote text reads naturally without
+    pulling in the full Lout pipeline. Footnote bodies in mdlout are
+    intentionally short -- callers wanting block content should put it
+    in the main flow.
+    """
+    out = ['<aside class="footnotes">', '<h2>Footnotes</h2>', '<ol>']
+    by_n = sorted(_fn_order.items(), key=lambda kv: kv[1])
+    for lbl, n in by_n:
+        body = _fn_defs.get(lbl, f'[^{lbl}]')
+        body_html = _md_inline_to_html(body)
+        out.append(
+            f'<li id="fn-{n}">{body_html} '
+            f'<a href="#fnref-{n}" class="fn-backref" '
+            f'title="back to text"><sup>[{n}]</sup></a></li>'
+        )
+    out.append('</ol>')
+    out.append('</aside>')
+    return '\n'.join(out)
+
+
+def _md_inline_to_html(s: str) -> str:
+    """Tiny markdown-inline -> HTML pass for footnote bodies. Handles
+    backticks, **bold**, *italic*, and bare links; escapes HTML metachars
+    first so user input can't break the document."""
+    s = _html_escape(s)
+    s = re.sub(r'`([^`]+)`', r'<code>\1</code>', s)
+    s = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', s)
+    s = re.sub(r'\*(.+?)\*', r'<em>\1</em>', s)
+    s = re.sub(
+        r'\[([^\]]+)\]\(([^)]+)\)',
+        lambda m: f'<a href="{m.group(2)}">{m.group(1)}</a>',
+        s,
+    )
+    return s
 
 
 def _html_escape(s: str) -> str:
@@ -2303,10 +2577,14 @@ def _build_once(args) -> str | None:
                     or 'numeric').lower()
     if _cite_format not in ('numeric', 'alpha'):
         _cite_format = 'numeric'
+    global _output_format
+    _output_format = 'html' if args.format == 'html' else 'pdf'
     md_text = _scan_citations(md_text)
+    md_text = _scan_footnotes(md_text)
     _scan_fig_tab_labels(md_text, frontmatter.get('type', 'doc').lower())
     blocks = parse_markdown(md_text)
     blocks = _inject_bibliography(blocks)
+    _scan_html_headings(blocks)
     lout_src = generate_lout(blocks, frontmatter)
 
     # --lout-only: just emit Lout source
