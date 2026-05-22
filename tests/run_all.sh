@@ -9,6 +9,19 @@ set -u
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# Optional flag --bench triggers the microbenchmark suite after the
+# regression compare. Default off so existing CI flows don't slow down.
+RUN_BENCH=0
+for arg in "$@"; do
+   case "${arg}" in
+      --bench) RUN_BENCH=1 ;;
+      *)
+         echo "run_all.sh: unknown arg '${arg}'" >&2
+         exit 2
+         ;;
+   esac
+done
+
 echo "==> running run_compare.sh"
 bash "${SCRIPT_DIR}/run_compare.sh"
 rc=$?
@@ -31,3 +44,9 @@ fi
 echo ""
 echo "==> running history.py"
 python3 "${SCRIPT_DIR}/history.py"
+
+if [[ "${RUN_BENCH}" -eq 1 ]]; then
+   echo ""
+   echo "==> running bench.sh (microbenchmark suite)"
+   bash "${SCRIPT_DIR}/bench.sh"
+fi
