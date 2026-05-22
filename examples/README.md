@@ -45,6 +45,7 @@ preview HTML.
 | [`02_typography.md`](02_typography.md) | doc | 1 (HTML) | Inline spans -- bold, italic, bold-italic, `inline code`, strikethrough, superscript, nested formatting, and backslash escapes. PDF currently fails to build; tracked in `TODO.md`. [[html](out/02_typography.html)] |
 | [`letter.md`](letter.md) | doc | 1 | US business letter built on `type: doc` plus raw-Lout passthrough for the right-aligned sender block, date, recipient block, and signature. Demonstrates `"@"` and `"/"` quoting to slip an email and a URL past Lout's metacharacters. The de-facto template for letters until `type: letter` lands. [[html](out/letter.html) - [pdf](out/letter.pdf)] |
 | [`cv.md`](cv.md) | doc | 1 | Two-column CV (`columns: 2`, `page-headers: None`) for a fictitious senior audio DSP engineer. Raw-Lout `@TaggedList` for the skills section, raw-Lout banner heading, markdown prose for the bulk. Exercises the `font`, `page`, `top-margin`, and `column-gap` knobs. [[html](out/cv.html) - [pdf](out/cv.pdf)] |
+| [`exam.md`](exam.md) | doc | 3 (PDF) / 6 (HTML) | Five-question calculus midterm with blank workspaces (`//Nc` vlist separators inside raw-Lout fences) between questions and a separate `# Answer Key` page. Prose math throughout so PDF and HTML stay in sync. The template for quizzes / worksheets / exam booklets. [[html](out/exam.html) - [pdf](out/exam.pdf)] |
 
 ## Lists and tables
 
