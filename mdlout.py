@@ -15,13 +15,18 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import base64
+import io
+import mimetypes
 import os
+import pathlib
 import re
 import shlex
 import shutil
 import subprocess
 import sys
 import tempfile
+import traceback
 from dataclasses import dataclass, field
 from enum import Enum, auto
 from pathlib import Path
@@ -2316,6 +2321,139 @@ def _read_text_if_exists(paths: tuple[str, ...]) -> tuple[str | None, str | None
     return None, None
 
 
+# Raster extensions @IncludeGraphic can route through <image href> in SVG
+# mode. mimetypes.guess_type covers png/jpg/jpeg/gif natively; .webp varies
+# by stdlib version, so we have a fallback table.
+_RASTER_EXTS = frozenset({'.png', '.jpg', '.jpeg', '.gif', '.webp'})
+_RASTER_MIME_FALLBACK = {
+    '.png':  'image/png',
+    '.jpg':  'image/jpeg',
+    '.jpeg': 'image/jpeg',
+    '.gif':  'image/gif',
+    '.webp': 'image/webp',
+}
+
+# Match <image ... href="..." ...> or xlink:href="..." in the SVG.
+# Tolerant of single/double quotes and whitespace, but only fires inside
+# an <image> element so we don't accidentally rewrite an <a xlink:href> or
+# a <use xlink:href>.
+_IMAGE_HREF_RE = re.compile(
+    r'(<image\b[^>]*?)'
+    r'(\b(?:xlink:href|href)\s*=\s*)'
+    r'(?P<quote>["\'])'
+    r'(?P<url>[^"\']+)'
+    r'(?P=quote)',
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _inline_raster_in_svg(svg_text: str, base_dir: pathlib.Path) -> str:
+    """Rewrite local raster <image href="..."> to base64 data: URLs.
+
+    Walks `svg_text`, finds every <image> href / xlink:href that points at a
+    local raster file (resolved against `base_dir`), reads it, base64-encodes
+    the bytes, and replaces the href with `data:image/<mime>;base64,<...>`.
+    Already-`data:`, http(s)://, and file:// URLs are left alone, as are
+    paths that don't resolve to an existing raster on disk (a warning is
+    logged to stderr in that case so the user notices broken links).
+
+    Vector .svg files are intentionally skipped: Lout's @SVGFile path already
+    inlines them as text via @IncludeGraphic, and re-inlining an SVG as a
+    base64 image would lose its DOM (no clickable links, no text selection).
+    """
+    cache: dict[str, str | None] = {}
+
+    def _encode(path: pathlib.Path) -> str | None:
+        key = str(path)
+        if key in cache:
+            return cache[key]
+        try:
+            data = path.read_bytes()
+        except OSError as e:
+            print(
+                f'mdlout: --inline-raster: could not read {path}: {e}',
+                file=sys.stderr,
+            )
+            cache[key] = None
+            return None
+        ext = path.suffix.lower()
+        mime, _ = mimetypes.guess_type(path.name)
+        if not mime:
+            mime = _RASTER_MIME_FALLBACK.get(ext, 'application/octet-stream')
+        b64 = base64.b64encode(data).decode('ascii')
+        out = f'data:{mime};base64,{b64}'
+        cache[key] = out
+        return out
+
+    def _sub(m: 're.Match[str]') -> str:
+        url = m.group('url').strip()
+        # Skip data:, http(s)://, file://, and anything that already
+        # looks like an absolute URL with a scheme we don't own.
+        low = url.lower()
+        if (low.startswith('data:')
+                or low.startswith('http://')
+                or low.startswith('https://')
+                or low.startswith('file://')):
+            return m.group(0)
+
+        # Only rewrite raster extensions; SVGs are inlined upstream.
+        ext = pathlib.Path(url).suffix.lower()
+        if ext not in _RASTER_EXTS:
+            return m.group(0)
+
+        # Resolve against base_dir, then fall back to absolute / cwd.
+        candidate = (base_dir / url) if not os.path.isabs(url) else pathlib.Path(url)
+        if not candidate.is_file():
+            print(
+                f'mdlout: --inline-raster: skipping missing file {candidate}',
+                file=sys.stderr,
+            )
+            return m.group(0)
+
+        data_url = _encode(candidate)
+        if data_url is None:
+            return m.group(0)
+        quote = m.group('quote')
+        return f'{m.group(1)}{m.group(2)}{quote}{data_url}{quote}'
+
+    return _IMAGE_HREF_RE.sub(_sub, svg_text)
+
+
+# CSS @page size keywords accepted by browsers (CSS Paged Media level 3).
+# Anything not in this set is passed through verbatim if it already looks
+# like an explicit dimension (e.g. "210mm 297mm"); otherwise we fall back
+# to "letter".
+_CSS_PAGE_SIZES = frozenset({
+    'a3', 'a4', 'a5', 'b4', 'b5', 'letter', 'legal', 'ledger',
+})
+
+
+def _print_page_size_css(page_size: str | None, orientation: str | None) -> str:
+    """Build a CSS @page `size:` value from frontmatter page + orientation.
+
+    Lout's @PageType accepts names like "A4", "Letter", "Legal". CSS Paged
+    Media's `size` property accepts the same names (lowercase) plus
+    "portrait" / "landscape". We just translate.
+
+    If `page_size` already looks like an explicit "<num><unit> <num><unit>"
+    pair, pass it through unchanged. Unrecognised names fall back to
+    "letter portrait".
+    """
+    raw = (page_size or 'Letter').strip()
+    orient = (orientation or 'Portrait').strip().lower()
+    if orient not in ('portrait', 'landscape'):
+        orient = 'portrait'
+
+    # Already an explicit "<n><unit> <n><unit>" pair? Pass through.
+    if re.match(r'^\d', raw) and re.search(r'[a-z]', raw):
+        return raw
+
+    key = raw.lower().replace(' ', '')
+    if key in _CSS_PAGE_SIZES:
+        return f'{key} {orient}'
+    return f'letter {orient}'
+
+
 def _build_html_scaffold(
     svg: str,
     title: str,
@@ -2327,6 +2465,8 @@ def _build_html_scaffold(
     highlight: bool = True,
     lang: str = 'en',
     a11y: bool = True,
+    page_size: str = 'Letter',
+    orientation: str = 'Portrait',
 ) -> tuple[str, dict[str, str | None]]:
     """Wrap raw SVG output from lout -G in a self-contained HTML5 document.
 
@@ -2385,8 +2525,47 @@ def _build_html_scaffold(
         'white-space:pre;overflow:auto}'
         '.mdlout-code code{background:transparent;padding:0;'
         'font-family:inherit;font-size:inherit}'
-        '@media print{body{background:#fff;padding:0}'
-        '.lout-page{box-shadow:none;margin:0;page-break-after:always}}'
+        '</style>'
+    )
+
+    # ---- Print stylesheet: page-for-page parity with the PDF route ---------
+    # The on-screen view shows .lout-page divs / <svg class="lout-page"> on a
+    # grey backdrop. When the document is printed (or rendered headless via
+    # Chrome's --print-to-pdf), each Lout page must land on its own physical
+    # printed sheet, with non-content chrome (skip link, TOC nav, footnote
+    # aside, hidden anchor/alt blocks, banner) hidden. Lout has already baked
+    # the page margins into the SVG viewBox, so the @page itself is borderless.
+    print_size = _print_page_size_css(page_size, orientation)
+    head_parts.append(
+        '<style media="print">'
+        f'@page{{size:{print_size};margin:0}}'
+        # Reset wrapper padding/background so the page edge is the SVG edge.
+        'html,body{background:#fff!important;margin:0!important;padding:0!important}'
+        # Hide non-content chrome -- footnotes are already printed inline at
+        # the bottom of each PDF page via Lout's @FootNote, and the HTML's
+        # separate <aside> would otherwise repeat them after the last page.
+        '.skip-link,nav.toc,aside.footnotes,header[role="banner"],'
+        '.mdlout-img-alts,.mdlout-anchors{display:none!important}'
+        # Each Lout page (svg.lout-page or .lout-page div) prints on its own
+        # sheet. page-break-before:always on every page except the first puts
+        # the cut between pages; page-break-inside:avoid keeps the page intact.
+        '.lout-page{box-shadow:none!important;margin:0!important;'
+        'padding:0!important;display:block;'
+        'page-break-before:always;page-break-after:auto;'
+        'break-before:page;break-after:auto;'
+        'page-break-inside:avoid;break-inside:avoid;'
+        # Lout already sized the <svg> at the exact paper dimensions in
+        # points (width="595pt" height="842pt" for A4, etc.). Keep those
+        # intrinsic dimensions for print so the page lines up edge-to-edge
+        # with the @page box. max-width:none cancels the on-screen rule
+        # that capped <svg>s at the viewport width.
+        'max-width:none!important}'
+        '.lout-page:first-of-type,'
+        'main>article>.lout-page:first-of-type{'
+        'page-break-before:auto;break-before:auto}'
+        # <main>/<article> wrappers from the a11y scaffolding must not add
+        # extra padding that would push the SVG off the page.
+        'main,article{margin:0!important;padding:0!important;display:block}'
         '</style>'
     )
 
@@ -2944,6 +3123,32 @@ def _build_once(args) -> str | None:
 
             with open(svg_file, encoding='utf-8') as f:
                 svg = f.read()
+            # --inline-raster: optionally base64-inline raster <image href>s
+            # so the HTML is fully self-contained. Trigger from CLI flag or
+            # `inline-raster: true` in frontmatter. Relative paths resolve
+            # against the directory containing the source markdown.
+            _inline_raster_flag = bool(
+                getattr(args, 'inline_raster', False)
+                or str(frontmatter.get('inline-raster', '')).strip().lower()
+                in ('true', 'yes', '1', 'on')
+                or str(frontmatter.get('inline_raster', '')).strip().lower()
+                in ('true', 'yes', '1', 'on')
+            )
+            if _inline_raster_flag:
+                if args.input == '-':
+                    raster_base = pathlib.Path.cwd()
+                else:
+                    raster_base = pathlib.Path(args.input).resolve().parent
+                before = svg.count('data:image')
+                svg = _inline_raster_in_svg(svg, raster_base)
+                after = svg.count('data:image')
+                inlined = max(0, after - before)
+                if inlined:
+                    print(
+                        f'  inline-raster: inlined {inlined} raster image(s) '
+                        f'from {raster_base}',
+                        file=sys.stderr,
+                    )
             if getattr(args, 'text_as_paths', False):
                 try:
                     svg, tap_stats = _convert_text_to_paths(svg)
@@ -2978,6 +3183,8 @@ def _build_once(args) -> str | None:
                 highlight=not args.no_highlight,
                 lang=html_lang,
                 a11y=not getattr(args, 'no_a11y', False),
+                page_size=str(frontmatter.get('page') or 'Letter'),
+                orientation=str(frontmatter.get('orientation') or 'Portrait'),
             )
             # Inject the live-reload <script> just before </body> so the
             # browser opens an EventSource to /events. Only active in
@@ -3034,19 +3241,158 @@ def _watch_file_mtime(path: str) -> float:
 
 
 def _safe_build(args) -> str | None:
-    """Run _build_once but swallow exceptions so watch/serve keep going."""
+    """Run _build_once but swallow exceptions so watch/serve keep going.
+
+    In --serve mode, captures stderr-style errors so _run_serve can render
+    them as an overlay in the served HTML. The captured error (if any)
+    lives in the module-level _last_build_error dict so the request
+    handler can consult it without re-plumbing return values.
+    """
+    global _last_build_error
+    # Capture stderr only when serving, so the regular CLI keeps its
+    # familiar "errors stream live to the terminal" behaviour.
+    capture = bool(_LIVE_RELOAD_SCRIPT)
+    stderr_buf: io.StringIO | None = None
+    tee: '_StderrTee | None' = None
+    saved_stderr = sys.stderr
+    if capture:
+        stderr_buf = io.StringIO()
+        tee = _StderrTee(saved_stderr, stderr_buf)
+        sys.stderr = tee
     try:
-        out = _build_once(args)
+        try:
+            out = _build_once(args)
+        finally:
+            if capture:
+                sys.stderr = saved_stderr
         ts = datetime.now().strftime('%H:%M:%S')
         print(f'[rebuilt {ts}] {out}', file=sys.stderr)
+        _last_build_error = None
         return out
     except SystemExit as e:
         ts = datetime.now().strftime('%H:%M:%S')
         print(f'[error {ts}] build exited with {e.code}', file=sys.stderr)
+        if capture and stderr_buf is not None:
+            _last_build_error = {
+                'kind': 'SystemExit',
+                'message': f'build exited with code {e.code}',
+                'stderr': stderr_buf.getvalue(),
+                'ts': ts,
+            }
     except Exception as e:
         ts = datetime.now().strftime('%H:%M:%S')
         print(f'[error {ts}] {type(e).__name__}: {e}', file=sys.stderr)
+        if capture:
+            tb = traceback.format_exc()
+            stderr_text = stderr_buf.getvalue() if stderr_buf else ''
+            _last_build_error = {
+                'kind': type(e).__name__,
+                'message': str(e),
+                'stderr': stderr_text + ('\n' + tb if tb else ''),
+                'ts': ts,
+            }
     return None
+
+
+# --serve error overlay state. _safe_build writes the last build error here
+# (or clears it on success); the HTTP handler reads it to decide whether to
+# wrap the served HTML in a red-bordered error overlay.
+_last_build_error: dict | None = None
+
+
+class _StderrTee:
+    """File-like wrapper that writes to two streams. Used in --serve mode
+    so build errors still appear in the terminal AND get captured for the
+    overlay simultaneously."""
+
+    def __init__(self, primary, secondary):
+        self._a = primary
+        self._b = secondary
+
+    def write(self, s):
+        try:
+            self._a.write(s)
+        except Exception:
+            pass
+        try:
+            self._b.write(s)
+        except Exception:
+            pass
+        return len(s)
+
+    def flush(self):
+        for s in (self._a, self._b):
+            try:
+                s.flush()
+            except Exception:
+                pass
+
+    def isatty(self):
+        try:
+            return self._a.isatty()
+        except Exception:
+            return False
+
+
+def _render_error_overlay_html(err: dict, base_html: str | None) -> bytes:
+    """Wrap (or replace) base_html with a styled red error overlay.
+
+    The overlay floats over whatever the previous successful build produced,
+    so the author still sees their last good render behind it. A "Retry"
+    button POSTs to /rebuild which triggers _build_once.
+    """
+    ts = err.get('ts', '')
+    kind = err.get('kind', 'Error')
+    message = err.get('message', '')
+    stderr = err.get('stderr', '')
+    title_text = f'{kind}: {message}' if message else kind
+
+    overlay = (
+        '<div id="__mdlout_error_overlay__" '
+        'style="position:fixed;left:0;right:0;bottom:0;'
+        'max-height:60vh;overflow:auto;'
+        'background:#fff;color:#222;'
+        'border-top:4px solid #c0392b;'
+        'box-shadow:0 -2px 8px rgba(0,0,0,.25);'
+        'font:13px/1.4 ui-monospace,Menlo,Consolas,monospace;'
+        'padding:.8em 1em;z-index:2147483647">'
+        '<div style="display:flex;align-items:center;'
+        'justify-content:space-between;gap:1em;margin-bottom:.5em">'
+        '<strong style="color:#c0392b;font:600 14px/1.2 system-ui,sans-serif">'
+        f'mdlout build error [{_html_escape(ts)}]'
+        '</strong>'
+        '<span>'
+        '<button onclick="fetch(\'/rebuild\',{method:\'POST\'})'
+        '.then(function(){setTimeout(function(){location.reload();},300);})" '
+        'style="background:#c0392b;color:#fff;border:0;border-radius:3px;'
+        'padding:.35em .9em;cursor:pointer;font:600 12px system-ui">Retry</button> '
+        '<button onclick="document.getElementById(\'__mdlout_error_overlay__\').remove()" '
+        'style="background:#777;color:#fff;border:0;border-radius:3px;'
+        'padding:.35em .9em;cursor:pointer;font:600 12px system-ui">Dismiss</button>'
+        '</span>'
+        '</div>'
+        f'<div style="color:#a93226;font-weight:600">{_html_escape(title_text)}</div>'
+        f'<pre style="margin:.4em 0 0 0;white-space:pre-wrap;'
+        f'word-break:break-word">{_html_escape(stderr)}</pre>'
+        '</div>'
+    )
+
+    if base_html:
+        if '</body>' in base_html:
+            wrapped = base_html.replace('</body>', overlay + '\n</body>', 1)
+        else:
+            wrapped = base_html + overlay
+        return wrapped.encode('utf-8')
+
+    # No prior successful build to overlay onto -- produce a minimal page.
+    return (
+        '<!DOCTYPE html><html><head><meta charset="utf-8">'
+        '<title>mdlout build error</title>'
+        + _LIVE_RELOAD_SCRIPT
+        + '</head><body style="margin:0;font-family:system-ui;background:#fafafa">'
+        + overlay
+        + '</body></html>'
+    ).encode('utf-8')
 
 
 def _run_watch(args) -> None:
@@ -3122,6 +3468,18 @@ def _run_serve(args, port: int) -> None:
                 except OSError as e:
                     self.send_error(500, str(e))
                     return
+                # If the most recent build failed, drape a red error overlay
+                # over the last-known-good HTML so the author sees the error
+                # without losing the previous render or having to read the
+                # terminal. Retry button POSTs /rebuild.
+                if _last_build_error is not None:
+                    try:
+                        body_str = body.decode('utf-8', errors='replace')
+                    except Exception:
+                        body_str = None
+                    body = _render_error_overlay_html(
+                        _last_build_error, body_str
+                    )
                 self.send_response(200)
                 self.send_header('Content-Type', 'text/html; charset=utf-8')
                 self.send_header('Cache-Control', 'no-store')
@@ -3154,6 +3512,19 @@ def _run_serve(args, port: int) -> None:
             else:
                 self.send_error(404)
 
+        def do_POST(self):
+            if self.path == '/rebuild':
+                # Force a rebuild on demand. Used by the error-overlay
+                # "Retry" button -- author hits it after fixing the input
+                # without having to ctrl-S the source.
+                if _safe_build(args):
+                    _bump_serve_version()
+                self.send_response(204)
+                self.send_header('Cache-Control', 'no-store')
+                self.end_headers()
+                return
+            self.send_error(404)
+
     class ThreadingServer(http.server.ThreadingHTTPServer):
         daemon_threads = True
 
@@ -3176,8 +3547,11 @@ def _run_serve(args, port: int) -> None:
             cur = _watch_file_mtime(args.input)
             if cur and cur != last:
                 last = cur
-                if _safe_build(args):
-                    _bump_serve_version()
+                _safe_build(args)
+                # Bump on both success AND failure so the connected
+                # EventSource reloads and the overlay (or restored
+                # render) shows up immediately.
+                _bump_serve_version()
     except KeyboardInterrupt:
         print('\nserve: bye', file=sys.stderr)
         httpd.shutdown()
@@ -3255,6 +3629,13 @@ def main() -> None:
              'image-alt manifest, focus-ring styles) from the HTML output. '
              'Produces marginally smaller HTML but fails WCAG 2.1 AA on '
              'multiple criteria; only use for diff/regression tooling.',
+    )
+    parser.add_argument(
+        '--inline-raster', action='store_true',
+        help='Base64-inline raster images (png/jpg/jpeg/gif/webp) that the '
+             'SVG references via <image href="...">. Produces a fully self-'
+             'contained HTML file at the cost of size. Off by default; can '
+             'also be enabled via `inline-raster: true` in frontmatter.',
     )
     parser.add_argument(
         '--text-as-paths', action='store_true',
