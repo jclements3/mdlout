@@ -11,8 +11,11 @@ For each HTML in examples/out/ this script:
                   in the rendered DOM.
        - abcjs:   every <div class="abc-music"> in input -> exactly one
                   child <svg> in the same div in the rendered DOM.
-       - hljs:    for every <code class="language-X"> we look for
-                  <span class="hljs-..."> descendants (tokenisation marker).
+       - hljs:    for every <code class="language-X"> (where X is a
+                  language hljs ships by default) we look for evidence
+                  that highlight.js ran -- either an `hljs` class /
+                  data-highlighted="yes" on the <code>, or hljs-* token
+                  spans in its body.
        - Anchors: every <a href="#x"> in input has a matching id="x" in
                   the rendered DOM.
 
@@ -108,8 +111,20 @@ RE_FOREIGNOBJECT_MATH = re.compile(
     r'<foreignObject[^>]*>\s*<span\s+class\s*=\s*"\s*math', re.I)
 RE_DIV_ABC = re.compile(r'<div[^>]*\bclass\s*=\s*"[^"]*\babc-music\b[^"]*"', re.I)
 RE_CODE_LANG = re.compile(r'<code\s+class\s*=\s*"\s*language-([\w+-]+)\s*"', re.I)
-RE_HREF_ANCHOR = re.compile(r'href\s*=\s*"\s*#([^"\s]+)\s*"', re.I)
-RE_ID_ATTR = re.compile(r'\sid\s*=\s*"\s*([^"\s]+)\s*"', re.I)
+# HTML4/5 require a fragment identifier to start with a letter, so anchor
+# names always begin with [A-Za-z]. Anchoring to that prevents matches
+# inside HTML numeric character references like `&#x27;` (apostrophe) or
+# inside JSON-escaped href strings like `href=\"#...\"` embedded in
+# <script type="application/json"> source dumps.
+RE_HREF_ANCHOR = re.compile(r'href\s*=\s*"\s*#([A-Za-z][\w:.-]*)\s*"', re.I)
+RE_ID_ATTR = re.compile(r'\sid\s*=\s*"\s*([A-Za-z][\w:.-]*)\s*"', re.I)
+# Scrub <script> bodies and HTML entities from the input before scanning
+# for anchors -- otherwise raw markdown source embedded in
+# <script type="application/json" class="md-source"> can leak literal
+# `href="#..."` substrings into the anchor set, and numeric character
+# references like `&#x27;` can leak `#x...` fragments.
+RE_SCRIPT_BODY = re.compile(r'<script\b[^>]*>.*?</script>', re.I | re.S)
+RE_HTML_ENTITY = re.compile(r'&(?:#[0-9]+|#x[0-9A-Fa-f]+|[A-Za-z][A-Za-z0-9]*);')
 RE_KATEX = re.compile(r'class\s*=\s*"[^"]*\bkatex\b[^"]*"', re.I)
 RE_HLJS_TOKEN = re.compile(r'<span\s+class\s*=\s*"\s*hljs-[\w-]+', re.I)
 RE_SVG = re.compile(r'<svg\b', re.I)
@@ -511,21 +526,59 @@ def count_abc_with_svg(dom_html: str) -> int:
     return n
 
 
+# Languages that highlight.js ships in its default "common" bundle (the one
+# mdlout pulls in via the bundled hljs payload). Code blocks tagged with
+# languages outside this set won't tokenise, so penalising them here would
+# be a false negative -- the hljs object simply doesn't know that grammar.
+# Source: highlight.js src/common.js (the bundle mdlout ships with). Keep
+# names lowercased; aliases live alongside their canonical names so we can
+# match either form.
+HLJS_KNOWN_LANGUAGES = frozenset({
+    "bash", "c", "cpp", "csharp", "cs", "css", "diff", "go", "graphql",
+    "ini", "toml", "java", "javascript", "js", "json", "kotlin", "less",
+    "lua", "makefile", "make", "markdown", "md", "objectivec", "perl",
+    "php", "php-template", "plaintext", "txt", "text", "python", "py",
+    "python-repl", "r", "ruby", "rb", "rust", "rs", "scss", "shell", "sh",
+    "console", "sql", "swift", "typescript", "ts", "vbnet", "wasm",
+    "xml", "html", "xhtml", "yaml", "yml",
+})
+
+
 def code_blocks_have_hljs(dom_html: str) -> tuple[int, int]:
     """Return (expected, ok) where expected = count of <code class="...language-X...">
-    in dom and ok = count of those that contain at least one hljs-* span.
-    We check against the *rendered* DOM rather than the input because hljs
-    typically rewrites the original <code> contents in place and appends
-    `hljs` to the class attribute, so the class list grows from
-    `language-python` to `language-python hljs` once highlight.js runs.
+    blocks whose language is one hljs knows by default, and ok = count of
+    those for which highlight.js demonstrably ran. We check against the
+    *rendered* DOM rather than the input because hljs rewrites the
+    original <code> contents in place and appends `hljs` to the class
+    attribute, so the class list grows from `language-python` to
+    `language-python hljs` once highlight.js runs.
+
+    "hljs ran" means *either* the <code> element gained the `hljs` class /
+    a `data-highlighted="yes"` attribute, *or* at least one <span
+    class="hljs-..."> token landed in its body. Some perfectly valid blocks
+    (e.g. a single `cd path/` shell line) have no tokens to emit even after
+    hljs analyses them, so requiring tokens alone is a false negative.
+
+    Blocks whose language is *not* in HLJS_KNOWN_LANGUAGES (e.g.
+    `language-gd-script`, `language-hcl`) are excluded from the denominator
+    so users aren't penalised for grammars hljs doesn't ship.
     """
     expected = 0
     ok = 0
     for m in re.finditer(
-            r'<code\b[^>]*\bclass\s*=\s*"[^"]*\blanguage-[\w+-]+\b[^"]*"[^>]*>(.*?)</code>',
+            r'<code\b([^>]*)\bclass\s*=\s*"([^"]*\blanguage-([\w+-]+)\b[^"]*)"([^>]*)>(.*?)</code>',
             dom_html, flags=re.I | re.S):
+        pre_attrs, class_attr, lang, post_attrs, body = m.groups()
+        if lang.lower() not in HLJS_KNOWN_LANGUAGES:
+            continue
         expected += 1
-        if RE_HLJS_TOKEN.search(m.group(1)):
+        attrs = pre_attrs + " " + post_attrs
+        ran = (
+            re.search(r'\bhljs\b', class_attr) is not None
+            or re.search(r'\bdata-highlighted\s*=\s*"\s*yes\s*"', attrs, re.I) is not None
+            or RE_HLJS_TOKEN.search(body) is not None
+        )
+        if ran:
             ok += 1
     return expected, ok
 
@@ -648,7 +701,12 @@ def evaluate_example(html_path: Path, chrome: str, work_dir: Path,
         detail="" if abc_ok else f"{abc_out}/{abc_in} abc-music divs gained an <svg>"))
 
     # --- check 4: every #anchor href resolves to an id in the DOM ---
-    anchors_src = sorted({m.group(1) for m in RE_HREF_ANCHOR.finditer(src)})
+    # Strip <script> bodies (which may carry escaped href strings inside
+    # JSON-embedded markdown source dumps) and HTML entities (so things
+    # like `&#x27;` don't leak `#x` fragments) before scanning.
+    src_for_anchors = RE_SCRIPT_BODY.sub(" ", src)
+    src_for_anchors = RE_HTML_ENTITY.sub(" ", src_for_anchors)
+    anchors_src = sorted({m.group(1) for m in RE_HREF_ANCHOR.finditer(src_for_anchors)})
     ids_dom = collect_ids(dom)
     missing = [a for a in anchors_src if a not in ids_dom]
     result.checks.append(CheckResult(

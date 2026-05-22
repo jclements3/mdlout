@@ -2,9 +2,9 @@
   "status": "ok",
   "chrome": "/mnt/c/Program Files/Google/Chrome/Application/chrome.exe",
   "wsl_windows_chrome": true,
-  "pass": 32,
-  "fail": 2,
-  "total": 34,
+  "pass": 37,
+  "fail": 0,
+  "total": 37,
   "examples": [
     {
       "name": "01_hello.html",
@@ -54,6 +54,20 @@
           "expected": 0,
           "found": 1,
           "detail": "backend=axe-core violations=1 rules=page-has-heading-one"
+        },
+        {
+          "name": "print",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": "body_w=764 pages=1 @page=0 @media-print=1 visible=70 cors_blocked_sheets=1"
+        },
+        {
+          "name": "dark",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": "no dark-mode CSS; bg_lum=0.807 contrast_failures=0"
         }
       ],
       "audits": {
@@ -68,6 +82,70 @@
           "nodes_affected": 1,
           "errors": [],
           "elapsed_ms": 20
+        },
+        "print": {
+          "status": "ok",
+          "audit": "print",
+          "body_width": 764,
+          "pages_survived": 1,
+          "page_rules": 0,
+          "print_media_rules": 1,
+          "rule_errors": 1,
+          "visible_before": 70,
+          "total_elements": 103,
+          "errors": [],
+          "elapsed_ms": 0
+        },
+        "dark": {
+          "status": "ok",
+          "audit": "dark",
+          "body_bg": [
+            232,
+            232,
+            232,
+            1
+          ],
+          "body_fg": [
+            0,
+            0,
+            0,
+            1
+          ],
+          "body_bg_luminance": 0.807,
+          "is_dark": false,
+          "contrast_failures": 0,
+          "contrast_samples": [
+            {
+              "sel": "p",
+              "contrast": 17.14,
+              "bg": [
+                232,
+                232,
+                232
+              ],
+              "fg": [
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "sel": ".lout-page text",
+              "contrast": 21,
+              "bg": [
+                255,
+                255,
+                255
+              ],
+              "fg": [
+                0,
+                0,
+                0
+              ]
+            }
+          ],
+          "errors": [],
+          "elapsed_ms": 0
         }
       }
     },
@@ -119,6 +197,20 @@
           "expected": 0,
           "found": 0,
           "detail": "backend=axe-core violations=0"
+        },
+        {
+          "name": "print",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": "body_w=764 pages=0 @page=0 @media-print=0 visible=24"
+        },
+        {
+          "name": "dark",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": "no dark-mode CSS; bg_lum=0.956 contrast_failures=0"
         }
       ],
       "audits": {
@@ -130,7 +222,71 @@
           "rule_ids": [],
           "nodes_affected": 0,
           "errors": [],
-          "elapsed_ms": 1728
+          "elapsed_ms": 784
+        },
+        "print": {
+          "status": "ok",
+          "audit": "print",
+          "body_width": 764,
+          "pages_survived": 0,
+          "page_rules": 0,
+          "print_media_rules": 0,
+          "rule_errors": 0,
+          "visible_before": 24,
+          "total_elements": 29,
+          "errors": [],
+          "elapsed_ms": 8
+        },
+        "dark": {
+          "status": "ok",
+          "audit": "dark",
+          "body_bg": [
+            250,
+            250,
+            250,
+            1
+          ],
+          "body_fg": [
+            26,
+            26,
+            26,
+            1
+          ],
+          "body_bg_luminance": 0.956,
+          "is_dark": false,
+          "contrast_failures": 0,
+          "contrast_samples": [
+            {
+              "sel": "p",
+              "contrast": 16.67,
+              "bg": [
+                250,
+                250,
+                250
+              ],
+              "fg": [
+                26,
+                26,
+                26
+              ]
+            },
+            {
+              "sel": "h1",
+              "contrast": 16.67,
+              "bg": [
+                250,
+                250,
+                250
+              ],
+              "fg": [
+                26,
+                26,
+                26
+              ]
+            }
+          ],
+          "errors": [],
+          "elapsed_ms": 5
         }
       }
     },
@@ -182,6 +338,20 @@
           "expected": 0,
           "found": 1,
           "detail": "backend=axe-core violations=1 rules=page-has-heading-one"
+        },
+        {
+          "name": "print",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": "body_w=764 pages=1 @page=0 @media-print=1 visible=313 cors_blocked_sheets=1"
+        },
+        {
+          "name": "dark",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": "no dark-mode CSS; bg_lum=0.807 contrast_failures=0"
         }
       ],
       "audits": {
@@ -196,6 +366,84 @@
           "nodes_affected": 1,
           "errors": [],
           "elapsed_ms": 20
+        },
+        "print": {
+          "status": "ok",
+          "audit": "print",
+          "body_width": 764,
+          "pages_survived": 1,
+          "page_rules": 0,
+          "print_media_rules": 1,
+          "rule_errors": 1,
+          "visible_before": 313,
+          "total_elements": 348,
+          "errors": [],
+          "elapsed_ms": 0
+        },
+        "dark": {
+          "status": "ok",
+          "audit": "dark",
+          "body_bg": [
+            232,
+            232,
+            232,
+            1
+          ],
+          "body_fg": [
+            0,
+            0,
+            0,
+            1
+          ],
+          "body_bg_luminance": 0.807,
+          "is_dark": false,
+          "contrast_failures": 0,
+          "contrast_samples": [
+            {
+              "sel": "p",
+              "contrast": 17.14,
+              "bg": [
+                232,
+                232,
+                232
+              ],
+              "fg": [
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "sel": "h1",
+              "contrast": 17.14,
+              "bg": [
+                232,
+                232,
+                232
+              ],
+              "fg": [
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "sel": ".lout-page text",
+              "contrast": 21,
+              "bg": [
+                255,
+                255,
+                255
+              ],
+              "fg": [
+                0,
+                0,
+                0
+              ]
+            }
+          ],
+          "errors": [],
+          "elapsed_ms": 0
         }
       }
     },
@@ -247,6 +495,20 @@
           "expected": 0,
           "found": 0,
           "detail": "backend=axe-core violations=0"
+        },
+        {
+          "name": "print",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": "body_w=764 pages=0 @page=0 @media-print=0 visible=23"
+        },
+        {
+          "name": "dark",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": "no dark-mode CSS; bg_lum=0.956 contrast_failures=0"
         }
       ],
       "audits": {
@@ -258,7 +520,71 @@
           "rule_ids": [],
           "nodes_affected": 0,
           "errors": [],
-          "elapsed_ms": 12
+          "elapsed_ms": 10
+        },
+        "print": {
+          "status": "ok",
+          "audit": "print",
+          "body_width": 764,
+          "pages_survived": 0,
+          "page_rules": 0,
+          "print_media_rules": 0,
+          "rule_errors": 0,
+          "visible_before": 23,
+          "total_elements": 28,
+          "errors": [],
+          "elapsed_ms": 0
+        },
+        "dark": {
+          "status": "ok",
+          "audit": "dark",
+          "body_bg": [
+            250,
+            250,
+            250,
+            1
+          ],
+          "body_fg": [
+            26,
+            26,
+            26,
+            1
+          ],
+          "body_bg_luminance": 0.956,
+          "is_dark": false,
+          "contrast_failures": 0,
+          "contrast_samples": [
+            {
+              "sel": "p",
+              "contrast": 16.67,
+              "bg": [
+                250,
+                250,
+                250
+              ],
+              "fg": [
+                26,
+                26,
+                26
+              ]
+            },
+            {
+              "sel": "h1",
+              "contrast": 16.67,
+              "bg": [
+                250,
+                250,
+                250
+              ],
+              "fg": [
+                26,
+                26,
+                26
+              ]
+            }
+          ],
+          "errors": [],
+          "elapsed_ms": 0
         }
       }
     },
@@ -310,6 +636,20 @@
           "expected": 0,
           "found": 1,
           "detail": "backend=axe-core violations=1 rules=page-has-heading-one"
+        },
+        {
+          "name": "print",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": "body_w=764 pages=2 @page=0 @media-print=1 visible=860 cors_blocked_sheets=1"
+        },
+        {
+          "name": "dark",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": "no dark-mode CSS; bg_lum=0.807 contrast_failures=0"
         }
       ],
       "audits": {
@@ -324,6 +664,84 @@
           "nodes_affected": 1,
           "errors": [],
           "elapsed_ms": 20
+        },
+        "print": {
+          "status": "ok",
+          "audit": "print",
+          "body_width": 764,
+          "pages_survived": 2,
+          "page_rules": 0,
+          "print_media_rules": 1,
+          "rule_errors": 1,
+          "visible_before": 860,
+          "total_elements": 941,
+          "errors": [],
+          "elapsed_ms": 0
+        },
+        "dark": {
+          "status": "ok",
+          "audit": "dark",
+          "body_bg": [
+            232,
+            232,
+            232,
+            1
+          ],
+          "body_fg": [
+            0,
+            0,
+            0,
+            1
+          ],
+          "body_bg_luminance": 0.807,
+          "is_dark": false,
+          "contrast_failures": 0,
+          "contrast_samples": [
+            {
+              "sel": "p",
+              "contrast": 17.14,
+              "bg": [
+                232,
+                232,
+                232
+              ],
+              "fg": [
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "sel": "h1",
+              "contrast": 17.14,
+              "bg": [
+                232,
+                232,
+                232
+              ],
+              "fg": [
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "sel": ".lout-page text",
+              "contrast": 21,
+              "bg": [
+                255,
+                255,
+                255
+              ],
+              "fg": [
+                0,
+                0,
+                0
+              ]
+            }
+          ],
+          "errors": [],
+          "elapsed_ms": 0
         }
       }
     },
@@ -375,6 +793,20 @@
           "expected": 0,
           "found": 0,
           "detail": "backend=axe-core violations=0"
+        },
+        {
+          "name": "print",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": "body_w=764 pages=0 @page=0 @media-print=0 visible=24"
+        },
+        {
+          "name": "dark",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": "no dark-mode CSS; bg_lum=0.956 contrast_failures=0"
         }
       ],
       "audits": {
@@ -386,7 +818,71 @@
           "rule_ids": [],
           "nodes_affected": 0,
           "errors": [],
-          "elapsed_ms": 412
+          "elapsed_ms": 382
+        },
+        "print": {
+          "status": "ok",
+          "audit": "print",
+          "body_width": 764,
+          "pages_survived": 0,
+          "page_rules": 0,
+          "print_media_rules": 0,
+          "rule_errors": 0,
+          "visible_before": 24,
+          "total_elements": 29,
+          "errors": [],
+          "elapsed_ms": 7
+        },
+        "dark": {
+          "status": "ok",
+          "audit": "dark",
+          "body_bg": [
+            250,
+            250,
+            250,
+            1
+          ],
+          "body_fg": [
+            26,
+            26,
+            26,
+            1
+          ],
+          "body_bg_luminance": 0.956,
+          "is_dark": false,
+          "contrast_failures": 0,
+          "contrast_samples": [
+            {
+              "sel": "p",
+              "contrast": 16.67,
+              "bg": [
+                250,
+                250,
+                250
+              ],
+              "fg": [
+                26,
+                26,
+                26
+              ]
+            },
+            {
+              "sel": "h1",
+              "contrast": 16.67,
+              "bg": [
+                250,
+                250,
+                250
+              ],
+              "fg": [
+                26,
+                26,
+                26
+              ]
+            }
+          ],
+          "errors": [],
+          "elapsed_ms": 4
         }
       }
     },
@@ -438,6 +934,20 @@
           "expected": 0,
           "found": 0,
           "detail": "backend=axe-core violations=0"
+        },
+        {
+          "name": "print",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": "body_w=764 pages=1 @page=1 @media-print=0 visible=842 cors_blocked_sheets=1"
+        },
+        {
+          "name": "dark",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": "no dark-mode CSS; bg_lum=0.807 contrast_failures=0"
         }
       ],
       "audits": {
@@ -449,7 +959,71 @@
           "rule_ids": [],
           "nodes_affected": 0,
           "errors": [],
-          "elapsed_ms": 2095
+          "elapsed_ms": 21
+        },
+        "print": {
+          "status": "ok",
+          "audit": "print",
+          "body_width": 764,
+          "pages_survived": 1,
+          "page_rules": 1,
+          "print_media_rules": 0,
+          "rule_errors": 1,
+          "visible_before": 842,
+          "total_elements": 1124,
+          "errors": [],
+          "elapsed_ms": 36
+        },
+        "dark": {
+          "status": "ok",
+          "audit": "dark",
+          "body_bg": [
+            232,
+            232,
+            232,
+            1
+          ],
+          "body_fg": [
+            0,
+            0,
+            0,
+            1
+          ],
+          "body_bg_luminance": 0.807,
+          "is_dark": false,
+          "contrast_failures": 0,
+          "contrast_samples": [
+            {
+              "sel": "h1",
+              "contrast": 17.14,
+              "bg": [
+                232,
+                232,
+                232
+              ],
+              "fg": [
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "sel": ".lout-page text",
+              "contrast": 21,
+              "bg": [
+                255,
+                255,
+                255
+              ],
+              "fg": [
+                0,
+                0,
+                0
+              ]
+            }
+          ],
+          "errors": [],
+          "elapsed_ms": 3
         }
       }
     },
@@ -501,6 +1075,20 @@
           "expected": 0,
           "found": 0,
           "detail": "backend=axe-core violations=0"
+        },
+        {
+          "name": "print",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": "body_w=764 pages=0 @page=0 @media-print=0 visible=24"
+        },
+        {
+          "name": "dark",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": "no dark-mode CSS; bg_lum=0.956 contrast_failures=0"
         }
       ],
       "audits": {
@@ -512,7 +1100,71 @@
           "rule_ids": [],
           "nodes_affected": 0,
           "errors": [],
-          "elapsed_ms": 377
+          "elapsed_ms": 480
+        },
+        "print": {
+          "status": "ok",
+          "audit": "print",
+          "body_width": 764,
+          "pages_survived": 0,
+          "page_rules": 0,
+          "print_media_rules": 0,
+          "rule_errors": 0,
+          "visible_before": 24,
+          "total_elements": 29,
+          "errors": [],
+          "elapsed_ms": 4
+        },
+        "dark": {
+          "status": "ok",
+          "audit": "dark",
+          "body_bg": [
+            250,
+            250,
+            250,
+            1
+          ],
+          "body_fg": [
+            26,
+            26,
+            26,
+            1
+          ],
+          "body_bg_luminance": 0.956,
+          "is_dark": false,
+          "contrast_failures": 0,
+          "contrast_samples": [
+            {
+              "sel": "p",
+              "contrast": 16.67,
+              "bg": [
+                250,
+                250,
+                250
+              ],
+              "fg": [
+                26,
+                26,
+                26
+              ]
+            },
+            {
+              "sel": "h1",
+              "contrast": 16.67,
+              "bg": [
+                250,
+                250,
+                250
+              ],
+              "fg": [
+                26,
+                26,
+                26
+              ]
+            }
+          ],
+          "errors": [],
+          "elapsed_ms": 4
         }
       }
     },
@@ -564,6 +1216,20 @@
           "expected": 0,
           "found": 1,
           "detail": "backend=axe-core violations=1 rules=page-has-heading-one"
+        },
+        {
+          "name": "print",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": "body_w=764 pages=1 @page=0 @media-print=1 visible=277 cors_blocked_sheets=1"
+        },
+        {
+          "name": "dark",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": "no dark-mode CSS; bg_lum=0.807 contrast_failures=0"
         }
       ],
       "audits": {
@@ -578,6 +1244,84 @@
           "nodes_affected": 1,
           "errors": [],
           "elapsed_ms": 20
+        },
+        "print": {
+          "status": "ok",
+          "audit": "print",
+          "body_width": 764,
+          "pages_survived": 1,
+          "page_rules": 0,
+          "print_media_rules": 1,
+          "rule_errors": 1,
+          "visible_before": 277,
+          "total_elements": 329,
+          "errors": [],
+          "elapsed_ms": 0
+        },
+        "dark": {
+          "status": "ok",
+          "audit": "dark",
+          "body_bg": [
+            232,
+            232,
+            232,
+            1
+          ],
+          "body_fg": [
+            0,
+            0,
+            0,
+            1
+          ],
+          "body_bg_luminance": 0.807,
+          "is_dark": false,
+          "contrast_failures": 0,
+          "contrast_samples": [
+            {
+              "sel": "p",
+              "contrast": 17.14,
+              "bg": [
+                232,
+                232,
+                232
+              ],
+              "fg": [
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "sel": "h1",
+              "contrast": 17.14,
+              "bg": [
+                232,
+                232,
+                232
+              ],
+              "fg": [
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "sel": ".lout-page text",
+              "contrast": 21,
+              "bg": [
+                255,
+                255,
+                255
+              ],
+              "fg": [
+                0,
+                0,
+                0
+              ]
+            }
+          ],
+          "errors": [],
+          "elapsed_ms": 0
         }
       }
     },
@@ -629,6 +1373,20 @@
           "expected": 0,
           "found": 0,
           "detail": "backend=axe-core violations=0"
+        },
+        {
+          "name": "print",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": "body_w=764 pages=0 @page=0 @media-print=0 visible=24"
+        },
+        {
+          "name": "dark",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": "no dark-mode CSS; bg_lum=0.956 contrast_failures=0"
         }
       ],
       "audits": {
@@ -640,7 +1398,71 @@
           "rule_ids": [],
           "nodes_affected": 0,
           "errors": [],
-          "elapsed_ms": 373
+          "elapsed_ms": 456
+        },
+        "print": {
+          "status": "ok",
+          "audit": "print",
+          "body_width": 764,
+          "pages_survived": 0,
+          "page_rules": 0,
+          "print_media_rules": 0,
+          "rule_errors": 0,
+          "visible_before": 24,
+          "total_elements": 29,
+          "errors": [],
+          "elapsed_ms": 7
+        },
+        "dark": {
+          "status": "ok",
+          "audit": "dark",
+          "body_bg": [
+            250,
+            250,
+            250,
+            1
+          ],
+          "body_fg": [
+            26,
+            26,
+            26,
+            1
+          ],
+          "body_bg_luminance": 0.956,
+          "is_dark": false,
+          "contrast_failures": 0,
+          "contrast_samples": [
+            {
+              "sel": "p",
+              "contrast": 16.67,
+              "bg": [
+                250,
+                250,
+                250
+              ],
+              "fg": [
+                26,
+                26,
+                26
+              ]
+            },
+            {
+              "sel": "h1",
+              "contrast": 16.67,
+              "bg": [
+                250,
+                250,
+                250
+              ],
+              "fg": [
+                26,
+                26,
+                26
+              ]
+            }
+          ],
+          "errors": [],
+          "elapsed_ms": 4
         }
       }
     },
@@ -692,6 +1514,20 @@
           "expected": 0,
           "found": 2,
           "detail": "backend=axe-core violations=2 rules=color-contrast,list"
+        },
+        {
+          "name": "print",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": "body_w=764 pages=3 @page=1 @media-print=0 visible=935 cors_blocked_sheets=2"
+        },
+        {
+          "name": "dark",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": "no dark-mode CSS; bg_lum=0.807 contrast_failures=0"
         }
       ],
       "audits": {
@@ -706,7 +1542,113 @@
           ],
           "nodes_affected": 3,
           "errors": [],
-          "elapsed_ms": 1008
+          "elapsed_ms": 1057
+        },
+        "print": {
+          "status": "ok",
+          "audit": "print",
+          "body_width": 764,
+          "pages_survived": 3,
+          "page_rules": 1,
+          "print_media_rules": 0,
+          "rule_errors": 2,
+          "visible_before": 935,
+          "total_elements": 1100,
+          "errors": [],
+          "elapsed_ms": 136
+        },
+        "dark": {
+          "status": "ok",
+          "audit": "dark",
+          "body_bg": [
+            232,
+            232,
+            232,
+            1
+          ],
+          "body_fg": [
+            0,
+            0,
+            0,
+            1
+          ],
+          "body_bg_luminance": 0.807,
+          "is_dark": false,
+          "contrast_failures": 0,
+          "contrast_samples": [
+            {
+              "sel": "h1",
+              "contrast": 17.14,
+              "bg": [
+                232,
+                232,
+                232
+              ],
+              "fg": [
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "sel": "h2",
+              "contrast": 17.14,
+              "bg": [
+                232,
+                232,
+                232
+              ],
+              "fg": [
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "sel": "h3",
+              "contrast": 17.14,
+              "bg": [
+                232,
+                232,
+                232
+              ],
+              "fg": [
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "sel": "li",
+              "contrast": 21,
+              "bg": [
+                255,
+                255,
+                255
+              ],
+              "fg": [
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "sel": ".lout-page text",
+              "contrast": 21,
+              "bg": [
+                255,
+                255,
+                255
+              ],
+              "fg": [
+                0,
+                0,
+                0
+              ]
+            }
+          ],
+          "errors": [],
+          "elapsed_ms": 3
         }
       }
     },
@@ -758,6 +1700,20 @@
           "expected": 0,
           "found": 0,
           "detail": "backend=axe-core violations=0"
+        },
+        {
+          "name": "print",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": "body_w=764 pages=0 @page=0 @media-print=0 visible=24"
+        },
+        {
+          "name": "dark",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": "no dark-mode CSS; bg_lum=0.956 contrast_failures=0"
         }
       ],
       "audits": {
@@ -769,7 +1725,71 @@
           "rule_ids": [],
           "nodes_affected": 0,
           "errors": [],
-          "elapsed_ms": 2451
+          "elapsed_ms": 387
+        },
+        "print": {
+          "status": "ok",
+          "audit": "print",
+          "body_width": 764,
+          "pages_survived": 0,
+          "page_rules": 0,
+          "print_media_rules": 0,
+          "rule_errors": 0,
+          "visible_before": 24,
+          "total_elements": 29,
+          "errors": [],
+          "elapsed_ms": 4
+        },
+        "dark": {
+          "status": "ok",
+          "audit": "dark",
+          "body_bg": [
+            250,
+            250,
+            250,
+            1
+          ],
+          "body_fg": [
+            26,
+            26,
+            26,
+            1
+          ],
+          "body_bg_luminance": 0.956,
+          "is_dark": false,
+          "contrast_failures": 0,
+          "contrast_samples": [
+            {
+              "sel": "p",
+              "contrast": 16.67,
+              "bg": [
+                250,
+                250,
+                250
+              ],
+              "fg": [
+                26,
+                26,
+                26
+              ]
+            },
+            {
+              "sel": "h1",
+              "contrast": 16.67,
+              "bg": [
+                250,
+                250,
+                250
+              ],
+              "fg": [
+                26,
+                26,
+                26
+              ]
+            }
+          ],
+          "errors": [],
+          "elapsed_ms": 3
         }
       }
     },
@@ -821,6 +1841,20 @@
           "expected": 0,
           "found": 1,
           "detail": "backend=axe-core violations=1 rules=page-has-heading-one"
+        },
+        {
+          "name": "print",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": "body_w=764 pages=1 @page=0 @media-print=1 visible=378 cors_blocked_sheets=1"
+        },
+        {
+          "name": "dark",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": "no dark-mode CSS; bg_lum=0.807 contrast_failures=0"
         }
       ],
       "audits": {
@@ -835,6 +1869,98 @@
           "nodes_affected": 1,
           "errors": [],
           "elapsed_ms": 20
+        },
+        "print": {
+          "status": "ok",
+          "audit": "print",
+          "body_width": 764,
+          "pages_survived": 1,
+          "page_rules": 0,
+          "print_media_rules": 1,
+          "rule_errors": 1,
+          "visible_before": 378,
+          "total_elements": 414,
+          "errors": [],
+          "elapsed_ms": 0
+        },
+        "dark": {
+          "status": "ok",
+          "audit": "dark",
+          "body_bg": [
+            232,
+            232,
+            232,
+            1
+          ],
+          "body_fg": [
+            0,
+            0,
+            0,
+            1
+          ],
+          "body_bg_luminance": 0.807,
+          "is_dark": false,
+          "contrast_failures": 0,
+          "contrast_samples": [
+            {
+              "sel": "p",
+              "contrast": 17.14,
+              "bg": [
+                232,
+                232,
+                232
+              ],
+              "fg": [
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "sel": "h1",
+              "contrast": 17.14,
+              "bg": [
+                232,
+                232,
+                232
+              ],
+              "fg": [
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "sel": "h2",
+              "contrast": 17.14,
+              "bg": [
+                232,
+                232,
+                232
+              ],
+              "fg": [
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "sel": ".lout-page text",
+              "contrast": 21,
+              "bg": [
+                255,
+                255,
+                255
+              ],
+              "fg": [
+                0,
+                0,
+                0
+              ]
+            }
+          ],
+          "errors": [],
+          "elapsed_ms": 0
         }
       }
     },
@@ -886,6 +2012,20 @@
           "expected": 0,
           "found": 0,
           "detail": "backend=axe-core violations=0"
+        },
+        {
+          "name": "print",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": "body_w=764 pages=0 @page=0 @media-print=0 visible=24"
+        },
+        {
+          "name": "dark",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": "no dark-mode CSS; bg_lum=0.956 contrast_failures=0"
         }
       ],
       "audits": {
@@ -897,7 +2037,71 @@
           "rule_ids": [],
           "nodes_affected": 0,
           "errors": [],
-          "elapsed_ms": 415
+          "elapsed_ms": 444
+        },
+        "print": {
+          "status": "ok",
+          "audit": "print",
+          "body_width": 764,
+          "pages_survived": 0,
+          "page_rules": 0,
+          "print_media_rules": 0,
+          "rule_errors": 0,
+          "visible_before": 24,
+          "total_elements": 29,
+          "errors": [],
+          "elapsed_ms": 5
+        },
+        "dark": {
+          "status": "ok",
+          "audit": "dark",
+          "body_bg": [
+            250,
+            250,
+            250,
+            1
+          ],
+          "body_fg": [
+            26,
+            26,
+            26,
+            1
+          ],
+          "body_bg_luminance": 0.956,
+          "is_dark": false,
+          "contrast_failures": 0,
+          "contrast_samples": [
+            {
+              "sel": "p",
+              "contrast": 16.67,
+              "bg": [
+                250,
+                250,
+                250
+              ],
+              "fg": [
+                26,
+                26,
+                26
+              ]
+            },
+            {
+              "sel": "h1",
+              "contrast": 16.67,
+              "bg": [
+                250,
+                250,
+                250
+              ],
+              "fg": [
+                26,
+                26,
+                26
+              ]
+            }
+          ],
+          "errors": [],
+          "elapsed_ms": 3
         }
       }
     },
@@ -949,6 +2153,20 @@
           "expected": 0,
           "found": 2,
           "detail": "backend=axe-core violations=2 rules=color-contrast,list"
+        },
+        {
+          "name": "print",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": "body_w=764 pages=3 @page=1 @media-print=0 visible=1122 cors_blocked_sheets=2"
+        },
+        {
+          "name": "dark",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": "no dark-mode CSS; bg_lum=0.807 contrast_failures=0"
         }
       ],
       "audits": {
@@ -963,7 +2181,99 @@
           ],
           "nodes_affected": 2,
           "errors": [],
-          "elapsed_ms": 1300
+          "elapsed_ms": 1192
+        },
+        "print": {
+          "status": "ok",
+          "audit": "print",
+          "body_width": 764,
+          "pages_survived": 3,
+          "page_rules": 1,
+          "print_media_rules": 0,
+          "rule_errors": 2,
+          "visible_before": 1122,
+          "total_elements": 1288,
+          "errors": [],
+          "elapsed_ms": 40
+        },
+        "dark": {
+          "status": "ok",
+          "audit": "dark",
+          "body_bg": [
+            232,
+            232,
+            232,
+            1
+          ],
+          "body_fg": [
+            0,
+            0,
+            0,
+            1
+          ],
+          "body_bg_luminance": 0.807,
+          "is_dark": false,
+          "contrast_failures": 0,
+          "contrast_samples": [
+            {
+              "sel": "h1",
+              "contrast": 17.14,
+              "bg": [
+                232,
+                232,
+                232
+              ],
+              "fg": [
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "sel": "h2",
+              "contrast": 17.14,
+              "bg": [
+                232,
+                232,
+                232
+              ],
+              "fg": [
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "sel": "li",
+              "contrast": 21,
+              "bg": [
+                255,
+                255,
+                255
+              ],
+              "fg": [
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "sel": ".lout-page text",
+              "contrast": 21,
+              "bg": [
+                255,
+                255,
+                255
+              ],
+              "fg": [
+                0,
+                0,
+                0
+              ]
+            }
+          ],
+          "errors": [],
+          "elapsed_ms": 1
         }
       }
     },
@@ -1015,6 +2325,20 @@
           "expected": 0,
           "found": 0,
           "detail": "backend=axe-core violations=0"
+        },
+        {
+          "name": "print",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": "body_w=764 pages=0 @page=0 @media-print=0 visible=24"
+        },
+        {
+          "name": "dark",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": "no dark-mode CSS; bg_lum=0.956 contrast_failures=0"
         }
       ],
       "audits": {
@@ -1026,7 +2350,71 @@
           "rule_ids": [],
           "nodes_affected": 0,
           "errors": [],
-          "elapsed_ms": 1049
+          "elapsed_ms": 426
+        },
+        "print": {
+          "status": "ok",
+          "audit": "print",
+          "body_width": 764,
+          "pages_survived": 0,
+          "page_rules": 0,
+          "print_media_rules": 0,
+          "rule_errors": 0,
+          "visible_before": 24,
+          "total_elements": 29,
+          "errors": [],
+          "elapsed_ms": 7
+        },
+        "dark": {
+          "status": "ok",
+          "audit": "dark",
+          "body_bg": [
+            250,
+            250,
+            250,
+            1
+          ],
+          "body_fg": [
+            26,
+            26,
+            26,
+            1
+          ],
+          "body_bg_luminance": 0.956,
+          "is_dark": false,
+          "contrast_failures": 0,
+          "contrast_samples": [
+            {
+              "sel": "p",
+              "contrast": 16.67,
+              "bg": [
+                250,
+                250,
+                250
+              ],
+              "fg": [
+                26,
+                26,
+                26
+              ]
+            },
+            {
+              "sel": "h1",
+              "contrast": 16.67,
+              "bg": [
+                250,
+                250,
+                250
+              ],
+              "fg": [
+                26,
+                26,
+                26
+              ]
+            }
+          ],
+          "errors": [],
+          "elapsed_ms": 3
         }
       }
     },
@@ -1078,6 +2466,20 @@
           "expected": 0,
           "found": 2,
           "detail": "backend=axe-core violations=2 rules=page-has-heading-one,region"
+        },
+        {
+          "name": "print",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": "body_w=764 pages=2 @page=1 @media-print=0 visible=2958 cors_blocked_sheets=1"
+        },
+        {
+          "name": "dark",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": "no dark-mode CSS; bg_lum=0.807 contrast_failures=0"
         }
       ],
       "audits": {
@@ -1092,7 +2494,240 @@
           ],
           "nodes_affected": 2,
           "errors": [],
-          "elapsed_ms": 21
+          "elapsed_ms": 2993
+        },
+        "print": {
+          "status": "ok",
+          "audit": "print",
+          "body_width": 764,
+          "pages_survived": 2,
+          "page_rules": 1,
+          "print_media_rules": 0,
+          "rule_errors": 1,
+          "visible_before": 2958,
+          "total_elements": 3427,
+          "errors": [],
+          "elapsed_ms": 57
+        },
+        "dark": {
+          "status": "ok",
+          "audit": "dark",
+          "body_bg": [
+            232,
+            232,
+            232,
+            1
+          ],
+          "body_fg": [
+            0,
+            0,
+            0,
+            1
+          ],
+          "body_bg_luminance": 0.807,
+          "is_dark": false,
+          "contrast_failures": 0,
+          "contrast_samples": [
+            {
+              "sel": "p",
+              "contrast": 17.14,
+              "bg": [
+                232,
+                232,
+                232
+              ],
+              "fg": [
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "sel": "h1",
+              "contrast": 17.14,
+              "bg": [
+                232,
+                232,
+                232
+              ],
+              "fg": [
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "sel": "h2",
+              "contrast": 17.14,
+              "bg": [
+                232,
+                232,
+                232
+              ],
+              "fg": [
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "sel": ".lout-page text",
+              "contrast": 21,
+              "bg": [
+                255,
+                255,
+                255
+              ],
+              "fg": [
+                0,
+                0,
+                0
+              ]
+            }
+          ],
+          "errors": [],
+          "elapsed_ms": 7
+        }
+      }
+    },
+    {
+      "name": "academic_poster_preview.html",
+      "ok": true,
+      "dom_bytes": 4012,
+      "error": "",
+      "stderr_tail": "",
+      "checks": [
+        {
+          "name": "loaded",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": ""
+        },
+        {
+          "name": "katex",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "abcjs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "anchors",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "hljs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "a11y",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": "backend=axe-core violations=0"
+        },
+        {
+          "name": "print",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": "body_w=764 pages=0 @page=0 @media-print=0 visible=24"
+        },
+        {
+          "name": "dark",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": "no dark-mode CSS; bg_lum=0.956 contrast_failures=0"
+        }
+      ],
+      "audits": {
+        "a11y": {
+          "status": "ok",
+          "audit": "a11y",
+          "backend": "axe-core",
+          "violations": 0,
+          "rule_ids": [],
+          "nodes_affected": 0,
+          "errors": [],
+          "elapsed_ms": 423
+        },
+        "print": {
+          "status": "ok",
+          "audit": "print",
+          "body_width": 764,
+          "pages_survived": 0,
+          "page_rules": 0,
+          "print_media_rules": 0,
+          "rule_errors": 0,
+          "visible_before": 24,
+          "total_elements": 29,
+          "errors": [],
+          "elapsed_ms": 6
+        },
+        "dark": {
+          "status": "ok",
+          "audit": "dark",
+          "body_bg": [
+            250,
+            250,
+            250,
+            1
+          ],
+          "body_fg": [
+            26,
+            26,
+            26,
+            1
+          ],
+          "body_bg_luminance": 0.956,
+          "is_dark": false,
+          "contrast_failures": 0,
+          "contrast_samples": [
+            {
+              "sel": "p",
+              "contrast": 16.67,
+              "bg": [
+                250,
+                250,
+                250
+              ],
+              "fg": [
+                26,
+                26,
+                26
+              ]
+            },
+            {
+              "sel": "h1",
+              "contrast": 16.67,
+              "bg": [
+                250,
+                250,
+                250
+              ],
+              "fg": [
+                26,
+                26,
+                26
+              ]
+            }
+          ],
+          "errors": [],
+          "elapsed_ms": 6
         }
       }
     },
@@ -1101,7 +2736,7 @@
       "ok": true,
       "dom_bytes": 2044162,
       "error": "",
-      "stderr_tail": "",
+      "stderr_tail": "[73204:35500:0522/145049.241:ERROR:chrome\\browser\\web_applications\\externally_managed_app_manager.cc:680] https://mail.google.com/mail/installwebapp?usp=chrome_default from install source 1 failed to install with reason 21",
       "checks": [
         {
           "name": "loaded",
@@ -1144,6 +2779,20 @@
           "expected": 0,
           "found": 1,
           "detail": "backend=axe-core violations=1 rules=page-has-heading-one"
+        },
+        {
+          "name": "print",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": "body_w=764 pages=3 @page=0 @media-print=1 visible=748 cors_blocked_sheets=1"
+        },
+        {
+          "name": "dark",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": "no dark-mode CSS; bg_lum=0.807 contrast_failures=0"
         }
       ],
       "audits": {
@@ -1158,6 +2807,112 @@
           "nodes_affected": 1,
           "errors": [],
           "elapsed_ms": 20
+        },
+        "print": {
+          "status": "ok",
+          "audit": "print",
+          "body_width": 764,
+          "pages_survived": 3,
+          "page_rules": 0,
+          "print_media_rules": 1,
+          "rule_errors": 1,
+          "visible_before": 748,
+          "total_elements": 826,
+          "errors": [],
+          "elapsed_ms": 0
+        },
+        "dark": {
+          "status": "ok",
+          "audit": "dark",
+          "body_bg": [
+            232,
+            232,
+            232,
+            1
+          ],
+          "body_fg": [
+            0,
+            0,
+            0,
+            1
+          ],
+          "body_bg_luminance": 0.807,
+          "is_dark": false,
+          "contrast_failures": 0,
+          "contrast_samples": [
+            {
+              "sel": "p",
+              "contrast": 17.14,
+              "bg": [
+                232,
+                232,
+                232
+              ],
+              "fg": [
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "sel": "h1",
+              "contrast": 17.14,
+              "bg": [
+                232,
+                232,
+                232
+              ],
+              "fg": [
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "sel": "h2",
+              "contrast": 17.14,
+              "bg": [
+                232,
+                232,
+                232
+              ],
+              "fg": [
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "sel": "li",
+              "contrast": 21,
+              "bg": [
+                255,
+                255,
+                255
+              ],
+              "fg": [
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "sel": ".lout-page text",
+              "contrast": 21,
+              "bg": [
+                255,
+                255,
+                255
+              ],
+              "fg": [
+                0,
+                0,
+                0
+              ]
+            }
+          ],
+          "errors": [],
+          "elapsed_ms": 0
         }
       }
     },
@@ -1209,6 +2964,20 @@
           "expected": 0,
           "found": 0,
           "detail": "backend=axe-core violations=0"
+        },
+        {
+          "name": "print",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": "body_w=764 pages=0 @page=0 @media-print=0 visible=24"
+        },
+        {
+          "name": "dark",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": "no dark-mode CSS; bg_lum=0.956 contrast_failures=0"
         }
       ],
       "audits": {
@@ -1220,7 +2989,71 @@
           "rule_ids": [],
           "nodes_affected": 0,
           "errors": [],
-          "elapsed_ms": 414
+          "elapsed_ms": 411
+        },
+        "print": {
+          "status": "ok",
+          "audit": "print",
+          "body_width": 764,
+          "pages_survived": 0,
+          "page_rules": 0,
+          "print_media_rules": 0,
+          "rule_errors": 0,
+          "visible_before": 24,
+          "total_elements": 29,
+          "errors": [],
+          "elapsed_ms": 5
+        },
+        "dark": {
+          "status": "ok",
+          "audit": "dark",
+          "body_bg": [
+            250,
+            250,
+            250,
+            1
+          ],
+          "body_fg": [
+            26,
+            26,
+            26,
+            1
+          ],
+          "body_bg_luminance": 0.956,
+          "is_dark": false,
+          "contrast_failures": 0,
+          "contrast_samples": [
+            {
+              "sel": "p",
+              "contrast": 16.67,
+              "bg": [
+                250,
+                250,
+                250
+              ],
+              "fg": [
+                26,
+                26,
+                26
+              ]
+            },
+            {
+              "sel": "h1",
+              "contrast": 16.67,
+              "bg": [
+                250,
+                250,
+                250
+              ],
+              "fg": [
+                26,
+                26,
+                26
+              ]
+            }
+          ],
+          "errors": [],
+          "elapsed_ms": 4
         }
       }
     },
@@ -1272,6 +3105,20 @@
           "expected": 0,
           "found": 1,
           "detail": "backend=axe-core violations=1 rules=page-has-heading-one"
+        },
+        {
+          "name": "print",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": "body_w=764 pages=4 @page=0 @media-print=1 visible=1619 cors_blocked_sheets=1"
+        },
+        {
+          "name": "dark",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": "no dark-mode CSS; bg_lum=0.807 contrast_failures=0"
         }
       ],
       "audits": {
@@ -1286,6 +3133,112 @@
           "nodes_affected": 1,
           "errors": [],
           "elapsed_ms": 20
+        },
+        "print": {
+          "status": "ok",
+          "audit": "print",
+          "body_width": 764,
+          "pages_survived": 4,
+          "page_rules": 0,
+          "print_media_rules": 1,
+          "rule_errors": 1,
+          "visible_before": 1619,
+          "total_elements": 2333,
+          "errors": [],
+          "elapsed_ms": 0
+        },
+        "dark": {
+          "status": "ok",
+          "audit": "dark",
+          "body_bg": [
+            232,
+            232,
+            232,
+            1
+          ],
+          "body_fg": [
+            0,
+            0,
+            0,
+            1
+          ],
+          "body_bg_luminance": 0.807,
+          "is_dark": false,
+          "contrast_failures": 0,
+          "contrast_samples": [
+            {
+              "sel": "p",
+              "contrast": 17.14,
+              "bg": [
+                232,
+                232,
+                232
+              ],
+              "fg": [
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "sel": "h1",
+              "contrast": 17.14,
+              "bg": [
+                232,
+                232,
+                232
+              ],
+              "fg": [
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "sel": "h2",
+              "contrast": 17.14,
+              "bg": [
+                232,
+                232,
+                232
+              ],
+              "fg": [
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "sel": "h3",
+              "contrast": 17.14,
+              "bg": [
+                232,
+                232,
+                232
+              ],
+              "fg": [
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "sel": ".lout-page text",
+              "contrast": 21,
+              "bg": [
+                255,
+                255,
+                255
+              ],
+              "fg": [
+                0,
+                0,
+                0
+              ]
+            }
+          ],
+          "errors": [],
+          "elapsed_ms": 0
         }
       }
     },
@@ -1337,6 +3290,20 @@
           "expected": 0,
           "found": 0,
           "detail": "backend=axe-core violations=0"
+        },
+        {
+          "name": "print",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": "body_w=764 pages=0 @page=0 @media-print=0 visible=24"
+        },
+        {
+          "name": "dark",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": "no dark-mode CSS; bg_lum=0.956 contrast_failures=0"
         }
       ],
       "audits": {
@@ -1348,7 +3315,71 @@
           "rule_ids": [],
           "nodes_affected": 0,
           "errors": [],
-          "elapsed_ms": 853
+          "elapsed_ms": 677
+        },
+        "print": {
+          "status": "ok",
+          "audit": "print",
+          "body_width": 764,
+          "pages_survived": 0,
+          "page_rules": 0,
+          "print_media_rules": 0,
+          "rule_errors": 0,
+          "visible_before": 24,
+          "total_elements": 29,
+          "errors": [],
+          "elapsed_ms": 5
+        },
+        "dark": {
+          "status": "ok",
+          "audit": "dark",
+          "body_bg": [
+            250,
+            250,
+            250,
+            1
+          ],
+          "body_fg": [
+            26,
+            26,
+            26,
+            1
+          ],
+          "body_bg_luminance": 0.956,
+          "is_dark": false,
+          "contrast_failures": 0,
+          "contrast_samples": [
+            {
+              "sel": "p",
+              "contrast": 16.67,
+              "bg": [
+                250,
+                250,
+                250
+              ],
+              "fg": [
+                26,
+                26,
+                26
+              ]
+            },
+            {
+              "sel": "h1",
+              "contrast": 16.67,
+              "bg": [
+                250,
+                250,
+                250
+              ],
+              "fg": [
+                26,
+                26,
+                26
+              ]
+            }
+          ],
+          "errors": [],
+          "elapsed_ms": 3
         }
       }
     },
@@ -1400,6 +3431,20 @@
           "expected": 0,
           "found": 1,
           "detail": "backend=axe-core violations=1 rules=page-has-heading-one"
+        },
+        {
+          "name": "print",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": "body_w=764 pages=1 @page=0 @media-print=1 visible=883 cors_blocked_sheets=1"
+        },
+        {
+          "name": "dark",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": "no dark-mode CSS; bg_lum=0.807 contrast_failures=0"
         }
       ],
       "audits": {
@@ -1414,6 +3459,84 @@
           "nodes_affected": 1,
           "errors": [],
           "elapsed_ms": 20
+        },
+        "print": {
+          "status": "ok",
+          "audit": "print",
+          "body_width": 764,
+          "pages_survived": 1,
+          "page_rules": 0,
+          "print_media_rules": 1,
+          "rule_errors": 1,
+          "visible_before": 883,
+          "total_elements": 939,
+          "errors": [],
+          "elapsed_ms": 0
+        },
+        "dark": {
+          "status": "ok",
+          "audit": "dark",
+          "body_bg": [
+            232,
+            232,
+            232,
+            1
+          ],
+          "body_fg": [
+            0,
+            0,
+            0,
+            1
+          ],
+          "body_bg_luminance": 0.807,
+          "is_dark": false,
+          "contrast_failures": 0,
+          "contrast_samples": [
+            {
+              "sel": "p",
+              "contrast": 17.14,
+              "bg": [
+                232,
+                232,
+                232
+              ],
+              "fg": [
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "sel": "h2",
+              "contrast": 17.14,
+              "bg": [
+                232,
+                232,
+                232
+              ],
+              "fg": [
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "sel": ".lout-page text",
+              "contrast": 21,
+              "bg": [
+                255,
+                255,
+                255
+              ],
+              "fg": [
+                0,
+                0,
+                0
+              ]
+            }
+          ],
+          "errors": [],
+          "elapsed_ms": 0
         }
       }
     },
@@ -1465,6 +3588,20 @@
           "expected": 0,
           "found": 0,
           "detail": "backend=axe-core violations=0"
+        },
+        {
+          "name": "print",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": "body_w=764 pages=0 @page=0 @media-print=0 visible=24"
+        },
+        {
+          "name": "dark",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": "no dark-mode CSS; bg_lum=0.956 contrast_failures=0"
         }
       ],
       "audits": {
@@ -1476,7 +3613,71 @@
           "rule_ids": [],
           "nodes_affected": 0,
           "errors": [],
-          "elapsed_ms": 447
+          "elapsed_ms": 475
+        },
+        "print": {
+          "status": "ok",
+          "audit": "print",
+          "body_width": 764,
+          "pages_survived": 0,
+          "page_rules": 0,
+          "print_media_rules": 0,
+          "rule_errors": 0,
+          "visible_before": 24,
+          "total_elements": 29,
+          "errors": [],
+          "elapsed_ms": 11
+        },
+        "dark": {
+          "status": "ok",
+          "audit": "dark",
+          "body_bg": [
+            250,
+            250,
+            250,
+            1
+          ],
+          "body_fg": [
+            26,
+            26,
+            26,
+            1
+          ],
+          "body_bg_luminance": 0.956,
+          "is_dark": false,
+          "contrast_failures": 0,
+          "contrast_samples": [
+            {
+              "sel": "p",
+              "contrast": 16.67,
+              "bg": [
+                250,
+                250,
+                250
+              ],
+              "fg": [
+                26,
+                26,
+                26
+              ]
+            },
+            {
+              "sel": "h1",
+              "contrast": 16.67,
+              "bg": [
+                250,
+                250,
+                250
+              ],
+              "fg": [
+                26,
+                26,
+                26
+              ]
+            }
+          ],
+          "errors": [],
+          "elapsed_ms": 4
         }
       }
     },
@@ -1528,6 +3729,20 @@
           "expected": 0,
           "found": 1,
           "detail": "backend=axe-core violations=1 rules=page-has-heading-one"
+        },
+        {
+          "name": "print",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": "body_w=764 pages=7 @page=0 @media-print=1 visible=1689 cors_blocked_sheets=1"
+        },
+        {
+          "name": "dark",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": "no dark-mode CSS; bg_lum=0.807 contrast_failures=0"
         }
       ],
       "audits": {
@@ -1542,6 +3757,112 @@
           "nodes_affected": 1,
           "errors": [],
           "elapsed_ms": 20
+        },
+        "print": {
+          "status": "ok",
+          "audit": "print",
+          "body_width": 764,
+          "pages_survived": 7,
+          "page_rules": 0,
+          "print_media_rules": 1,
+          "rule_errors": 1,
+          "visible_before": 1689,
+          "total_elements": 2248,
+          "errors": [],
+          "elapsed_ms": 0
+        },
+        "dark": {
+          "status": "ok",
+          "audit": "dark",
+          "body_bg": [
+            232,
+            232,
+            232,
+            1
+          ],
+          "body_fg": [
+            0,
+            0,
+            0,
+            1
+          ],
+          "body_bg_luminance": 0.807,
+          "is_dark": false,
+          "contrast_failures": 0,
+          "contrast_samples": [
+            {
+              "sel": "p",
+              "contrast": 17.14,
+              "bg": [
+                232,
+                232,
+                232
+              ],
+              "fg": [
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "sel": "h1",
+              "contrast": 17.14,
+              "bg": [
+                232,
+                232,
+                232
+              ],
+              "fg": [
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "sel": "h2",
+              "contrast": 17.14,
+              "bg": [
+                232,
+                232,
+                232
+              ],
+              "fg": [
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "sel": "h3",
+              "contrast": 17.14,
+              "bg": [
+                232,
+                232,
+                232
+              ],
+              "fg": [
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "sel": ".lout-page text",
+              "contrast": 21,
+              "bg": [
+                255,
+                255,
+                255
+              ],
+              "fg": [
+                0,
+                0,
+                0
+              ]
+            }
+          ],
+          "errors": [],
+          "elapsed_ms": 0
         }
       }
     },
@@ -1593,6 +3914,20 @@
           "expected": 0,
           "found": 0,
           "detail": "backend=axe-core violations=0"
+        },
+        {
+          "name": "print",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": "body_w=764 pages=0 @page=0 @media-print=0 visible=24"
+        },
+        {
+          "name": "dark",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": "no dark-mode CSS; bg_lum=0.956 contrast_failures=0"
         }
       ],
       "audits": {
@@ -1604,14 +3939,78 @@
           "rule_ids": [],
           "nodes_affected": 0,
           "errors": [],
-          "elapsed_ms": 354
+          "elapsed_ms": 414
+        },
+        "print": {
+          "status": "ok",
+          "audit": "print",
+          "body_width": 764,
+          "pages_survived": 0,
+          "page_rules": 0,
+          "print_media_rules": 0,
+          "rule_errors": 0,
+          "visible_before": 24,
+          "total_elements": 29,
+          "errors": [],
+          "elapsed_ms": 4
+        },
+        "dark": {
+          "status": "ok",
+          "audit": "dark",
+          "body_bg": [
+            250,
+            250,
+            250,
+            1
+          ],
+          "body_fg": [
+            26,
+            26,
+            26,
+            1
+          ],
+          "body_bg_luminance": 0.956,
+          "is_dark": false,
+          "contrast_failures": 0,
+          "contrast_samples": [
+            {
+              "sel": "p",
+              "contrast": 16.67,
+              "bg": [
+                250,
+                250,
+                250
+              ],
+              "fg": [
+                26,
+                26,
+                26
+              ]
+            },
+            {
+              "sel": "h1",
+              "contrast": 16.67,
+              "bg": [
+                250,
+                250,
+                250
+              ],
+              "fg": [
+                26,
+                26,
+                26
+              ]
+            }
+          ],
+          "errors": [],
+          "elapsed_ms": 4
         }
       }
     },
     {
       "name": "index.html",
-      "ok": false,
-      "dom_bytes": 161636,
+      "ok": true,
+      "dom_bytes": 162361,
       "error": "",
       "stderr_tail": "",
       "checks": [
@@ -1638,10 +4037,10 @@
         },
         {
           "name": "anchors",
-          "ok": false,
-          "expected": 1,
+          "ok": true,
+          "expected": 0,
           "found": 0,
-          "detail": "missing ids: x"
+          "detail": ""
         },
         {
           "name": "hljs",
@@ -1656,6 +4055,20 @@
           "expected": 0,
           "found": 0,
           "detail": "backend=axe-core violations=0"
+        },
+        {
+          "name": "print",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": "body_w=764 pages=0 @page=0 @media-print=0 visible=399"
+        },
+        {
+          "name": "dark",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": "no dark-mode CSS; bg_lum=0.956 contrast_failures=0"
         }
       ],
       "audits": {
@@ -1667,7 +4080,85 @@
           "rule_ids": [],
           "nodes_affected": 0,
           "errors": [],
-          "elapsed_ms": 11
+          "elapsed_ms": 10
+        },
+        "print": {
+          "status": "ok",
+          "audit": "print",
+          "body_width": 764,
+          "pages_survived": 0,
+          "page_rules": 0,
+          "print_media_rules": 0,
+          "rule_errors": 0,
+          "visible_before": 399,
+          "total_elements": 428,
+          "errors": [],
+          "elapsed_ms": 6
+        },
+        "dark": {
+          "status": "ok",
+          "audit": "dark",
+          "body_bg": [
+            250,
+            250,
+            250,
+            1
+          ],
+          "body_fg": [
+            26,
+            26,
+            26,
+            1
+          ],
+          "body_bg_luminance": 0.956,
+          "is_dark": false,
+          "contrast_failures": 0,
+          "contrast_samples": [
+            {
+              "sel": "p",
+              "contrast": 7.14,
+              "bg": [
+                250,
+                250,
+                250
+              ],
+              "fg": [
+                85,
+                85,
+                85
+              ]
+            },
+            {
+              "sel": "h1",
+              "contrast": 16.67,
+              "bg": [
+                250,
+                250,
+                250
+              ],
+              "fg": [
+                26,
+                26,
+                26
+              ]
+            },
+            {
+              "sel": "h2",
+              "contrast": 17.4,
+              "bg": [
+                255,
+                255,
+                255
+              ],
+              "fg": [
+                26,
+                26,
+                26
+              ]
+            }
+          ],
+          "errors": [],
+          "elapsed_ms": 4
         }
       }
     },
@@ -1719,6 +4210,20 @@
           "expected": 0,
           "found": 1,
           "detail": "backend=axe-core violations=1 rules=page-has-heading-one"
+        },
+        {
+          "name": "print",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": "body_w=764 pages=1 @page=0 @media-print=1 visible=660 cors_blocked_sheets=1"
+        },
+        {
+          "name": "dark",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": "no dark-mode CSS; bg_lum=0.807 contrast_failures=0"
         }
       ],
       "audits": {
@@ -1733,6 +4238,70 @@
           "nodes_affected": 1,
           "errors": [],
           "elapsed_ms": 20
+        },
+        "print": {
+          "status": "ok",
+          "audit": "print",
+          "body_width": 764,
+          "pages_survived": 1,
+          "page_rules": 0,
+          "print_media_rules": 1,
+          "rule_errors": 1,
+          "visible_before": 660,
+          "total_elements": 693,
+          "errors": [],
+          "elapsed_ms": 0
+        },
+        "dark": {
+          "status": "ok",
+          "audit": "dark",
+          "body_bg": [
+            232,
+            232,
+            232,
+            1
+          ],
+          "body_fg": [
+            0,
+            0,
+            0,
+            1
+          ],
+          "body_bg_luminance": 0.807,
+          "is_dark": false,
+          "contrast_failures": 0,
+          "contrast_samples": [
+            {
+              "sel": "p",
+              "contrast": 17.14,
+              "bg": [
+                232,
+                232,
+                232
+              ],
+              "fg": [
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "sel": ".lout-page text",
+              "contrast": 21,
+              "bg": [
+                255,
+                255,
+                255
+              ],
+              "fg": [
+                0,
+                0,
+                0
+              ]
+            }
+          ],
+          "errors": [],
+          "elapsed_ms": 0
         }
       }
     },
@@ -1784,6 +4353,20 @@
           "expected": 0,
           "found": 0,
           "detail": "backend=axe-core violations=0"
+        },
+        {
+          "name": "print",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": "body_w=764 pages=0 @page=0 @media-print=0 visible=24"
+        },
+        {
+          "name": "dark",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": "no dark-mode CSS; bg_lum=0.956 contrast_failures=0"
         }
       ],
       "audits": {
@@ -1795,7 +4378,71 @@
           "rule_ids": [],
           "nodes_affected": 0,
           "errors": [],
-          "elapsed_ms": 400
+          "elapsed_ms": 711
+        },
+        "print": {
+          "status": "ok",
+          "audit": "print",
+          "body_width": 764,
+          "pages_survived": 0,
+          "page_rules": 0,
+          "print_media_rules": 0,
+          "rule_errors": 0,
+          "visible_before": 24,
+          "total_elements": 29,
+          "errors": [],
+          "elapsed_ms": 4
+        },
+        "dark": {
+          "status": "ok",
+          "audit": "dark",
+          "body_bg": [
+            250,
+            250,
+            250,
+            1
+          ],
+          "body_fg": [
+            26,
+            26,
+            26,
+            1
+          ],
+          "body_bg_luminance": 0.956,
+          "is_dark": false,
+          "contrast_failures": 0,
+          "contrast_samples": [
+            {
+              "sel": "p",
+              "contrast": 16.67,
+              "bg": [
+                250,
+                250,
+                250
+              ],
+              "fg": [
+                26,
+                26,
+                26
+              ]
+            },
+            {
+              "sel": "h1",
+              "contrast": 16.67,
+              "bg": [
+                250,
+                250,
+                250
+              ],
+              "fg": [
+                26,
+                26,
+                26
+              ]
+            }
+          ],
+          "errors": [],
+          "elapsed_ms": 3
         }
       }
     },
@@ -1847,6 +4494,20 @@
           "expected": 0,
           "found": 1,
           "detail": "backend=axe-core violations=1 rules=page-has-heading-one"
+        },
+        {
+          "name": "print",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": "body_w=764 pages=3 @page=1 @media-print=0 visible=3246 cors_blocked_sheets=1"
+        },
+        {
+          "name": "dark",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": "no dark-mode CSS; bg_lum=0.807 contrast_failures=0"
         }
       ],
       "audits": {
@@ -1861,6 +4522,225 @@
           "nodes_affected": 1,
           "errors": [],
           "elapsed_ms": 20
+        },
+        "print": {
+          "status": "ok",
+          "audit": "print",
+          "body_width": 764,
+          "pages_survived": 3,
+          "page_rules": 1,
+          "print_media_rules": 0,
+          "rule_errors": 1,
+          "visible_before": 3246,
+          "total_elements": 3327,
+          "errors": [],
+          "elapsed_ms": 0
+        },
+        "dark": {
+          "status": "ok",
+          "audit": "dark",
+          "body_bg": [
+            232,
+            232,
+            232,
+            1
+          ],
+          "body_fg": [
+            0,
+            0,
+            0,
+            1
+          ],
+          "body_bg_luminance": 0.807,
+          "is_dark": false,
+          "contrast_failures": 0,
+          "contrast_samples": [
+            {
+              "sel": "p",
+              "contrast": 17.14,
+              "bg": [
+                232,
+                232,
+                232
+              ],
+              "fg": [
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "sel": "h2",
+              "contrast": 17.14,
+              "bg": [
+                232,
+                232,
+                232
+              ],
+              "fg": [
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "sel": ".lout-page text",
+              "contrast": 21,
+              "bg": [
+                255,
+                255,
+                255
+              ],
+              "fg": [
+                0,
+                0,
+                0
+              ]
+            }
+          ],
+          "errors": [],
+          "elapsed_ms": 0
+        }
+      }
+    },
+    {
+      "name": "magazine_layout_preview.html",
+      "ok": true,
+      "dom_bytes": 3975,
+      "error": "",
+      "stderr_tail": "",
+      "checks": [
+        {
+          "name": "loaded",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": ""
+        },
+        {
+          "name": "katex",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "abcjs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "anchors",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "hljs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "a11y",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": "backend=axe-core violations=0"
+        },
+        {
+          "name": "print",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": "body_w=764 pages=0 @page=0 @media-print=0 visible=24"
+        },
+        {
+          "name": "dark",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": "no dark-mode CSS; bg_lum=0.956 contrast_failures=0"
+        }
+      ],
+      "audits": {
+        "a11y": {
+          "status": "ok",
+          "audit": "a11y",
+          "backend": "axe-core",
+          "violations": 0,
+          "rule_ids": [],
+          "nodes_affected": 0,
+          "errors": [],
+          "elapsed_ms": 382
+        },
+        "print": {
+          "status": "ok",
+          "audit": "print",
+          "body_width": 764,
+          "pages_survived": 0,
+          "page_rules": 0,
+          "print_media_rules": 0,
+          "rule_errors": 0,
+          "visible_before": 24,
+          "total_elements": 29,
+          "errors": [],
+          "elapsed_ms": 7
+        },
+        "dark": {
+          "status": "ok",
+          "audit": "dark",
+          "body_bg": [
+            250,
+            250,
+            250,
+            1
+          ],
+          "body_fg": [
+            26,
+            26,
+            26,
+            1
+          ],
+          "body_bg_luminance": 0.956,
+          "is_dark": false,
+          "contrast_failures": 0,
+          "contrast_samples": [
+            {
+              "sel": "p",
+              "contrast": 16.67,
+              "bg": [
+                250,
+                250,
+                250
+              ],
+              "fg": [
+                26,
+                26,
+                26
+              ]
+            },
+            {
+              "sel": "h1",
+              "contrast": 16.67,
+              "bg": [
+                250,
+                250,
+                250
+              ],
+              "fg": [
+                26,
+                26,
+                26
+              ]
+            }
+          ],
+          "errors": [],
+          "elapsed_ms": 3
         }
       }
     },
@@ -1912,6 +4792,20 @@
           "expected": 0,
           "found": 2,
           "detail": "backend=axe-core violations=2 rules=list,region"
+        },
+        {
+          "name": "print",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": "body_w=764 pages=6 @page=1 @media-print=0 visible=7757 cors_blocked_sheets=1"
+        },
+        {
+          "name": "dark",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": "no dark-mode CSS; bg_lum=0.807 contrast_failures=0"
         }
       ],
       "audits": {
@@ -1926,7 +4820,99 @@
           ],
           "nodes_affected": 2,
           "errors": [],
-          "elapsed_ms": 42
+          "elapsed_ms": 36
+        },
+        "print": {
+          "status": "ok",
+          "audit": "print",
+          "body_width": 764,
+          "pages_survived": 6,
+          "page_rules": 1,
+          "print_media_rules": 0,
+          "rule_errors": 1,
+          "visible_before": 7757,
+          "total_elements": 8829,
+          "errors": [],
+          "elapsed_ms": 130
+        },
+        "dark": {
+          "status": "ok",
+          "audit": "dark",
+          "body_bg": [
+            232,
+            232,
+            232,
+            1
+          ],
+          "body_fg": [
+            0,
+            0,
+            0,
+            1
+          ],
+          "body_bg_luminance": 0.807,
+          "is_dark": false,
+          "contrast_failures": 0,
+          "contrast_samples": [
+            {
+              "sel": "h1",
+              "contrast": 17.14,
+              "bg": [
+                232,
+                232,
+                232
+              ],
+              "fg": [
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "sel": "h2",
+              "contrast": 17.14,
+              "bg": [
+                232,
+                232,
+                232
+              ],
+              "fg": [
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "sel": "li",
+              "contrast": 21,
+              "bg": [
+                255,
+                255,
+                255
+              ],
+              "fg": [
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "sel": ".lout-page text",
+              "contrast": 21,
+              "bg": [
+                255,
+                255,
+                255
+              ],
+              "fg": [
+                0,
+                0,
+                0
+              ]
+            }
+          ],
+          "errors": [],
+          "elapsed_ms": 9
         }
       }
     },
@@ -1978,6 +4964,20 @@
           "expected": 0,
           "found": 0,
           "detail": "backend=axe-core violations=0"
+        },
+        {
+          "name": "print",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": "body_w=764 pages=0 @page=0 @media-print=0 visible=24"
+        },
+        {
+          "name": "dark",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": "no dark-mode CSS; bg_lum=0.956 contrast_failures=0"
         }
       ],
       "audits": {
@@ -1989,7 +4989,71 @@
           "rule_ids": [],
           "nodes_affected": 0,
           "errors": [],
-          "elapsed_ms": 401
+          "elapsed_ms": 431
+        },
+        "print": {
+          "status": "ok",
+          "audit": "print",
+          "body_width": 764,
+          "pages_survived": 0,
+          "page_rules": 0,
+          "print_media_rules": 0,
+          "rule_errors": 0,
+          "visible_before": 24,
+          "total_elements": 29,
+          "errors": [],
+          "elapsed_ms": 5
+        },
+        "dark": {
+          "status": "ok",
+          "audit": "dark",
+          "body_bg": [
+            250,
+            250,
+            250,
+            1
+          ],
+          "body_fg": [
+            26,
+            26,
+            26,
+            1
+          ],
+          "body_bg_luminance": 0.956,
+          "is_dark": false,
+          "contrast_failures": 0,
+          "contrast_samples": [
+            {
+              "sel": "p",
+              "contrast": 16.67,
+              "bg": [
+                250,
+                250,
+                250
+              ],
+              "fg": [
+                26,
+                26,
+                26
+              ]
+            },
+            {
+              "sel": "h1",
+              "contrast": 16.67,
+              "bg": [
+                250,
+                250,
+                250
+              ],
+              "fg": [
+                26,
+                26,
+                26
+              ]
+            }
+          ],
+          "errors": [],
+          "elapsed_ms": 3
         }
       }
     },
@@ -2041,6 +5105,20 @@
           "expected": 0,
           "found": 1,
           "detail": "backend=axe-core violations=1 rules=page-has-heading-one"
+        },
+        {
+          "name": "print",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": "body_w=764 pages=9 @page=0 @media-print=1 visible=1155 cors_blocked_sheets=1"
+        },
+        {
+          "name": "dark",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": "no dark-mode CSS; bg_lum=0.807 contrast_failures=0"
         }
       ],
       "audits": {
@@ -2055,6 +5133,84 @@
           "nodes_affected": 1,
           "errors": [],
           "elapsed_ms": 20
+        },
+        "print": {
+          "status": "ok",
+          "audit": "print",
+          "body_width": 764,
+          "pages_survived": 9,
+          "page_rules": 0,
+          "print_media_rules": 1,
+          "rule_errors": 1,
+          "visible_before": 1155,
+          "total_elements": 1397,
+          "errors": [],
+          "elapsed_ms": 0
+        },
+        "dark": {
+          "status": "ok",
+          "audit": "dark",
+          "body_bg": [
+            232,
+            232,
+            232,
+            1
+          ],
+          "body_fg": [
+            0,
+            0,
+            0,
+            1
+          ],
+          "body_bg_luminance": 0.807,
+          "is_dark": false,
+          "contrast_failures": 0,
+          "contrast_samples": [
+            {
+              "sel": "p",
+              "contrast": 17.14,
+              "bg": [
+                232,
+                232,
+                232
+              ],
+              "fg": [
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "sel": "h1",
+              "contrast": 17.14,
+              "bg": [
+                232,
+                232,
+                232
+              ],
+              "fg": [
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "sel": ".lout-page text",
+              "contrast": 21,
+              "bg": [
+                255,
+                255,
+                255
+              ],
+              "fg": [
+                0,
+                0,
+                0
+              ]
+            }
+          ],
+          "errors": [],
+          "elapsed_ms": 0
         }
       }
     },
@@ -2106,6 +5262,20 @@
           "expected": 0,
           "found": 0,
           "detail": "backend=axe-core violations=0"
+        },
+        {
+          "name": "print",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": "body_w=764 pages=0 @page=0 @media-print=0 visible=24"
+        },
+        {
+          "name": "dark",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": "no dark-mode CSS; bg_lum=0.956 contrast_failures=0"
         }
       ],
       "audits": {
@@ -2117,16 +5287,80 @@
           "rule_ids": [],
           "nodes_affected": 0,
           "errors": [],
-          "elapsed_ms": 384
+          "elapsed_ms": 570
+        },
+        "print": {
+          "status": "ok",
+          "audit": "print",
+          "body_width": 764,
+          "pages_survived": 0,
+          "page_rules": 0,
+          "print_media_rules": 0,
+          "rule_errors": 0,
+          "visible_before": 24,
+          "total_elements": 29,
+          "errors": [],
+          "elapsed_ms": 8
+        },
+        "dark": {
+          "status": "ok",
+          "audit": "dark",
+          "body_bg": [
+            250,
+            250,
+            250,
+            1
+          ],
+          "body_fg": [
+            26,
+            26,
+            26,
+            1
+          ],
+          "body_bg_luminance": 0.956,
+          "is_dark": false,
+          "contrast_failures": 0,
+          "contrast_samples": [
+            {
+              "sel": "p",
+              "contrast": 16.67,
+              "bg": [
+                250,
+                250,
+                250
+              ],
+              "fg": [
+                26,
+                26,
+                26
+              ]
+            },
+            {
+              "sel": "h1",
+              "contrast": 16.67,
+              "bg": [
+                250,
+                250,
+                250
+              ],
+              "fg": [
+                26,
+                26,
+                26
+              ]
+            }
+          ],
+          "errors": [],
+          "elapsed_ms": 4
         }
       }
     },
     {
       "name": "technical_manual.html",
-      "ok": false,
-      "dom_bytes": 3531531,
+      "ok": true,
+      "dom_bytes": 3537636,
       "error": "",
-      "stderr_tail": "[1888:49392:0521/224714.063:ERROR:chrome\\browser\\web_applications\\externally_managed_app_manager.cc:680] https://docs.google.com/document/installwebapp?usp=chrome_default from install source 1 failed to install with reason 21",
+      "stderr_tail": "[66428:25912:0522/145611.042:ERROR:chrome\\browser\\web_applications\\externally_managed_app_manager.cc:680] https://mail.google.com/mail/installwebapp?usp=chrome_default from install source 1 failed to install with reason 21",
       "checks": [
         {
           "name": "loaded",
@@ -2152,23 +5386,37 @@
         {
           "name": "anchors",
           "ok": true,
-          "expected": 145,
-          "found": 145,
+          "expected": 147,
+          "found": 147,
           "detail": ""
         },
         {
           "name": "hljs",
-          "ok": false,
-          "expected": 20,
-          "found": 11,
-          "detail": "11/20 <code class=language-*> had hljs-* spans"
+          "ok": true,
+          "expected": 18,
+          "found": 18,
+          "detail": ""
         },
         {
           "name": "a11y",
           "ok": true,
           "expected": 0,
-          "found": 3,
-          "detail": "backend=axe-core violations=3 rules=list,page-has-heading-one,scrollable-region-focusable"
+          "found": 2,
+          "detail": "backend=axe-core violations=2 rules=list,scrollable-region-focusable"
+        },
+        {
+          "name": "print",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": "body_w=764 pages=21 @page=1 @media-print=0 visible=20632 cors_blocked_sheets=2"
+        },
+        {
+          "name": "dark",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": "no dark-mode CSS; bg_lum=0.807 contrast_failures=0"
         }
       ],
       "audits": {
@@ -2176,21 +5424,255 @@
           "status": "ok",
           "audit": "a11y",
           "backend": "axe-core",
-          "violations": 3,
+          "violations": 2,
           "rule_ids": [
             "list",
-            "page-has-heading-one",
             "scrollable-region-focusable"
           ],
-          "nodes_affected": 6,
+          "nodes_affected": 4,
           "errors": [],
           "elapsed_ms": 20
+        },
+        "print": {
+          "status": "ok",
+          "audit": "print",
+          "body_width": 764,
+          "pages_survived": 21,
+          "page_rules": 1,
+          "print_media_rules": 0,
+          "rule_errors": 2,
+          "visible_before": 20632,
+          "total_elements": 21216,
+          "errors": [],
+          "elapsed_ms": 122
+        },
+        "dark": {
+          "status": "ok",
+          "audit": "dark",
+          "body_bg": [
+            232,
+            232,
+            232,
+            1
+          ],
+          "body_fg": [
+            0,
+            0,
+            0,
+            1
+          ],
+          "body_bg_luminance": 0.807,
+          "is_dark": false,
+          "contrast_failures": 0,
+          "contrast_samples": [
+            {
+              "sel": "h1",
+              "contrast": 17.14,
+              "bg": [
+                232,
+                232,
+                232
+              ],
+              "fg": [
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "sel": "h2",
+              "contrast": 17.14,
+              "bg": [
+                232,
+                232,
+                232
+              ],
+              "fg": [
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "sel": "li",
+              "contrast": 21,
+              "bg": [
+                255,
+                255,
+                255
+              ],
+              "fg": [
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "sel": ".lout-page text",
+              "contrast": 21,
+              "bg": [
+                255,
+                255,
+                255
+              ],
+              "fg": [
+                0,
+                0,
+                0
+              ]
+            }
+          ],
+          "errors": [],
+          "elapsed_ms": 4
+        }
+      }
+    },
+    {
+      "name": "technical_manual_preview.html",
+      "ok": true,
+      "dom_bytes": 3911,
+      "error": "",
+      "stderr_tail": "",
+      "checks": [
+        {
+          "name": "loaded",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": ""
+        },
+        {
+          "name": "katex",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "abcjs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "anchors",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "hljs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "a11y",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": "backend=axe-core violations=0"
+        },
+        {
+          "name": "print",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": "body_w=764 pages=0 @page=0 @media-print=0 visible=24"
+        },
+        {
+          "name": "dark",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": "no dark-mode CSS; bg_lum=0.956 contrast_failures=0"
+        }
+      ],
+      "audits": {
+        "a11y": {
+          "status": "ok",
+          "audit": "a11y",
+          "backend": "axe-core",
+          "violations": 0,
+          "rule_ids": [],
+          "nodes_affected": 0,
+          "errors": [],
+          "elapsed_ms": 416
+        },
+        "print": {
+          "status": "ok",
+          "audit": "print",
+          "body_width": 764,
+          "pages_survived": 0,
+          "page_rules": 0,
+          "print_media_rules": 0,
+          "rule_errors": 0,
+          "visible_before": 24,
+          "total_elements": 29,
+          "errors": [],
+          "elapsed_ms": 4
+        },
+        "dark": {
+          "status": "ok",
+          "audit": "dark",
+          "body_bg": [
+            250,
+            250,
+            250,
+            1
+          ],
+          "body_fg": [
+            26,
+            26,
+            26,
+            1
+          ],
+          "body_bg_luminance": 0.956,
+          "is_dark": false,
+          "contrast_failures": 0,
+          "contrast_samples": [
+            {
+              "sel": "p",
+              "contrast": 16.67,
+              "bg": [
+                250,
+                250,
+                250
+              ],
+              "fg": [
+                26,
+                26,
+                26
+              ]
+            },
+            {
+              "sel": "h1",
+              "contrast": 16.67,
+              "bg": [
+                250,
+                250,
+                250
+              ],
+              "fg": [
+                26,
+                26,
+                26
+              ]
+            }
+          ],
+          "errors": [],
+          "elapsed_ms": 9
         }
       }
     }
   ],
   "audits_enabled": [
-    "a11y"
+    "a11y",
+    "print",
+    "dark"
   ],
   "axe_url": "https://cdnjs.cloudflare.com/ajax/libs/axe-core/4.10.0/axe.min.js"
 }
