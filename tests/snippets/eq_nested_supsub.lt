@@ -1,0 +1,21 @@
+###########################################################################
+#  eq_nested_supsub - an @Eq expression with sub/super nested several     #
+#  layers deep, exercising recursive script box construction in z45.c.    #
+###########################################################################
+
+@SysInclude { eq }
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+Nested scripts (sub inside sup inside sub):
+@DP
+@CentredDisplay @Eq {
+   x sub { i sup { j sub { k sup l } } } = y sup { m sub { n sup o } }
+}
+@DP
+Tower with mixed scripts:
+@DP
+@CentredDisplay @Eq {
+   a sup { b sup { c sup { d sup e } } } + p sub { q sub { r sub { s sub t } } }
+}
+@End @Text

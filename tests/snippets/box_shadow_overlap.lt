@@ -1,0 +1,30 @@
+###########################################################################
+#  box_shadow_overlap - multiple @ShadowBox arranged so their drop        #
+#  shadows visually overlap, exercising z-order and shadow rendering      #
+#  in both the PS and SVG back ends.                                      #
+###########################################################################
+
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+Three shadow boxes packed close enough to overlap their drops:
+@DP
+@CentredDisplay {
+   @ShadowBox { First }
+   |-0.6c|
+   @ShadowBox { Second }
+   |-0.6c|
+   @ShadowBox { Third }
+}
+@DP
+Stacked vertically with negative gap (rows overlap shadows):
+@DP
+@CentredDisplay {
+   ^//-0.4c
+   @ShadowBox { Alpha shadow }
+   /-0.4c
+   @ShadowBox { Beta shadow }
+   /-0.4c
+   @ShadowBox { Gamma shadow }
+}
+@End @Text

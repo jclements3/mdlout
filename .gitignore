@@ -30,6 +30,13 @@ tests/out/
 tests/report.html
 tests/visual_diff.html
 
+# tests/history.jsonl is the append-only regression history log (one
+# JSON record per run, written by tests/history.py).  tests/history.html
+# is the static SVG-chart viewer regenerated alongside it.  Both are
+# intentionally tracked so trend lines persist across machines/branches.
+!tests/history.jsonl
+!tests/history.html
+
 # tests/user_guide_diff/ holds the committed PS-vs-SVG comparison
 # evidence (manifests, README, and the 10 worst-page side-by-side
 # PNGs). The runner at tests/user_guide_diff.sh regenerates the

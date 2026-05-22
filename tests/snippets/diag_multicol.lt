@@ -1,0 +1,34 @@
+###########################################################################
+#  diag_multicol - a @Diag drawing placed inside a two-column layout,     #
+#  exercising galley placement of graphics in narrow columns.             #
+###########################################################################
+
+@SysInclude { diag }
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+Two columns of body text sandwich a small diagram:
+@DP
+{ 6c @Wide {
+@PP
+Left column.  This paragraph fills the left-hand column with body text
+of a reasonable width, so the column-bound diagram below sits in a
+narrow measure.
+@DP
+@CentredDisplay @Diag {
+   @Box margin { 0.2c } { In column }
+}
+@PP
+Body text resumes after the diagram.
+} } |1c| { 6c @Wide {
+@PP
+Right column.  This paragraph carries on the two-column composition with
+matching text of similar length.
+@DP
+@CentredDisplay @Diag {
+   @Circle margin { 0.2c } { Right }
+}
+@PP
+Right column continues.
+} }
+@End @Text

@@ -111,10 +111,20 @@ for lt in "${SNIPPETS[@]}"; do
       fi
    fi
 
-   # 4) Rasterize SVG -> PNG.
+   # 4) Rasterize SVG -> PNG. Lout emits one <svg>...</svg> per page,
+   #    concatenated. rsvg-convert only accepts a single root element,
+   #    so for multi-page output we extract the first page first.
    if [[ "${status}" == "OK" && -s "${svg}" ]]; then
+      svg_for_rsvg="${svg}"
+      if [[ $(grep -c '^<svg ' "${svg}") -gt 1 ]]; then
+         svg_for_rsvg="${OUT_DIR}/${name}.svg.p1.svg"
+         awk 'BEGIN{p=0} /^<\?xml/ && p==0 {print; next}
+              /^<svg / { if (p==0) {p=1; print; next} else exit }
+              p==1 {print; if ($0 ~ /^<\/svg>/) exit}' \
+              "${svg}" > "${svg_for_rsvg}"
+      fi
       if ! rsvg-convert -d ${DPI} -p ${DPI} -f png \
-                       -o "${svg_png}" "${svg}" \
+                       -o "${svg_png}" "${svg_for_rsvg}" \
                        2> "${OUT_DIR}/${name}.rsvg.err"; then
          status="RSVG_FAIL"
          note="rsvg-convert failed"

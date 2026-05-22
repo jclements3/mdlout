@@ -1,0 +1,31 @@
+###########################################################################
+#  tree_4level - a @Tree four levels deep with leaves wrapped in a mix    #
+#  of @Box and @Circle shapes, exercising heterogeneous leaf decoration   #
+#  through recursive @Sub layout.                                         #
+###########################################################################
+
+@SysInclude { diag }
+@SysInclude { doc }
+@Doc @Text @Begin
+
+@CentredDisplay @Diag {
+@Tree {
+   @Node { @Box { root } }
+   @Sub { @Node { @Circle { L } }
+      @Sub { @Node { @Box { L.1 } }
+         @Sub { @Node { @Circle { L.1.a } }
+            @Sub { @Node { @Box { leaf } } }
+         }
+         @Sub { @Node { @Circle { L.1.b } } }
+      }
+      @Sub { @Node { @Box { L.2 } } }
+   }
+   @Sub { @Node { @Circle { R } }
+      @Sub { @Node { @Box { R.1 } }
+         @Sub { @Node { @Circle { R.1.a } } }
+      }
+   }
+}
+}
+
+@End @Text

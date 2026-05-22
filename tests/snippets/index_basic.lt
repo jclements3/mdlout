@@ -1,0 +1,44 @@
+###########################################################################
+#  index_basic - a short @Report with several @Index entries; @MakeIndex  #
+#  is turned on in a hand-rolled DocumentSetup so the auto-generated      #
+#  @IndexPart is emitted by the second/third lout pass.                   #
+###########################################################################
+
+@SysInclude { langdefs }
+@SysInclude { bsf }
+@SysInclude { dsf }
+@SysInclude { reportf }
+
+@SysDatabase @FontDef { fontdefs }
+
+@Use { @BasicSetup }
+@Use { @DocumentSetup
+    @MakeIndex { Yes }
+}
+@Use { @ReportSetup }
+
+@Report
+    @Title { Index Basic }
+    @Author { Tester }
+    @InitialLanguage { English }
+//
+
+@Section
+    @Title { Introduction }
+@Begin
+@PP
+This report mentions {algorithm @Index { algorithm }},
+{database @Index { database }}, and {topology @Index { topology }}
+in the opening paragraph.
+@PP
+We also discuss {algorithm @Index { algorithm }} a second time so the
+index entry collects two page numbers.
+@End @Section
+
+@Section
+    @Title { More Terms }
+@Begin
+@PP
+Further coverage of {entropy @Index { entropy }},
+{morphism @Index { morphism }}, and {recursion @Index { recursion }}.
+@End @Section

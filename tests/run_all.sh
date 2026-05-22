@@ -26,3 +26,8 @@ if [[ -f "${REPORT}" ]]; then
    echo "Report written to: ${REPORT}"
    echo "Open with:  xdg-open \"${REPORT}\""
 fi
+
+# Append a record to tests/history.jsonl and regenerate tests/history.html.
+echo ""
+echo "==> running history.py"
+python3 "${SCRIPT_DIR}/history.py"

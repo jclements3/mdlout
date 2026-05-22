@@ -1,0 +1,25 @@
+###########################################################################
+#  sym_special - exercise @Sym for Greek letters and miscellaneous        #
+#  special characters that map to the Symbol font in the PS output.       #
+###########################################################################
+
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+Greek lowercase: @Sym alpha , @Sym beta , @Sym gamma , @Sym delta ,
+@Sym epsilon , @Sym lambda , @Sym mu , @Sym pi , @Sym sigma , @Sym omega .
+
+@PP
+Greek uppercase: @Sym Gamma , @Sym Delta , @Sym Theta , @Sym Lambda ,
+@Sym Sigma , @Sym Omega .
+
+@PP
+Mathematical: @Sym infinity , @Sym summation , @Sym product , @Sym integral ,
+@Sym partialdiff , @Sym plusminus , @Sym lessequal , @Sym greaterequal ,
+@Sym notequal , @Sym approxequal .
+
+@PP
+Inline form: the area of a circle is @Sym pi r and the limit as
+@Sym epsilon @Sym arrowright 0 .
+
+@End @Text

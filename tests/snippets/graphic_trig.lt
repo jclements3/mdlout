@@ -1,0 +1,48 @@
+###########################################################################
+#  graphic_trig - raw @Graphic with PostScript trig operators (sin, cos,  #
+#  atan) drawing a discrete sine curve.                                   #
+###########################################################################
+
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+A sine curve plotted in PostScript using sin, cos and atan operators:
+@DP
+@CentredDisplay {
+   "gsave"
+   "  0.4 setlinewidth"
+   "  0 ysize 2 div moveto xsize ysize 2 div lineto stroke"
+   "  xsize 2 div 0 moveto xsize 2 div ysize lineto stroke"
+   "grestore"
+   "gsave"
+   "  0.2 0.4 0.8 setrgbcolor 1.0 setlinewidth"
+   "  newpath"
+   "  0 ysize 2 div moveto"
+   "  0 2 xsize {"
+   "     /x exch def"
+   "     x 360 mul xsize div sin ysize 2 div mul 0.7 mul"
+   "     ysize 2 div add"
+   "     /y exch def"
+   "     x y lineto"
+   "  } for"
+   "  stroke"
+   "grestore"
+   "gsave"
+   "  0.8 0.2 0.2 setrgbcolor 0.6 setlinewidth [2 2] 0 setdash"
+   "  newpath"
+   "  0 ysize 2 div moveto"
+   "  0 4 xsize {"
+   "     /x exch def"
+   "     x 360 mul xsize div cos ysize 2 div mul 0.7 mul"
+   "     ysize 2 div add"
+   "     /y exch def"
+   "     x y lineto"
+   "  } for"
+   "  stroke"
+   "grestore"
+   "gsave"
+   "  /a 30 sin 30 cos atan def"
+   "  0 0 moveto a 10 string cvs show"
+   "grestore"
+} @Graphic { 8c @Wide 4c @High }
+@End @Text

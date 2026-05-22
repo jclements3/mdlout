@@ -1,0 +1,33 @@
+###########################################################################
+#  display_overhead - @Overhead transparencies with nested @Display       #
+#  blocks inside the body, exercising slides-style document setup with    #
+#  embedded centred/indented display formatting.                          #
+###########################################################################
+
+@SysInclude { slides }
+@OverheadTransparencies
+    @Title { Display Nesting }
+    @RunningTitle { displays }
+    @InitialLanguage { English }
+//
+
+@Overhead
+    @Title { Outer overhead }
+@Begin
+@PP
+This overhead contains nested displays:
+@DP
+@CentredDisplay { A centred display inside an overhead transparency. }
+@DP
+@IndentedDisplay { An indented display follows. }
+@DP
+@LeftDisplay { And a left-aligned display caps it. }
+@End @Overhead
+
+@Overhead @Begin
+@CentredDisplay {
+   @Heading { Second slide }
+}
+@DP
+@CentredDisplay { Single centred line on the second overhead. }
+@End @Overhead

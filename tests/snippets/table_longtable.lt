@@ -1,0 +1,67 @@
+###########################################################################
+#  table_longtable - a multi-page table simulated by two @Tbl blocks      #
+#  bracketed by an explicit @NP pagebreak; exercises page-spanning table  #
+#  layout (Lout has no native @LongTable).                                #
+###########################################################################
+
+@SysInclude { tbl }
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+A long table that spans multiple pages by splitting around an
+explicit pagebreak:
+@DP
+@CentredDisplay @Tbl
+   rule { yes }
+   aformat { @Cell A | @Cell B | @Cell C }
+{
+@Rowa A { @B { N } } B { @B { N squared } } C { @B { N cubed } }
+@Rowa A { 1 } B { 1 } C { 1 }
+@Rowa A { 2 } B { 4 } C { 8 }
+@Rowa A { 3 } B { 9 } C { 27 }
+@Rowa A { 4 } B { 16 } C { 64 }
+@Rowa A { 5 } B { 25 } C { 125 }
+@Rowa A { 6 } B { 36 } C { 216 }
+@Rowa A { 7 } B { 49 } C { 343 }
+@Rowa A { 8 } B { 64 } C { 512 }
+@Rowa A { 9 } B { 81 } C { 729 }
+@Rowa A { 10 } B { 100 } C { 1000 }
+@Rowa A { 11 } B { 121 } C { 1331 }
+@Rowa A { 12 } B { 144 } C { 1728 }
+@Rowa A { 13 } B { 169 } C { 2197 }
+@Rowa A { 14 } B { 196 } C { 2744 }
+@Rowa A { 15 } B { 225 } C { 3375 }
+@Rowa A { 16 } B { 256 } C { 4096 }
+@Rowa A { 17 } B { 289 } C { 4913 }
+@Rowa A { 18 } B { 324 } C { 5832 }
+@Rowa A { 19 } B { 361 } C { 6859 }
+@Rowa A { 20 } B { 400 } C { 8000 }
+}
+@NP
+@CentredDisplay @Tbl
+   rule { yes }
+   aformat { @Cell A | @Cell B | @Cell C }
+{
+@Rowa A { @B { N } } B { @B { N squared } } C { @B { N cubed } }
+@Rowa A { 21 } B { 441 } C { 9261 }
+@Rowa A { 22 } B { 484 } C { 10648 }
+@Rowa A { 23 } B { 529 } C { 12167 }
+@Rowa A { 24 } B { 576 } C { 13824 }
+@Rowa A { 25 } B { 625 } C { 15625 }
+@Rowa A { 26 } B { 676 } C { 17576 }
+@Rowa A { 27 } B { 729 } C { 19683 }
+@Rowa A { 28 } B { 784 } C { 21952 }
+@Rowa A { 29 } B { 841 } C { 24389 }
+@Rowa A { 30 } B { 900 } C { 27000 }
+@Rowa A { 31 } B { 961 } C { 29791 }
+@Rowa A { 32 } B { 1024 } C { 32768 }
+@Rowa A { 33 } B { 1089 } C { 35937 }
+@Rowa A { 34 } B { 1156 } C { 39304 }
+@Rowa A { 35 } B { 1225 } C { 42875 }
+@Rowa A { 36 } B { 1296 } C { 46656 }
+@Rowa A { 37 } B { 1369 } C { 50653 }
+@Rowa A { 38 } B { 1444 } C { 54872 }
+@Rowa A { 39 } B { 1521 } C { 59319 }
+@Rowa A { 40 } B { 1600 } C { 64000 }
+}
+@End @Text
