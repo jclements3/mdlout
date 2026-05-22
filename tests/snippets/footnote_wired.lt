@@ -1,0 +1,14 @@
+# footnote_wired.lt -- pins the Lout output mdlout produces for a
+# pandoc-style footnote in PDF mode: a numbered superscript followed
+# by Lout's @FootNote so the page-bottom note placement is handled
+# downstream by doc setup. The same body reused twice still gets the
+# same number (idempotent assignment via _fn_order).
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+A claim with a footnote{ "[1]" } @Sup {} @FootNote { First footnote body. }.
+Another claim referencing the same note{ "[1]" } @Sup {} @FootNote { First footnote body. }.
+@PP
+A second, named footnote{ "[2]" } @Sup {} @FootNote { Body of the second note. }
+appears later.
+@End @Text

@@ -114,6 +114,13 @@ _html_toc_requested: bool = False
 # markers (e.g. footnote refs, TOC placeholders) into the Lout stream.
 _output_format: str = 'pdf'
 
+# Whether highlight.js syntax highlighting is wired into the HTML output.
+# Off when --no-highlight is passed or no code blocks have a language hint.
+_highlight_enabled: bool = True
+# Set of code-block languages encountered so we know whether to bother
+# loading highlight.js at all. Populated by _block_to_lout in HTML mode.
+_highlight_langs: set[str] = set()
+
 
 def _reset_xref_state() -> None:
     _cite_order.clear()
@@ -123,6 +130,7 @@ def _reset_xref_state() -> None:
     _fn_order.clear()
     _fn_defs.clear()
     _html_headings.clear()
+    _highlight_langs.clear()
     global _cite_format, _html_toc_requested
     _cite_format = 'numeric'
     _html_toc_requested = False
@@ -1007,13 +1015,35 @@ def _parse_list(lines: list[str], start: int, bullet: bool) -> tuple[list[Block]
 def _parse_pipe_table(table_lines: list[str]) -> Block:
     rows = []
     has_header = False
+    aligns: list[str] = []
     for line in table_lines:
         if _TABLE_SEP_RE.match(line):
             has_header = True
+            # CommonMark alignment markers:
+            #   :---   -> left   (default; explicit)
+            #   ---:   -> right
+            #   :---:  -> center
+            #   ---    -> left   (no marker = default)
+            for cell in line.strip().strip('|').split('|'):
+                c = cell.strip()
+                left = c.startswith(':')
+                right = c.endswith(':')
+                if left and right:
+                    aligns.append('ctr')
+                elif right:
+                    aligns.append('right')
+                elif left:
+                    aligns.append('left')
+                else:
+                    aligns.append('')
             continue
         cells = [c.strip() for c in line.strip('|').split('|')]
         rows.append(cells)
-    return Block(type=BlockType.TABLE, rows=rows, meta={'has_header': has_header})
+    return Block(
+        type=BlockType.TABLE,
+        rows=rows,
+        meta={'has_header': has_header, 'aligns': aligns},
+    )
 
 
 def _parse_grid_table(table_lines: list[str]) -> Block:
@@ -1588,6 +1618,7 @@ def _generate_slides_body(blocks: list[Block]) -> list[str]:
 
 
 def _block_to_lout(block: Block) -> str:
+    global _needs_svgmacros
     match block.type:
         case BlockType.PARAGRAPH:
             return f'@PP\n{convert_inline(block.content)}'
@@ -1595,8 +1626,34 @@ def _block_to_lout(block: Block) -> str:
             level = min(block.level, 6)
             return f'{_HEADING_GAP[level]}\n@Display {_HEADING_FONTS[level]} {{ {convert_inline(block.content)} }}'
         case BlockType.CODE_BLOCK:
-            lang = f'# language: {block.language}\n' if block.language else ''
-            return f'{lang}@LP\n@IndentedDisplay @F @Verbatim @Begin\n{block.content}\n@End @Verbatim'
+            # In HTML mode, route language-tagged code blocks through
+            # @SVG so the actual <pre><code class="language-X"> reaches
+            # the browser and highlight.js can colour it. Untagged blocks
+            # (or PDF/PS mode) still use Lout's @Verbatim layout so the
+            # block appears as monospaced text in the printed page.
+            lang = (block.language or '').strip().lower()
+            if (
+                _output_format == 'html'
+                and _highlight_enabled
+                and lang
+                and lang not in ('lout', 'abc', 'svg', 'math', 'latex')
+            ):
+                _highlight_langs.add(lang)
+                _needs_svgmacros = True
+                # Each line is one SVG <text>/foreignObject row -- we
+                # encode the entire <pre> as one opaque string.
+                inner = (
+                    f'<foreignObject width="100%" height="100%" '
+                    f'class="mdlout-code-fo">'
+                    f'<pre class="mdlout-code" '
+                    f'xmlns="http://www.w3.org/1999/xhtml">'
+                    f'<code class="language-{_html_escape(lang)}">'
+                    f'{_html_escape(block.content)}'
+                    f'</code></pre></foreignObject>'
+                )
+                return f'@LP\n@SVG {{ "{_lout_string_encode(inner)}" }}'
+            tag = f'# language: {block.language}\n' if block.language else ''
+            return f'{tag}@LP\n@IndentedDisplay @F @Verbatim @Begin\n{block.content}\n@End @Verbatim'
         case BlockType.LOUT_RAW:
             return block.content
         case BlockType.BULLET_LIST:
@@ -1627,16 +1684,23 @@ def _block_to_lout(block: Block) -> str:
         case BlockType.FOOTNOTE_DEF:
             return f'# footnote [{block.meta.get("id", "")}]: {lout_escape(block.content)}'
         case BlockType.MATH_BLOCK:
-            global _needs_svgmacros
             _needs_svgmacros = True
             # Pass LaTeX body opaquely through @Math as one Lout string.
-            # Normalise internal whitespace: Lout's PS back end emits a
+            # Normalise newlines: Lout's PS back end emits a
             # "character \012 replaced by space" warning when literal LFs
-            # reach @Math (it tries to render them as glyphs). KaTeX is
-            # newline-tolerant, so collapsing any run of newlines + tabs +
-            # spaces to a single space is safe in both back ends. Authors
-            # that want LaTeX line breaks should write `\\` explicitly.
-            body = re.sub(r'[\s\n\t]+', ' ', block.content.strip())
+            # reach @Math (it tries to render them as glyphs). Rules:
+            #   * blank line  ->  ' \\ '    (LaTeX line break -- preserves
+            #                                visual paragraph separation
+            #                                authors typed in the source)
+            #   * single LF   ->  ' '        (just whitespace)
+            # KaTeX accepts both forms; the warning disappears in PS mode.
+            raw = block.content.strip()
+            # Split on blank lines first so we can put \\ between groups.
+            groups = re.split(r'\n[ \t]*\n', raw)
+            joined = []
+            for g in groups:
+                joined.append(re.sub(r'[\s\t\n]+', ' ', g).strip())
+            body = ' \\\\ '.join(p for p in joined if p)
             return f'@LP\n@CentredDisplay @Math {{ "{_lout_string_encode(body)}" }}'
         case BlockType.ABC:
             _needs_svgmacros = True
@@ -1645,6 +1709,12 @@ def _block_to_lout(block: Block) -> str:
             _needs_svgmacros = True
             return f'@LP\n@SVG {{ "{_lout_string_encode(block.content)}" }}'
         case BlockType.TOC:
+            # PDF/PS: Lout's native TOC is emitted automatically by the
+            # report/book preamble when `contents: Yes` is in YAML
+            # frontmatter -- there's no per-position macro for it. We
+            # leave a comment marker so the inline [TOC] position
+            # roughly survives in the Lout source for debugging.
+            # HTML mode handles the visible TOC via _build_html_toc.
             return '# [Table of Contents placeholder]'
         case BlockType.PAGE_BREAK:
             return '@NP'
@@ -1669,8 +1739,20 @@ def _table_to_lout(block: Block) -> str:
     num_cols = max(len(row) for row in block.rows)
     has_header = block.meta.get('has_header', False)
     label = block.meta.get('label')
+    # Per-column alignment from the pipe-table separator row
+    # (:---/:---:/---:). Missing entries default to left.
+    aligns = block.meta.get('aligns', []) or []
     cols = [chr(ord('A') + i) for i in range(min(num_cols, 26))]
-    fmt = ' | '.join(f'@Cell {c}' for c in cols[:num_cols])
+    fmt_parts = []
+    for idx, c in enumerate(cols[:num_cols]):
+        a = aligns[idx] if idx < len(aligns) else ''
+        if a in ('right', 'ctr'):
+            fmt_parts.append(f'@Cell {c} indent {{ {a} }}')
+        else:
+            # left is Lout's default -- omit the option to keep the
+            # snippet small and the diff vs. pre-alignment output minimal.
+            fmt_parts.append(f'@Cell {c}')
+    fmt = ' | '.join(fmt_parts)
 
     parts = ['@LP', '@DP', '@Tbl', f'  rule {{ yes }}', f'  aformat {{ {fmt} }}', '{']
     for ri, row in enumerate(block.rows):
@@ -1780,6 +1862,30 @@ _ABCJS_DIST_CANDIDATES = (
 )
 
 _ABCJS_CDN = 'https://cdn.jsdelivr.net/npm/abcjs@6.4.4/dist/abcjs-basic-min.js'
+
+# highlight.js -- syntax highlighting for fenced code blocks in HTML mode.
+# The full common bundle ships ~30 languages and is small enough (~50 kB
+# minified) that the CDN cost on the first view is negligible. We don't
+# attempt to inline it (no canonical system path exists across distros);
+# the spec explicitly allows CDN here.
+_HLJS_VERSION = '11.9.0'
+_HLJS_CDN_JS = (
+    f'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/'
+    f'{_HLJS_VERSION}/highlight.min.js'
+)
+_HLJS_CDN_CSS = (
+    f'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/'
+    f'{_HLJS_VERSION}/styles/github.min.css'
+)
+# Local-inline fallback locations (uncommon but supported for offline builds).
+_HLJS_JS_CANDIDATES = (
+    '/usr/lib/node_modules/highlight.js/lib/highlight.min.js',
+    '/usr/share/javascript/highlight.js/highlight.min.js',
+)
+_HLJS_CSS_CANDIDATES = (
+    '/usr/share/javascript/highlight.js/styles/github.min.css',
+    '/usr/lib/node_modules/highlight.js/styles/github.min.css',
+)
 
 
 # ---------------------------------------------------------------------------
@@ -2201,6 +2307,7 @@ def _build_html_scaffold(
     math_engine: bool = True,
     music_engine: bool = True,
     embed_fonts: bool = True,
+    highlight: bool = True,
 ) -> tuple[str, dict[str, str | None]]:
     """Wrap raw SVG output from lout -G in a self-contained HTML5 document.
 
@@ -2213,6 +2320,8 @@ def _build_html_scaffold(
         'katex_autorender': None,
         'abcjs': None,
         'embedded_fonts': None,
+        'highlightjs_css': None,
+        'highlightjs_js': None,
     }
 
     head_parts: list[str] = [
@@ -2251,6 +2360,12 @@ def _build_html_scaffold(
         '.math{display:inline-block}'
         '.abc-music{display:block;width:100%}'
         '.abc-music svg{max-width:100%;height:auto}'
+        '.mdlout-code{margin:0;padding:.6em 1em;background:#f6f8fa;'
+        'border:1px solid #ddd;border-radius:4px;font-family:Courier,'
+        '"Liberation Mono",monospace;font-size:.9em;line-height:1.4;'
+        'white-space:pre;overflow:auto}'
+        '.mdlout-code code{background:transparent;padding:0;'
+        'font-family:inherit;font-size:inherit}'
         '@media print{body{background:#fff;padding:0}'
         '.lout-page{box-shadow:none;margin:0;page-break-after:always}}'
         '</style>'
@@ -2322,6 +2437,45 @@ def _build_html_scaffold(
             else:
                 head_parts.append(f'<script defer src="{_ABCJS_CDN}"></script>')
                 info['abcjs'] = f'{_ABCJS_CDN} (CDN fallback)'
+
+    # ---- highlight.js -------------------------------------------------------
+    # Only load if (a) the user hasn't disabled it AND (b) at least one
+    # code block actually wants highlighting. Otherwise we'd ship ~150 kB
+    # of dead-weight CSS+JS to every page that has no code in it.
+    if highlight and _highlight_langs:
+        if external_assets:
+            head_parts.append(
+                f'<link rel="stylesheet" href="{_HLJS_CDN_CSS}">'
+            )
+            head_parts.append(
+                f'<script defer src="{_HLJS_CDN_JS}" '
+                f'onload="hljs.highlightAll()"></script>'
+            )
+            info['highlightjs_css'] = f'{_HLJS_CDN_CSS} (CDN)'
+            info['highlightjs_js'] = f'{_HLJS_CDN_JS} (CDN)'
+        else:
+            css_text, css_path = _read_text_if_exists(_HLJS_CSS_CANDIDATES)
+            if css_text is not None:
+                head_parts.append(f'<style>{css_text}</style>')
+                info['highlightjs_css'] = f'{css_path} (inlined)'
+            else:
+                head_parts.append(
+                    f'<link rel="stylesheet" href="{_HLJS_CDN_CSS}">'
+                )
+                info['highlightjs_css'] = f'{_HLJS_CDN_CSS} (CDN fallback)'
+            js_text, js_path = _read_text_if_exists(_HLJS_JS_CANDIDATES)
+            if js_text is not None:
+                head_parts.append(
+                    f'<script>{js_text}</script>'
+                    '<script>hljs.highlightAll();</script>'
+                )
+                info['highlightjs_js'] = f'{js_path} (inlined)'
+            else:
+                head_parts.append(
+                    f'<script defer src="{_HLJS_CDN_JS}" '
+                    f'onload="hljs.highlightAll()"></script>'
+                )
+                info['highlightjs_js'] = f'{_HLJS_CDN_JS} (CDN fallback)'
 
     # ---- Init script --------------------------------------------------------
     # Runs once both KaTeX auto-render and abcjs are loaded. We hook
@@ -2424,7 +2578,7 @@ def _build_html_extras() -> tuple[str, str, str]:
       from _fn_order / _fn_defs. Emitted only when at least one [^ref] fired.
     """
     anchor_block = ''
-    if _html_headings:
+    if _html_headings or _fn_order:
         bits = ['<div class="mdlout-anchors" aria-hidden="true">']
         for level, text, anchor in _html_headings:
             lvl = max(1, min(6, level))
@@ -2432,6 +2586,13 @@ def _build_html_extras() -> tuple[str, str, str]:
                 f'<h{lvl} id="{_html_escape(anchor)}">'
                 f'{_html_escape(text)}</h{lvl}>'
             )
+        # Footnote backref targets. The visible "[N]" superscript is
+        # painted by Lout inside the SVG and isn't an anchor target; this
+        # hidden <span id="fnref-N"> lets the footnote-section backref
+        # land somewhere meaningful (browsers scroll to the section the
+        # ref originally appeared in).
+        for lbl, n in sorted(_fn_order.items(), key=lambda kv: kv[1]):
+            bits.append(f'<span id="fnref-{n}"></span>')
         bits.append('</div>')
         anchor_block = '\n'.join(bits)
 
@@ -2577,8 +2738,9 @@ def _build_once(args) -> str | None:
                     or 'numeric').lower()
     if _cite_format not in ('numeric', 'alpha'):
         _cite_format = 'numeric'
-    global _output_format
+    global _output_format, _highlight_enabled
     _output_format = 'html' if args.format == 'html' else 'pdf'
+    _highlight_enabled = not getattr(args, 'no_highlight', False)
     md_text = _scan_citations(md_text)
     md_text = _scan_footnotes(md_text)
     _scan_fig_tab_labels(md_text, frontmatter.get('type', 'doc').lower())
@@ -2650,6 +2812,7 @@ def _build_once(args) -> str | None:
                 math_engine=not args.no_math_engine,
                 music_engine=not args.no_music_engine,
                 embed_fonts=not args.no_font_embedding,
+                highlight=not args.no_highlight,
             )
             # Inject the live-reload <script> just before </body> so the
             # browser opens an EventSource to /events. Only active in
@@ -2913,6 +3076,13 @@ def main() -> None:
         help='Do not inline URW++ Nimbus @font-face web fonts into the HTML '
              '(smaller output; SVG text will fall back to system fonts and '
              'may drift slightly from the PS/PDF render)',
+    )
+    parser.add_argument(
+        '--no-highlight', action='store_true',
+        help='Disable highlight.js syntax highlighting for fenced code '
+             'blocks. With highlighting on (default), HTML-mode code blocks '
+             'render as a <pre><code class="language-XYZ"> the browser '
+             'colourises via the highlight.js CDN.',
     )
     parser.add_argument(
         '--text-as-paths', action='store_true',

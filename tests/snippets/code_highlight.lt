@@ -1,0 +1,18 @@
+# code_highlight.lt -- In HTML mode mdlout routes language-tagged
+# code blocks through @SVG so the browser sees a real <pre><code
+# class="language-XXX"> that highlight.js can colour. In PDF/PS mode
+# (this snippet's mode) mdlout falls back to @Verbatim so the code
+# still renders as monospaced text on the printed page. This snippet
+# pins the PDF/PS form.
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+A code block with a language hint:
+@LP
+@IndentedDisplay @F @Verbatim @Begin
+def hello():
+    print("hi")
+@End @Verbatim
+@PP
+Text resumes normally after the verbatim block.
+@End @Text

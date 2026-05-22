@@ -1,0 +1,15 @@
+# toc_auto.lt -- locks in the Lout source mdlout emits for a [TOC]
+# placeholder. Because Lout's `doc` setup has no per-position TOC
+# macro, mdlout currently leaves a comment in the Lout stream and
+# delegates the visible TOC to the HTML wrapper (HTML mode) or to the
+# `contents: Yes` frontmatter switch on report/book setups (PDF mode).
+# This snippet just exercises the Lout side -- the marker has to
+# survive the round trip without breaking subsequent paragraph layout.
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+First paragraph above the TOC marker.
+# [Table of Contents placeholder]
+@PP
+Paragraph after the marker; layout should be unaffected.
+@End @Text

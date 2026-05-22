@@ -1,0 +1,18 @@
+# table_align.lt -- pipe-table column alignment markers (:---/:---:/---:)
+# round-trip into Lout `@Cell A indent { left|ctr|right }` so the
+# left/centre/right columns render exactly as the markdown author intends.
+# This snippet pins the @Tbl form mdlout emits.
+@SysInclude { tbl }
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+@DP
+@Tbl
+  rule { yes }
+  aformat { @Cell A | @Cell B indent { ctr } | @Cell C indent { right } }
+{
+@Rowa A { @B { Left } } B { @B { Centre } } C { @B { Right } }
+@Rowa A { apple } B { banana } C { 123 }
+@Rowa A { aardvark } B { ok } C { 4567890 }
+}
+@End @Text
