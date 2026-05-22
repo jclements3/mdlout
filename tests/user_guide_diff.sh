@@ -88,7 +88,12 @@ for psfile in "$WORK"/ps/ps-*.png; do
         printf "%s\t%s\tMISSING\t%s\t%s\tMISSING\n" "$n" "$ink" "$ink" "$ratio" >> "$MANIFEST"
         continue
     fi
-    diff_px=$(compare -metric AE -fuzz 5% "$psfile" "$svgfile" "$difffile" 2>&1 | tail -n1)
+    # `compare -metric AE` returns non-zero whenever the two images
+    # differ (i.e. always, in our case). With `set -euo pipefail` that
+    # tears down the loop on the first page. `|| true` keeps the pipe-
+    # line's exit status at 0; the next line still validates the
+    # captured value, so a non-integer result is handled.
+    diff_px=$(compare -metric AE -fuzz 5% "$psfile" "$svgfile" "$difffile" 2>&1 | tail -n1 || true)
     [[ "$diff_px" =~ ^[0-9]+$ ]] || diff_px=0
     ratio=$(awk -v a="$diff_px" -v b="$total" 'BEGIN{printf "%.4f", a/b}')
     verdict=$(awk -v r="$ratio" 'BEGIN{
