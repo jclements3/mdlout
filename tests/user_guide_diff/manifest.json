@@ -1,7 +1,7 @@
 {
   "metadata": {
-    "generated_utc": "2026-05-22T20:07:39Z",
-    "lout_submodule_sha": "a3e9d04b9f483a54d33a51d62eb0a9c5f132a4e1",
+    "generated_utc": "2026-05-22T23:28:19Z",
+    "lout_submodule_sha": "a0a5c28e52817992e03e81c556c0e4752c56beec",
     "render_dpi": 100,
     "fuzz_percent": 5,
     "compare_metric": "AE",
@@ -13,8 +13,8 @@
   },
   "summary": {
     "total_pages": 327,
-    "ok_lt_5pct": 36,
-    "diff_5_to_20pct": 291,
+    "ok_lt_5pct": 38,
+    "diff_5_to_20pct": 289,
     "bad_gt_20pct": 0,
     "missing_svg_pages": 0
   },
@@ -102,10 +102,10 @@
       "page": "004",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 47910,
+      "diff_pixels": 47942,
       "diff_ratio": 0.0495,
       "verdict": "OK",
-      "ssim": 0.9456
+      "ssim": 0.9455
     },
     {
       "page": "005",
@@ -381,10 +381,10 @@
       "page": "035",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 65050,
+      "diff_pixels": 65015,
       "diff_ratio": 0.0672,
       "verdict": "DIFF",
-      "ssim": 0.9385
+      "ssim": 0.9386
     },
     {
       "page": "036",
@@ -993,10 +993,10 @@
       "page": "103",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 97067,
-      "diff_ratio": 0.1003,
+      "diff_pixels": 97312,
+      "diff_ratio": 0.1006,
       "verdict": "DIFF",
-      "ssim": 0.8955
+      "ssim": 0.8937
     },
     {
       "page": "104",
@@ -1101,10 +1101,10 @@
       "page": "115",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 94712,
-      "diff_ratio": 0.0979,
+      "diff_pixels": 95573,
+      "diff_ratio": 0.0988,
       "verdict": "DIFF",
-      "ssim": 0.9152
+      "ssim": 0.9119
     },
     {
       "page": "116",
@@ -1875,19 +1875,19 @@
       "page": "201",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 56732,
-      "diff_ratio": 0.0586,
+      "diff_pixels": 55387,
+      "diff_ratio": 0.0572,
       "verdict": "DIFF",
-      "ssim": 0.9469
+      "ssim": 0.9537
     },
     {
       "page": "202",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 76289,
-      "diff_ratio": 0.0788,
+      "diff_pixels": 74052,
+      "diff_ratio": 0.0765,
       "verdict": "DIFF",
-      "ssim": 0.9045
+      "ssim": 0.9137
     },
     {
       "page": "203",
@@ -1911,28 +1911,28 @@
       "page": "205",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 78809,
-      "diff_ratio": 0.0814,
+      "diff_pixels": 78061,
+      "diff_ratio": 0.0807,
       "verdict": "DIFF",
-      "ssim": 0.885
+      "ssim": 0.8889
     },
     {
       "page": "206",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 83510,
-      "diff_ratio": 0.0863,
+      "diff_pixels": 83255,
+      "diff_ratio": 0.086,
       "verdict": "DIFF",
-      "ssim": 0.9272
+      "ssim": 0.9285
     },
     {
       "page": "207",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 91593,
-      "diff_ratio": 0.0947,
+      "diff_pixels": 90859,
+      "diff_ratio": 0.0939,
       "verdict": "DIFF",
-      "ssim": 0.8986
+      "ssim": 0.9022
     },
     {
       "page": "208",
@@ -2082,19 +2082,19 @@
       "page": "224",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 76025,
-      "diff_ratio": 0.0786,
+      "diff_pixels": 75141,
+      "diff_ratio": 0.0777,
       "verdict": "DIFF",
-      "ssim": 0.901
+      "ssim": 0.9052
     },
     {
       "page": "225",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 54509,
-      "diff_ratio": 0.0563,
+      "diff_pixels": 54351,
+      "diff_ratio": 0.0562,
       "verdict": "DIFF",
-      "ssim": 0.936
+      "ssim": 0.9369
     },
     {
       "page": "226",
@@ -2109,10 +2109,10 @@
       "page": "227",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 64317,
-      "diff_ratio": 0.0665,
+      "diff_pixels": 64178,
+      "diff_ratio": 0.0663,
       "verdict": "DIFF",
-      "ssim": 0.9214
+      "ssim": 0.922
     },
     {
       "page": "228",
@@ -2127,19 +2127,19 @@
       "page": "229",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 55133,
-      "diff_ratio": 0.057,
+      "diff_pixels": 52064,
+      "diff_ratio": 0.0538,
       "verdict": "DIFF",
-      "ssim": 0.9115
+      "ssim": 0.9252
     },
     {
       "page": "230",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 51458,
-      "diff_ratio": 0.0532,
-      "verdict": "DIFF",
-      "ssim": 0.9208
+      "diff_pixels": 48089,
+      "diff_ratio": 0.0497,
+      "verdict": "OK",
+      "ssim": 0.936
     },
     {
       "page": "231",
@@ -2154,46 +2154,46 @@
       "page": "232",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 50367,
-      "diff_ratio": 0.0521,
-      "verdict": "DIFF",
-      "ssim": 0.9181
+      "diff_pixels": 47652,
+      "diff_ratio": 0.0492,
+      "verdict": "OK",
+      "ssim": 0.9303
     },
     {
       "page": "233",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 44933,
-      "diff_ratio": 0.0464,
+      "diff_pixels": 40154,
+      "diff_ratio": 0.0415,
       "verdict": "OK",
-      "ssim": 0.9119
+      "ssim": 0.935
     },
     {
       "page": "234",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 42775,
-      "diff_ratio": 0.0442,
+      "diff_pixels": 38613,
+      "diff_ratio": 0.0399,
       "verdict": "OK",
-      "ssim": 0.9222
+      "ssim": 0.9424
     },
     {
       "page": "235",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 44986,
-      "diff_ratio": 0.0465,
+      "diff_pixels": 41086,
+      "diff_ratio": 0.0425,
       "verdict": "OK",
-      "ssim": 0.9121
+      "ssim": 0.931
     },
     {
       "page": "236",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 62390,
-      "diff_ratio": 0.0645,
+      "diff_pixels": 59927,
+      "diff_ratio": 0.0619,
       "verdict": "DIFF",
-      "ssim": 0.9064
+      "ssim": 0.9199
     },
     {
       "page": "237",
@@ -2883,10 +2883,10 @@
       "page": "313",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 71098,
+      "diff_pixels": 71116,
       "diff_ratio": 0.0735,
       "verdict": "DIFF",
-      "ssim": 0.9483
+      "ssim": 0.9481
     },
     {
       "page": "314",
@@ -2901,10 +2901,10 @@
       "page": "315",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 62460,
+      "diff_pixels": 62463,
       "diff_ratio": 0.0646,
       "verdict": "DIFF",
-      "ssim": 0.9355
+      "ssim": 0.9354
     },
     {
       "page": "316",
@@ -2928,7 +2928,7 @@
       "page": "318",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 67409,
+      "diff_pixels": 67420,
       "diff_ratio": 0.0697,
       "verdict": "DIFF",
       "ssim": 0.9382
@@ -2946,19 +2946,19 @@
       "page": "320",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 65377,
+      "diff_pixels": 65406,
       "diff_ratio": 0.0676,
       "verdict": "DIFF",
-      "ssim": 0.9562
+      "ssim": 0.9559
     },
     {
       "page": "321",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 73305,
+      "diff_pixels": 73342,
       "diff_ratio": 0.0758,
       "verdict": "DIFF",
-      "ssim": 0.9297
+      "ssim": 0.9296
     },
     {
       "page": "322",
@@ -3000,10 +3000,10 @@
       "page": "326",
       "ps_pixels": 967590,
       "svg_pixels": 967590,
-      "diff_pixels": 66836,
+      "diff_pixels": 66900,
       "diff_ratio": 0.0691,
       "verdict": "DIFF",
-      "ssim": 0.9558
+      "ssim": 0.9555
     },
     {
       "page": "327",
@@ -3017,12 +3017,12 @@
   ],
   "ssim_summary": {
     "pages_with_ssim": 327,
-    "mean_ssim": 0.923,
-    "median_ssim": 0.9255,
+    "mean_ssim": 0.9234,
+    "median_ssim": 0.9258,
     "min_ssim": 0.8354,
     "max_ssim": 1.0,
     "count_ge_0_99": 2,
-    "count_ge_0_95": 35,
+    "count_ge_0_95": 36,
     "count_ge_0_85": 324,
     "count_lt_0_85": 3
   }

@@ -64,13 +64,13 @@ and which pages still diverge most.
 
 Total PS pages: **327**.  Total SVG pages: **327**.
 
-After Adobe Symbol glyph table + @Graph plot-symbol dispatch fix
-(2026-05-22, lout submodule `a3e9d04`):
+After Type 1 charpath + rotated-show fix (2026-05-22, lout
+submodule `a0a5c28`):
 
 | bucket                           | pages |
 |----------------------------------|-------|
-| `OK` (diff < 5%)                 | 36    |
-| `DIFF` (5% <= diff < 20%)        | 291   |
+| `OK` (diff < 5%)                 | 38    |
+| `DIFF` (5% <= diff < 20%)        | 289   |
 | `BAD` (diff >= 20%)              | 0     |
 | `MISSING` (no SVG page at all)   | 0     |
 
@@ -209,6 +209,52 @@ No real bugs remain in the current worst-10. All entries are
 page-boundary drift: the same prose laid out on slightly different
 page boundaries, which the AE metric flags as a large diff even
 though both pages are individually well-formed.
+
+## Diagrams chapter (@Diag, pages 190-229)
+
+40 pages exercising `@Diag`, `@Fig`, `@Tree`, label orientation,
+arrowstyles, link labels.  This is the highest-stakes chapter for
+SVG-back-end correctness; the chapter-wide pixel-diff heatmaps
+live under [`diag_thumbs/`](diag_thumbs/) and are stitched into a
+single per-page gallery at [`diag_gallery.html`](diag_gallery.html).
+
+Aggregate stats (built 2026-05-22 with lout `a0a5c28`):
+
+| statistic       | value  |
+|-----------------|--------|
+| pages           | 40     |
+| mean AE         | 6.93%  |
+| mean SSIM       | 0.9248 |
+| min SSIM        | 0.8820 (page 221) |
+
+Worst-10 by SSIM in this chapter (side-by-side panels at
+`diag-worst-NN.png`):
+
+| rank | page | AE     | SSIM   |
+|-----:|-----:|-------:|-------:|
+| 01   | 221  | 9.86%  | 0.8820 |
+| 02   | 205  | 8.07%  | 0.8889 |
+| 03   | 213  | 7.42%  | 0.8986 |
+| 04   | 219  | 7.35%  | 0.8993 |
+| 05   | 211  | 7.78%  | 0.8998 |
+| 06   | 207  | 9.39%  | 0.9022 |
+| 07   | 224  | 7.77%  | 0.9052 |
+| 08   | 202  | 7.65%  | 0.9137 |
+| 09   | 216  | 7.52%  | 0.9138 |
+| 10   | 193  | 7.70%  | 0.9144 |
+
+After the rotated-show fix (lout `a0a5c28`):
+- p205 SSIM 0.8850 -> 0.8889 (+0.0039)
+- p207 SSIM 0.8986 -> 0.9022 (+0.0036)
+- p224 SSIM 0.9010 -> 0.9052 (+0.0042)
+- p211 / p213: no measurable change (the rotated-show idiom isn't
+  the dominant diff source there).
+
+None of the @Diag pages appear in the corpus-wide worst-10 (which
+is dominated by chapter-3 prose pagination drift, confirmed
+antialiasing-only by docs/chapter3_pagination_drift_investigation.md).
+The remaining @Diag SSIM gap is the same sub-pixel Ghostscript-vs-
+librsvg antialiasing floor we see corpus-wide; no layout bugs.
 
 ## Recently fixed (2026-05-22)
 

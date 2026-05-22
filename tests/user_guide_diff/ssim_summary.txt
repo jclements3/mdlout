@@ -1,10 +1,10 @@
 SSIM summary (skimage.metrics.structural_similarity, grayscale, data_range=255)
 Pages compared:        327
-Mean SSIM:             0.9230
-Median SSIM:           0.9255
+Mean SSIM:             0.9234
+Median SSIM:           0.9258
 Min SSIM:              0.8354
 Max SSIM:              1.0000
 Pages SSIM >= 0.99:    2
-Pages SSIM >= 0.95:    35  (visually indistinguishable)
+Pages SSIM >= 0.95:    36  (visually indistinguishable)
 Pages SSIM >= 0.85:    324  (close)
 Pages SSIM <  0.85:    3  (visibly different)
