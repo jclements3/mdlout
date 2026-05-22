@@ -1,0 +1,54 @@
+{
+  "status": "ok",
+  "chrome": "/mnt/c/Program Files/Google/Chrome/Application/chrome.exe",
+  "wsl_windows_chrome": true,
+  "pass": 0,
+  "fail": 1,
+  "total": 1,
+  "examples": [
+    {
+      "name": "04_math.html",
+      "ok": false,
+      "dom_bytes": 2000485,
+      "error": "",
+      "stderr_tail": "",
+      "checks": [
+        {
+          "name": "loaded",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": ""
+        },
+        {
+          "name": "katex",
+          "ok": false,
+          "expected": 8,
+          "found": 7,
+          "detail": "only 7 .katex matches for 8 spans"
+        },
+        {
+          "name": "abcjs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "anchors",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": ""
+        },
+        {
+          "name": "hljs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        }
+      ]
+    }
+  ]
+}
