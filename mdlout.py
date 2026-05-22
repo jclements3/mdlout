@@ -2791,13 +2791,14 @@ def _build_html_scaffold(
         body_parts.append(
             '<a href="#main" class="skip-link">Skip to content</a>'
         )
-        # <header> as a landmark only -- the visible title and any markdown
-        # # H1 already render inside the SVG, and the hidden-anchor block
-        # below carries the H1/H2/... structure for screen-reader navigation.
-        # Adding a second <h1> here would corrupt the heading outline.
+        # Visually-hidden <h1> labelling the page. Required by axe-core's
+        # page-has-heading-one rule; without it, documents whose first
+        # markdown heading is ## or @Section (most reports/books) have
+        # no <h1> anywhere in the DOM and fail WCAG audits. Multiple <h1>s
+        # in different sectioning roots are valid HTML5 and pass axe.
         body_parts.append(
             '<header role="banner" aria-label="Document header">'
-            f'<p class="mdlout-doc-title">{_html_escape(title)}</p>'
+            f'<h1 class="mdlout-doc-title">{_html_escape(title)}</h1>'
             '</header>'
         )
     if head_anchors:

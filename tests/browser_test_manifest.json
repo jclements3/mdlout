@@ -2,9 +2,9 @@
   "status": "ok",
   "chrome": "/mnt/c/Program Files/Google/Chrome/Application/chrome.exe",
   "wsl_windows_chrome": true,
-  "pass": 31,
-  "fail": 0,
-  "total": 31,
+  "pass": 32,
+  "fail": 2,
+  "total": 34,
   "examples": [
     {
       "name": "01_hello.html",
@@ -47,8 +47,29 @@
           "expected": 0,
           "found": 0,
           "detail": ""
+        },
+        {
+          "name": "a11y",
+          "ok": true,
+          "expected": 0,
+          "found": 1,
+          "detail": "backend=axe-core violations=1 rules=page-has-heading-one"
         }
-      ]
+      ],
+      "audits": {
+        "a11y": {
+          "status": "ok",
+          "audit": "a11y",
+          "backend": "axe-core",
+          "violations": 1,
+          "rule_ids": [
+            "page-has-heading-one"
+          ],
+          "nodes_affected": 1,
+          "errors": [],
+          "elapsed_ms": 20
+        }
+      }
     },
     {
       "name": "01_hello_preview.html",
@@ -91,8 +112,27 @@
           "expected": 0,
           "found": 0,
           "detail": ""
+        },
+        {
+          "name": "a11y",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": "backend=axe-core violations=0"
         }
-      ]
+      ],
+      "audits": {
+        "a11y": {
+          "status": "ok",
+          "audit": "a11y",
+          "backend": "axe-core",
+          "violations": 0,
+          "rule_ids": [],
+          "nodes_affected": 0,
+          "errors": [],
+          "elapsed_ms": 1728
+        }
+      }
     },
     {
       "name": "02_typography.html",
@@ -135,8 +175,29 @@
           "expected": 0,
           "found": 0,
           "detail": ""
+        },
+        {
+          "name": "a11y",
+          "ok": true,
+          "expected": 0,
+          "found": 1,
+          "detail": "backend=axe-core violations=1 rules=page-has-heading-one"
         }
-      ]
+      ],
+      "audits": {
+        "a11y": {
+          "status": "ok",
+          "audit": "a11y",
+          "backend": "axe-core",
+          "violations": 1,
+          "rule_ids": [
+            "page-has-heading-one"
+          ],
+          "nodes_affected": 1,
+          "errors": [],
+          "elapsed_ms": 20
+        }
+      }
     },
     {
       "name": "02_typography_preview.html",
@@ -179,8 +240,27 @@
           "expected": 0,
           "found": 0,
           "detail": ""
+        },
+        {
+          "name": "a11y",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": "backend=axe-core violations=0"
         }
-      ]
+      ],
+      "audits": {
+        "a11y": {
+          "status": "ok",
+          "audit": "a11y",
+          "backend": "axe-core",
+          "violations": 0,
+          "rule_ids": [],
+          "nodes_affected": 0,
+          "errors": [],
+          "elapsed_ms": 12
+        }
+      }
     },
     {
       "name": "03_lists_and_tables.html",
@@ -223,8 +303,29 @@
           "expected": 0,
           "found": 0,
           "detail": ""
+        },
+        {
+          "name": "a11y",
+          "ok": true,
+          "expected": 0,
+          "found": 1,
+          "detail": "backend=axe-core violations=1 rules=page-has-heading-one"
         }
-      ]
+      ],
+      "audits": {
+        "a11y": {
+          "status": "ok",
+          "audit": "a11y",
+          "backend": "axe-core",
+          "violations": 1,
+          "rule_ids": [
+            "page-has-heading-one"
+          ],
+          "nodes_affected": 1,
+          "errors": [],
+          "elapsed_ms": 20
+        }
+      }
     },
     {
       "name": "03_lists_and_tables_preview.html",
@@ -267,13 +368,32 @@
           "expected": 0,
           "found": 0,
           "detail": ""
+        },
+        {
+          "name": "a11y",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": "backend=axe-core violations=0"
         }
-      ]
+      ],
+      "audits": {
+        "a11y": {
+          "status": "ok",
+          "audit": "a11y",
+          "backend": "axe-core",
+          "violations": 0,
+          "rule_ids": [],
+          "nodes_affected": 0,
+          "errors": [],
+          "elapsed_ms": 412
+        }
+      }
     },
     {
       "name": "04_math.html",
       "ok": true,
-      "dom_bytes": 2032886,
+      "dom_bytes": 2033448,
       "error": "",
       "stderr_tail": "",
       "checks": [
@@ -311,8 +431,27 @@
           "expected": 0,
           "found": 0,
           "detail": ""
+        },
+        {
+          "name": "a11y",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": "backend=axe-core violations=0"
         }
-      ]
+      ],
+      "audits": {
+        "a11y": {
+          "status": "ok",
+          "audit": "a11y",
+          "backend": "axe-core",
+          "violations": 0,
+          "rule_ids": [],
+          "nodes_affected": 0,
+          "errors": [],
+          "elapsed_ms": 2095
+        }
+      }
     },
     {
       "name": "04_math_preview.html",
@@ -355,8 +494,27 @@
           "expected": 0,
           "found": 0,
           "detail": ""
+        },
+        {
+          "name": "a11y",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": "backend=axe-core violations=0"
         }
-      ]
+      ],
+      "audits": {
+        "a11y": {
+          "status": "ok",
+          "audit": "a11y",
+          "backend": "axe-core",
+          "violations": 0,
+          "rule_ids": [],
+          "nodes_affected": 0,
+          "errors": [],
+          "elapsed_ms": 377
+        }
+      }
     },
     {
       "name": "05_music.html",
@@ -399,8 +557,29 @@
           "expected": 0,
           "found": 0,
           "detail": ""
+        },
+        {
+          "name": "a11y",
+          "ok": true,
+          "expected": 0,
+          "found": 1,
+          "detail": "backend=axe-core violations=1 rules=page-has-heading-one"
         }
-      ]
+      ],
+      "audits": {
+        "a11y": {
+          "status": "ok",
+          "audit": "a11y",
+          "backend": "axe-core",
+          "violations": 1,
+          "rule_ids": [
+            "page-has-heading-one"
+          ],
+          "nodes_affected": 1,
+          "errors": [],
+          "elapsed_ms": 20
+        }
+      }
     },
     {
       "name": "05_music_preview.html",
@@ -443,13 +622,32 @@
           "expected": 0,
           "found": 0,
           "detail": ""
+        },
+        {
+          "name": "a11y",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": "backend=axe-core violations=0"
         }
-      ]
+      ],
+      "audits": {
+        "a11y": {
+          "status": "ok",
+          "audit": "a11y",
+          "backend": "axe-core",
+          "violations": 0,
+          "rule_ids": [],
+          "nodes_affected": 0,
+          "errors": [],
+          "elapsed_ms": 373
+        }
+      }
     },
     {
       "name": "06_report.html",
       "ok": true,
-      "dom_bytes": 2057108,
+      "dom_bytes": 2057666,
       "error": "",
       "stderr_tail": "",
       "checks": [
@@ -487,8 +685,30 @@
           "expected": 1,
           "found": 1,
           "detail": ""
+        },
+        {
+          "name": "a11y",
+          "ok": true,
+          "expected": 0,
+          "found": 2,
+          "detail": "backend=axe-core violations=2 rules=color-contrast,list"
         }
-      ]
+      ],
+      "audits": {
+        "a11y": {
+          "status": "ok",
+          "audit": "a11y",
+          "backend": "axe-core",
+          "violations": 2,
+          "rule_ids": [
+            "color-contrast",
+            "list"
+          ],
+          "nodes_affected": 3,
+          "errors": [],
+          "elapsed_ms": 1008
+        }
+      }
     },
     {
       "name": "06_report_preview.html",
@@ -531,8 +751,27 @@
           "expected": 0,
           "found": 0,
           "detail": ""
+        },
+        {
+          "name": "a11y",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": "backend=axe-core violations=0"
         }
-      ]
+      ],
+      "audits": {
+        "a11y": {
+          "status": "ok",
+          "audit": "a11y",
+          "backend": "axe-core",
+          "violations": 0,
+          "rule_ids": [],
+          "nodes_affected": 0,
+          "errors": [],
+          "elapsed_ms": 2451
+        }
+      }
     },
     {
       "name": "07_raw_lout_and_svg.html",
@@ -575,8 +814,29 @@
           "expected": 0,
           "found": 0,
           "detail": ""
+        },
+        {
+          "name": "a11y",
+          "ok": true,
+          "expected": 0,
+          "found": 1,
+          "detail": "backend=axe-core violations=1 rules=page-has-heading-one"
         }
-      ]
+      ],
+      "audits": {
+        "a11y": {
+          "status": "ok",
+          "audit": "a11y",
+          "backend": "axe-core",
+          "violations": 1,
+          "rule_ids": [
+            "page-has-heading-one"
+          ],
+          "nodes_affected": 1,
+          "errors": [],
+          "elapsed_ms": 20
+        }
+      }
     },
     {
       "name": "07_raw_lout_and_svg_preview.html",
@@ -619,13 +879,32 @@
           "expected": 0,
           "found": 0,
           "detail": ""
+        },
+        {
+          "name": "a11y",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": "backend=axe-core violations=0"
         }
-      ]
+      ],
+      "audits": {
+        "a11y": {
+          "status": "ok",
+          "audit": "a11y",
+          "backend": "axe-core",
+          "violations": 0,
+          "rule_ids": [],
+          "nodes_affected": 0,
+          "errors": [],
+          "elapsed_ms": 415
+        }
+      }
     },
     {
       "name": "08_kitchen_sink.html",
       "ok": true,
-      "dom_bytes": 2074362,
+      "dom_bytes": 2074920,
       "error": "",
       "stderr_tail": "",
       "checks": [
@@ -663,8 +942,30 @@
           "expected": 1,
           "found": 1,
           "detail": ""
+        },
+        {
+          "name": "a11y",
+          "ok": true,
+          "expected": 0,
+          "found": 2,
+          "detail": "backend=axe-core violations=2 rules=color-contrast,list"
         }
-      ]
+      ],
+      "audits": {
+        "a11y": {
+          "status": "ok",
+          "audit": "a11y",
+          "backend": "axe-core",
+          "violations": 2,
+          "rule_ids": [
+            "color-contrast",
+            "list"
+          ],
+          "nodes_affected": 2,
+          "errors": [],
+          "elapsed_ms": 1300
+        }
+      }
     },
     {
       "name": "08_kitchen_sink_preview.html",
@@ -707,8 +1008,93 @@
           "expected": 0,
           "found": 0,
           "detail": ""
+        },
+        {
+          "name": "a11y",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": "backend=axe-core violations=0"
         }
-      ]
+      ],
+      "audits": {
+        "a11y": {
+          "status": "ok",
+          "audit": "a11y",
+          "backend": "axe-core",
+          "violations": 0,
+          "rule_ids": [],
+          "nodes_affected": 0,
+          "errors": [],
+          "elapsed_ms": 1049
+        }
+      }
+    },
+    {
+      "name": "academic_poster.html",
+      "ok": true,
+      "dom_bytes": 2177469,
+      "error": "",
+      "stderr_tail": "",
+      "checks": [
+        {
+          "name": "loaded",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": ""
+        },
+        {
+          "name": "katex",
+          "ok": true,
+          "expected": 39,
+          "found": 119,
+          "detail": ""
+        },
+        {
+          "name": "abcjs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "anchors",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": ""
+        },
+        {
+          "name": "hljs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "a11y",
+          "ok": true,
+          "expected": 0,
+          "found": 2,
+          "detail": "backend=axe-core violations=2 rules=page-has-heading-one,region"
+        }
+      ],
+      "audits": {
+        "a11y": {
+          "status": "ok",
+          "audit": "a11y",
+          "backend": "axe-core",
+          "violations": 2,
+          "rule_ids": [
+            "page-has-heading-one",
+            "region"
+          ],
+          "nodes_affected": 2,
+          "errors": [],
+          "elapsed_ms": 21
+        }
+      }
     },
     {
       "name": "book_chapter.html",
@@ -751,8 +1137,29 @@
           "expected": 0,
           "found": 0,
           "detail": ""
+        },
+        {
+          "name": "a11y",
+          "ok": true,
+          "expected": 0,
+          "found": 1,
+          "detail": "backend=axe-core violations=1 rules=page-has-heading-one"
         }
-      ]
+      ],
+      "audits": {
+        "a11y": {
+          "status": "ok",
+          "audit": "a11y",
+          "backend": "axe-core",
+          "violations": 1,
+          "rule_ids": [
+            "page-has-heading-one"
+          ],
+          "nodes_affected": 1,
+          "errors": [],
+          "elapsed_ms": 20
+        }
+      }
     },
     {
       "name": "book_chapter_preview.html",
@@ -795,8 +1202,27 @@
           "expected": 0,
           "found": 0,
           "detail": ""
+        },
+        {
+          "name": "a11y",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": "backend=axe-core violations=0"
         }
-      ]
+      ],
+      "audits": {
+        "a11y": {
+          "status": "ok",
+          "audit": "a11y",
+          "backend": "axe-core",
+          "violations": 0,
+          "rule_ids": [],
+          "nodes_affected": 0,
+          "errors": [],
+          "elapsed_ms": 414
+        }
+      }
     },
     {
       "name": "complex_diag.html",
@@ -839,8 +1265,29 @@
           "expected": 0,
           "found": 0,
           "detail": ""
+        },
+        {
+          "name": "a11y",
+          "ok": true,
+          "expected": 0,
+          "found": 1,
+          "detail": "backend=axe-core violations=1 rules=page-has-heading-one"
         }
-      ]
+      ],
+      "audits": {
+        "a11y": {
+          "status": "ok",
+          "audit": "a11y",
+          "backend": "axe-core",
+          "violations": 1,
+          "rule_ids": [
+            "page-has-heading-one"
+          ],
+          "nodes_affected": 1,
+          "errors": [],
+          "elapsed_ms": 20
+        }
+      }
     },
     {
       "name": "complex_diag_preview.html",
@@ -883,8 +1330,27 @@
           "expected": 0,
           "found": 0,
           "detail": ""
+        },
+        {
+          "name": "a11y",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": "backend=axe-core violations=0"
         }
-      ]
+      ],
+      "audits": {
+        "a11y": {
+          "status": "ok",
+          "audit": "a11y",
+          "backend": "axe-core",
+          "violations": 0,
+          "rule_ids": [],
+          "nodes_affected": 0,
+          "errors": [],
+          "elapsed_ms": 853
+        }
+      }
     },
     {
       "name": "cv.html",
@@ -927,8 +1393,29 @@
           "expected": 0,
           "found": 0,
           "detail": ""
+        },
+        {
+          "name": "a11y",
+          "ok": true,
+          "expected": 0,
+          "found": 1,
+          "detail": "backend=axe-core violations=1 rules=page-has-heading-one"
         }
-      ]
+      ],
+      "audits": {
+        "a11y": {
+          "status": "ok",
+          "audit": "a11y",
+          "backend": "axe-core",
+          "violations": 1,
+          "rule_ids": [
+            "page-has-heading-one"
+          ],
+          "nodes_affected": 1,
+          "errors": [],
+          "elapsed_ms": 20
+        }
+      }
     },
     {
       "name": "cv_preview.html",
@@ -971,8 +1458,27 @@
           "expected": 0,
           "found": 0,
           "detail": ""
+        },
+        {
+          "name": "a11y",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": "backend=axe-core violations=0"
         }
-      ]
+      ],
+      "audits": {
+        "a11y": {
+          "status": "ok",
+          "audit": "a11y",
+          "backend": "axe-core",
+          "violations": 0,
+          "rule_ids": [],
+          "nodes_affected": 0,
+          "errors": [],
+          "elapsed_ms": 447
+        }
+      }
     },
     {
       "name": "diag_gallery.html",
@@ -1015,8 +1521,29 @@
           "expected": 0,
           "found": 0,
           "detail": ""
+        },
+        {
+          "name": "a11y",
+          "ok": true,
+          "expected": 0,
+          "found": 1,
+          "detail": "backend=axe-core violations=1 rules=page-has-heading-one"
         }
-      ]
+      ],
+      "audits": {
+        "a11y": {
+          "status": "ok",
+          "audit": "a11y",
+          "backend": "axe-core",
+          "violations": 1,
+          "rule_ids": [
+            "page-has-heading-one"
+          ],
+          "nodes_affected": 1,
+          "errors": [],
+          "elapsed_ms": 20
+        }
+      }
     },
     {
       "name": "diag_gallery_preview.html",
@@ -1059,13 +1586,32 @@
           "expected": 0,
           "found": 0,
           "detail": ""
+        },
+        {
+          "name": "a11y",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": "backend=axe-core violations=0"
         }
-      ]
+      ],
+      "audits": {
+        "a11y": {
+          "status": "ok",
+          "audit": "a11y",
+          "backend": "axe-core",
+          "violations": 0,
+          "rule_ids": [],
+          "nodes_affected": 0,
+          "errors": [],
+          "elapsed_ms": 354
+        }
+      }
     },
     {
       "name": "index.html",
-      "ok": true,
-      "dom_bytes": 15620,
+      "ok": false,
+      "dom_bytes": 161636,
       "error": "",
       "stderr_tail": "",
       "checks": [
@@ -1092,10 +1638,10 @@
         },
         {
           "name": "anchors",
-          "ok": true,
-          "expected": 0,
+          "ok": false,
+          "expected": 1,
           "found": 0,
-          "detail": ""
+          "detail": "missing ids: x"
         },
         {
           "name": "hljs",
@@ -1103,8 +1649,27 @@
           "expected": 0,
           "found": 0,
           "detail": ""
+        },
+        {
+          "name": "a11y",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": "backend=axe-core violations=0"
         }
-      ]
+      ],
+      "audits": {
+        "a11y": {
+          "status": "ok",
+          "audit": "a11y",
+          "backend": "axe-core",
+          "violations": 0,
+          "rule_ids": [],
+          "nodes_affected": 0,
+          "errors": [],
+          "elapsed_ms": 11
+        }
+      }
     },
     {
       "name": "letter.html",
@@ -1147,8 +1712,29 @@
           "expected": 0,
           "found": 0,
           "detail": ""
+        },
+        {
+          "name": "a11y",
+          "ok": true,
+          "expected": 0,
+          "found": 1,
+          "detail": "backend=axe-core violations=1 rules=page-has-heading-one"
         }
-      ]
+      ],
+      "audits": {
+        "a11y": {
+          "status": "ok",
+          "audit": "a11y",
+          "backend": "axe-core",
+          "violations": 1,
+          "rule_ids": [
+            "page-has-heading-one"
+          ],
+          "nodes_affected": 1,
+          "errors": [],
+          "elapsed_ms": 20
+        }
+      }
     },
     {
       "name": "letter_preview.html",
@@ -1191,13 +1777,97 @@
           "expected": 0,
           "found": 0,
           "detail": ""
+        },
+        {
+          "name": "a11y",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": "backend=axe-core violations=0"
         }
-      ]
+      ],
+      "audits": {
+        "a11y": {
+          "status": "ok",
+          "audit": "a11y",
+          "backend": "axe-core",
+          "violations": 0,
+          "rule_ids": [],
+          "nodes_affected": 0,
+          "errors": [],
+          "elapsed_ms": 400
+        }
+      }
+    },
+    {
+      "name": "magazine_layout.html",
+      "ok": true,
+      "dom_bytes": 2239307,
+      "error": "",
+      "stderr_tail": "",
+      "checks": [
+        {
+          "name": "loaded",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": ""
+        },
+        {
+          "name": "katex",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "abcjs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "anchors",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": ""
+        },
+        {
+          "name": "hljs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "a11y",
+          "ok": true,
+          "expected": 0,
+          "found": 1,
+          "detail": "backend=axe-core violations=1 rules=page-has-heading-one"
+        }
+      ],
+      "audits": {
+        "a11y": {
+          "status": "ok",
+          "audit": "a11y",
+          "backend": "axe-core",
+          "violations": 1,
+          "rule_ids": [
+            "page-has-heading-one"
+          ],
+          "nodes_affected": 1,
+          "errors": [],
+          "elapsed_ms": 20
+        }
+      }
     },
     {
       "name": "scientific_paper.html",
       "ok": true,
-      "dom_bytes": 2451167,
+      "dom_bytes": 2495007,
       "error": "",
       "stderr_tail": "",
       "checks": [
@@ -1225,8 +1895,8 @@
         {
           "name": "anchors",
           "ok": true,
-          "expected": 13,
-          "found": 13,
+          "expected": 25,
+          "found": 25,
           "detail": ""
         },
         {
@@ -1235,8 +1905,30 @@
           "expected": 0,
           "found": 0,
           "detail": ""
+        },
+        {
+          "name": "a11y",
+          "ok": true,
+          "expected": 0,
+          "found": 2,
+          "detail": "backend=axe-core violations=2 rules=list,region"
         }
-      ]
+      ],
+      "audits": {
+        "a11y": {
+          "status": "ok",
+          "audit": "a11y",
+          "backend": "axe-core",
+          "violations": 2,
+          "rule_ids": [
+            "list",
+            "region"
+          ],
+          "nodes_affected": 2,
+          "errors": [],
+          "elapsed_ms": 42
+        }
+      }
     },
     {
       "name": "scientific_paper_preview.html",
@@ -1279,8 +1971,27 @@
           "expected": 0,
           "found": 0,
           "detail": ""
+        },
+        {
+          "name": "a11y",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": "backend=axe-core violations=0"
         }
-      ]
+      ],
+      "audits": {
+        "a11y": {
+          "status": "ok",
+          "audit": "a11y",
+          "backend": "axe-core",
+          "violations": 0,
+          "rule_ids": [],
+          "nodes_affected": 0,
+          "errors": [],
+          "elapsed_ms": 401
+        }
+      }
     },
     {
       "name": "slides_basic.html",
@@ -1323,8 +2034,29 @@
           "expected": 0,
           "found": 0,
           "detail": ""
+        },
+        {
+          "name": "a11y",
+          "ok": true,
+          "expected": 0,
+          "found": 1,
+          "detail": "backend=axe-core violations=1 rules=page-has-heading-one"
         }
-      ]
+      ],
+      "audits": {
+        "a11y": {
+          "status": "ok",
+          "audit": "a11y",
+          "backend": "axe-core",
+          "violations": 1,
+          "rule_ids": [
+            "page-has-heading-one"
+          ],
+          "nodes_affected": 1,
+          "errors": [],
+          "elapsed_ms": 20
+        }
+      }
     },
     {
       "name": "slides_basic_preview.html",
@@ -1367,8 +2099,98 @@
           "expected": 0,
           "found": 0,
           "detail": ""
+        },
+        {
+          "name": "a11y",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": "backend=axe-core violations=0"
         }
-      ]
+      ],
+      "audits": {
+        "a11y": {
+          "status": "ok",
+          "audit": "a11y",
+          "backend": "axe-core",
+          "violations": 0,
+          "rule_ids": [],
+          "nodes_affected": 0,
+          "errors": [],
+          "elapsed_ms": 384
+        }
+      }
+    },
+    {
+      "name": "technical_manual.html",
+      "ok": false,
+      "dom_bytes": 3531531,
+      "error": "",
+      "stderr_tail": "[1888:49392:0521/224714.063:ERROR:chrome\\browser\\web_applications\\externally_managed_app_manager.cc:680] https://docs.google.com/document/installwebapp?usp=chrome_default from install source 1 failed to install with reason 21",
+      "checks": [
+        {
+          "name": "loaded",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": ""
+        },
+        {
+          "name": "katex",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "abcjs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "anchors",
+          "ok": true,
+          "expected": 145,
+          "found": 145,
+          "detail": ""
+        },
+        {
+          "name": "hljs",
+          "ok": false,
+          "expected": 20,
+          "found": 11,
+          "detail": "11/20 <code class=language-*> had hljs-* spans"
+        },
+        {
+          "name": "a11y",
+          "ok": true,
+          "expected": 0,
+          "found": 3,
+          "detail": "backend=axe-core violations=3 rules=list,page-has-heading-one,scrollable-region-focusable"
+        }
+      ],
+      "audits": {
+        "a11y": {
+          "status": "ok",
+          "audit": "a11y",
+          "backend": "axe-core",
+          "violations": 3,
+          "rule_ids": [
+            "list",
+            "page-has-heading-one",
+            "scrollable-region-focusable"
+          ],
+          "nodes_affected": 6,
+          "errors": [],
+          "elapsed_ms": 20
+        }
+      }
     }
-  ]
+  ],
+  "audits_enabled": [
+    "a11y"
+  ],
+  "axe_url": "https://cdnjs.cloudflare.com/ajax/libs/axe-core/4.10.0/axe.min.js"
 }
