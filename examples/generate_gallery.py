@@ -16,12 +16,13 @@ Usage:
 from __future__ import annotations
 
 import html
+import json
 import re
 import shutil
 import subprocess
 import sys
 import tempfile
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -64,6 +65,143 @@ class Example:
     title: str
     description: str
     broken: bool
+    # New metadata for the filter / sort UI.
+    doc_type: str = "doc"           # one of doc/report/book/slides/poster/magazine
+    features: list[str] = field(default_factory=list)
+    page_count: int = 0
+    md_source: str = ""             # raw .md text (for the copy-to-clipboard button)
+
+
+# ---------------------------------------------------------------------------
+# Feature detection
+# ---------------------------------------------------------------------------
+
+
+# Each entry: (chip-id, regex against the Markdown source). Patterns are
+# intentionally generous; the chips are advisory, not contractual.
+FEATURE_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
+    ("math",
+     re.compile(r"(\$\$[^$]+\$\$|```math|(?<![\$\\])\$(?!\$)[^$\n]+?\$)", re.M)),
+    ("music",
+     re.compile(r"```abc", re.M)),
+    ("code",
+     re.compile(r"```(?:python|c|cpp|c\+\+|shell|bash|sh|js|javascript|"
+                r"ts|typescript|rust|go|java|yaml|json|xml|html|css|sql|"
+                r"haskell|markdown|text)\b", re.I | re.M)),
+    ("diagrams",
+     re.compile(r"@(?:Diag|DiagTree|SyntaxDiag|Node|Link|Tree)\b", re.M)),
+    ("tables",
+     re.compile(r"^\s*\|[^\n]+\|\s*$", re.M)),
+    ("multi-col",
+     re.compile(r"^columns:\s*[2-9]\b", re.M | re.I)),
+    ("bibliography",
+     re.compile(r"\[@[A-Za-z0-9_][A-Za-z0-9_-]*\]", re.M)),
+    ("footnotes",
+     re.compile(r"\[\^[A-Za-z0-9_-]+\]", re.M)),
+    ("raw-lout",
+     re.compile(r"```lout\b", re.M)),
+    ("svg",
+     re.compile(r"```svg\b|\]\([^)]+\.svg\b", re.M)),
+    ("admonitions",
+     re.compile(r"^!!!\s+\w+", re.M)),
+]
+
+# Special-case override map: some example basenames belong to a "presentation"
+# document type beyond what frontmatter announces. The mapping is keyed by
+# basename and overrides the value extracted from ``type:``.
+DOCTYPE_OVERRIDES: dict[str, str] = {
+    "academic_poster": "poster",
+    "magazine_layout": "magazine",
+}
+
+# Canonical chip ordering, used for both the top filter bar and the per-card
+# tag chips. Each entry is (chip-id, human-readable-label).
+DOCTYPE_CHIPS: list[tuple[str, str]] = [
+    ("doc", "Doc"),
+    ("report", "Report"),
+    ("book", "Book"),
+    ("slides", "Slides"),
+    ("poster", "Poster"),
+    ("magazine", "Magazine"),
+]
+FEATURE_CHIPS: list[tuple[str, str]] = [
+    ("math", "Math"),
+    ("music", "Music"),
+    ("code", "Code"),
+    ("diagrams", "Diagrams"),
+    ("tables", "Tables"),
+    ("multi-col", "Multi-col"),
+    ("bibliography", "Bibliography"),
+    ("footnotes", "Footnotes"),
+    ("raw-lout", "Raw Lout"),
+    ("svg", "SVG"),
+    ("admonitions", "Admonitions"),
+]
+
+
+def detect_features(md_text: str) -> list[str]:
+    """Return the list of feature chip-ids that fire on ``md_text``.
+
+    Matches are stable in canonical chip order so the per-card chips
+    render in a predictable sequence.
+    """
+    hits: list[str] = []
+    for chip_id, pat in FEATURE_PATTERNS:
+        if pat.search(md_text):
+            hits.append(chip_id)
+    return hits
+
+
+def detect_doc_type(basename: str, frontmatter: dict[str, str]) -> str:
+    """Pick the doc-type chip for an example.
+
+    The basename override map wins over the YAML ``type:`` so the
+    poster and magazine examples land on their dedicated chips even
+    though their underlying Lout package is ``doc``.
+    """
+    if basename in DOCTYPE_OVERRIDES:
+        return DOCTYPE_OVERRIDES[basename]
+    raw = (frontmatter.get("type") or "doc").strip().lower()
+    if raw not in {c[0] for c in DOCTYPE_CHIPS}:
+        raw = "doc"
+    return raw
+
+
+# ---------------------------------------------------------------------------
+# Page-count extraction
+# ---------------------------------------------------------------------------
+
+
+# The SVG back end emits ``<svg class="lout-page" ...>`` per page; count those
+# occurrences to derive a page count from the HTML file without parsing it.
+# Falls back to a PDF-based count via ``pdfinfo`` if no HTML is present.
+_LOUT_PAGE_RE = re.compile(r'<svg\b[^>]*\bclass\s*=\s*"[^"]*\blout-page\b', re.I)
+
+
+def count_pages_html(html_path: Path) -> int:
+    try:
+        text = html_path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return 0
+    return len(_LOUT_PAGE_RE.findall(text))
+
+
+def count_pages_pdf(pdf_path: Path) -> int:
+    if not pdf_path.exists():
+        return 0
+    try:
+        proc = subprocess.run(
+            ["pdfinfo", str(pdf_path)],
+            capture_output=True, text=True, check=True)
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return 0
+    for line in proc.stdout.splitlines():
+        if line.startswith("Pages:"):
+            try:
+                return int(line.split(":", 1)[1].strip())
+            except ValueError:
+                return 0
+    return 0
 
 
 # ---------------------------------------------------------------------------
@@ -285,8 +423,11 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
     --card-bg: #ffffff;
     --border: #d8d8d8;
     --accent: #2c5aa0;
+    --accent-bg: #eaf1fb;
     --warn-bg: #fff4d6;
     --warn-border: #e0b94a;
+    --chip-bg: #eef0f3;
+    --chip-fg: #333;
   }}
   * {{ box-sizing: border-box; }}
   html, body {{ margin: 0; padding: 0; background: var(--bg); color: var(--fg);
@@ -296,10 +437,27 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
   header h1 {{ margin: 0 0 0.4rem 0; font-size: 1.9rem; }}
   header p  {{ margin: 0.3rem 0; color: var(--muted); }}
   main {{ max-width: 1100px; margin: 0 auto; padding: 1.2rem 1.5rem 2rem; }}
+  nav.gallery-filters {{ max-width: 1100px; margin: 0 auto 1rem auto; padding: 0.6rem 1.5rem;
+    background: var(--card-bg); border: 1px solid var(--border); border-radius: 6px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04); }}
+  nav.gallery-filters .row {{ display: flex; flex-wrap: wrap; align-items: center;
+    gap: 0.5rem; margin: 0.4rem 0; }}
+  nav.gallery-filters .row-label {{ font-size: 0.85rem; color: var(--muted);
+    margin-right: 0.4rem; min-width: 4.5rem; }}
+  nav.gallery-filters button.chip {{ border: 1px solid var(--border); background: var(--chip-bg);
+    color: var(--chip-fg); border-radius: 999px; padding: 0.25rem 0.7rem; font-size: 0.82rem;
+    cursor: pointer; font-family: inherit; }}
+  nav.gallery-filters button.chip:hover {{ background: #dfe3ea; }}
+  nav.gallery-filters button.chip.active {{ background: var(--accent); color: white;
+    border-color: var(--accent); }}
+  nav.gallery-filters select.sort {{ border: 1px solid var(--border); background: white;
+    border-radius: 4px; padding: 0.25rem 0.5rem; font-size: 0.85rem; font-family: inherit; }}
+  nav.gallery-filters .count {{ font-size: 0.82rem; color: var(--muted); margin-left: auto; }}
   .grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
     gap: 1.2rem; }}
   .card {{ background: var(--card-bg); border: 1px solid var(--border); border-radius: 6px;
     padding: 0.9rem; display: flex; flex-direction: column; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }}
+  .card.hidden {{ display: none; }}
   .card .thumb-wrap {{ display: flex; align-items: center; justify-content: center;
     background: #eee; border: 1px solid var(--border); border-radius: 4px;
     min-height: 230px; margin-bottom: 0.7rem; overflow: hidden; }}
@@ -309,13 +467,28 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
   .card h2 a {{ color: var(--fg); text-decoration: none; }}
   .card h2 a:hover {{ color: var(--accent); text-decoration: underline; }}
   .card p.desc {{ margin: 0 0 0.7rem 0; color: var(--muted); font-size: 0.92rem; flex: 1 1 auto; }}
+  .card .tags {{ display: flex; flex-wrap: wrap; gap: 0.3rem; margin-bottom: 0.6rem; }}
+  .card .tag {{ font-size: 0.72rem; padding: 0.1rem 0.5rem; border-radius: 999px;
+    background: var(--chip-bg); color: var(--chip-fg); border: 1px solid var(--border); }}
+  .card .tag.type {{ background: var(--accent-bg); color: var(--accent); border-color: #c9d6ec; }}
   .card .links {{ font-size: 0.88rem; }}
   .card .links a {{ color: var(--accent); text-decoration: none; margin-right: 0.6rem; }}
   .card .links a:hover {{ text-decoration: underline; }}
+  .card button.copy-md {{ font-size: 0.82rem; padding: 0.25rem 0.6rem; margin-top: 0.5rem;
+    border: 1px solid var(--border); background: var(--chip-bg); border-radius: 4px;
+    color: var(--chip-fg); cursor: pointer; font-family: inherit; align-self: flex-start; }}
+  .card button.copy-md:hover {{ background: var(--accent-bg); color: var(--accent);
+    border-color: #c9d6ec; }}
+  .card button.copy-md.copied {{ background: #d8eed8; color: #225522; border-color: #b6d8b6; }}
   .banner {{ background: var(--warn-bg); border: 1px solid var(--warn-border);
     padding: 0.4rem 0.6rem; border-radius: 4px; font-size: 0.85rem;
     color: #6b4f10; margin-bottom: 0.6rem; }}
   .meta {{ font-size: 0.78rem; color: var(--muted); margin-top: 0.4rem; }}
+  .page-badge {{ display: inline-block; padding: 0.1rem 0.5rem; border-radius: 999px;
+    background: var(--chip-bg); color: var(--chip-fg); font-size: 0.72rem;
+    border: 1px solid var(--border); margin-left: 0.4rem; }}
+  .empty-message {{ color: var(--muted); font-style: italic; padding: 2rem;
+    text-align: center; grid-column: 1 / -1; }}
   footer {{ border-top: 1px solid var(--border); margin-top: 2rem; padding-top: 1rem;
     color: var(--muted); font-size: 0.88rem; }}
   footer a {{ color: var(--accent); text-decoration: none; }}
@@ -335,9 +508,32 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
      Thumbnails are extracted from the committed PDFs with
      <code>pdftoppm</code> + ImageMagick <code>convert</code>.</p>
 </header>
+<nav class="gallery-filters" aria-label="Filter and sort gallery examples">
+  <div class="row" data-row="type">
+    <span class="row-label">Type:</span>
+{type_chips}
+  </div>
+  <div class="row" data-row="feature">
+    <span class="row-label">Feature:</span>
+{feature_chips}
+  </div>
+  <div class="row" data-row="sort">
+    <span class="row-label">Sort:</span>
+    <select class="sort" id="sort-select" aria-label="Sort order">
+      <option value="title">Title (A-Z)</option>
+      <option value="title-desc">Title (Z-A)</option>
+      <option value="pages">Page count (low-high)</option>
+      <option value="pages-desc">Page count (high-low)</option>
+    </select>
+    <span class="count" id="visible-count" aria-live="polite"></span>
+  </div>
+</nav>
 <main>
-  <section class="grid">
+  <section class="grid" id="gallery-grid">
 {cards}
+    <div class="empty-message" id="empty-message" hidden>
+      No examples match the current filter combination.
+    </div>
   </section>
 </main>
 <footer>
@@ -346,21 +542,186 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
      <a href="../../TODO.md">TODO</a></p>
   <p>{count} example{plural} indexed{broken_note}.</p>
 </footer>
+<script>
+(function() {{
+  "use strict";
+  var grid = document.getElementById("gallery-grid");
+  if (!grid) return;
+  var cards = Array.prototype.slice.call(grid.querySelectorAll(".card"));
+  var emptyMsg = document.getElementById("empty-message");
+  var visibleCount = document.getElementById("visible-count");
+  var sortSelect = document.getElementById("sort-select");
+
+  // Active-filter state. ``typeActive`` is a single string ("" means all
+  // types). ``featuresActive`` is a Set of feature ids (empty = all).
+  var typeActive = "";
+  var featuresActive = new Set();
+
+  function cardMatches(card) {{
+    if (typeActive && card.getAttribute("data-type") !== typeActive) {{
+      return false;
+    }}
+    if (featuresActive.size > 0) {{
+      var raw = card.getAttribute("data-features") || "";
+      var have = new Set(raw.split(",").filter(Boolean));
+      var iter = featuresActive.values();
+      var step;
+      while (!(step = iter.next()).done) {{
+        if (!have.has(step.value)) return false;
+      }}
+    }}
+    return true;
+  }}
+
+  function applyFilters() {{
+    var nVisible = 0;
+    for (var i = 0; i < cards.length; i++) {{
+      var card = cards[i];
+      if (cardMatches(card)) {{
+        card.classList.remove("hidden");
+        nVisible++;
+      }} else {{
+        card.classList.add("hidden");
+      }}
+    }}
+    if (emptyMsg) emptyMsg.hidden = nVisible > 0;
+    if (visibleCount) {{
+      visibleCount.textContent = nVisible + " of " + cards.length + " visible";
+    }}
+  }}
+
+  function applySort(key) {{
+    var rev = key.indexOf("-desc") >= 0;
+    var base = key.replace("-desc", "");
+    var sorted = cards.slice().sort(function(a, b) {{
+      var av, bv;
+      if (base === "pages") {{
+        av = parseInt(a.getAttribute("data-pages") || "0", 10);
+        bv = parseInt(b.getAttribute("data-pages") || "0", 10);
+      }} else {{
+        av = (a.getAttribute("data-title") || "").toLowerCase();
+        bv = (b.getAttribute("data-title") || "").toLowerCase();
+      }}
+      if (av < bv) return rev ? 1 : -1;
+      if (av > bv) return rev ? -1 : 1;
+      return 0;
+    }});
+    // Re-attach in sorted order. ``emptyMsg`` stays at the end.
+    for (var i = 0; i < sorted.length; i++) grid.appendChild(sorted[i]);
+    if (emptyMsg) grid.appendChild(emptyMsg);
+  }}
+
+  // Wire up chip clicks.
+  var chips = document.querySelectorAll("nav.gallery-filters button.chip");
+  chips.forEach(function(chip) {{
+    chip.addEventListener("click", function() {{
+      var row = chip.closest(".row").getAttribute("data-row");
+      var value = chip.getAttribute("data-value");
+      if (row === "type") {{
+        // Single-select within the Type row.
+        if (typeActive === value) {{
+          typeActive = "";
+          chip.classList.remove("active");
+        }} else {{
+          typeActive = value;
+          var typeChips = document.querySelectorAll(
+            'nav.gallery-filters .row[data-row="type"] button.chip');
+          typeChips.forEach(function(c) {{ c.classList.remove("active"); }});
+          chip.classList.add("active");
+        }}
+      }} else if (row === "feature") {{
+        // Multi-select; every active chip must be present on the card.
+        if (featuresActive.has(value)) {{
+          featuresActive.delete(value);
+          chip.classList.remove("active");
+        }} else {{
+          featuresActive.add(value);
+          chip.classList.add("active");
+        }}
+      }}
+      applyFilters();
+    }});
+  }});
+
+  // Sort dropdown.
+  if (sortSelect) {{
+    sortSelect.addEventListener("change", function() {{
+      applySort(sortSelect.value);
+    }});
+  }}
+
+  // Copy-markdown buttons. Each card holds the raw .md in a hidden
+  // <script type="application/json"> sibling under the card root; we
+  // JSON.parse the textContent (which is the .md text encoded as a JSON
+  // string literal) and hand the result to navigator.clipboard.
+  cards.forEach(function(card) {{
+    var btn = card.querySelector("button.copy-md");
+    if (!btn) return;
+    btn.addEventListener("click", function() {{
+      var src = card.querySelector('script.md-source');
+      var decoded = "";
+      if (src) {{
+        try {{ decoded = JSON.parse(src.textContent); }}
+        catch (e) {{ decoded = src.textContent; }}
+      }}
+      var done = function() {{
+        var orig = btn.textContent;
+        btn.textContent = "Copied!";
+        btn.classList.add("copied");
+        setTimeout(function() {{
+          btn.textContent = orig;
+          btn.classList.remove("copied");
+        }}, 1400);
+      }};
+      if (navigator.clipboard && navigator.clipboard.writeText) {{
+        navigator.clipboard.writeText(decoded).then(done, function() {{
+          /* Permission denied or insecure context. Fall back to selection. */
+          var ta = document.createElement("textarea");
+          ta.value = decoded;
+          document.body.appendChild(ta);
+          ta.select();
+          try {{ document.execCommand("copy"); done(); }} catch (e) {{}}
+          document.body.removeChild(ta);
+        }});
+      }} else {{
+        var ta = document.createElement("textarea");
+        ta.value = decoded;
+        document.body.appendChild(ta);
+        ta.select();
+        try {{ document.execCommand("copy"); done(); }} catch (e) {{}}
+        document.body.removeChild(ta);
+      }}
+    }});
+  }});
+
+  // Initial sort + count.
+  applySort(sortSelect ? sortSelect.value : "title");
+  applyFilters();
+}})();
+</script>
 </body>
 </html>
 """
 
 
-CARD_TEMPLATE = """    <article class="card">
+CARD_TEMPLATE = """    <article class="card" data-type="{data_type}" \
+data-features="{data_features}" data-pages="{data_pages}" \
+data-title="{data_title}">
       <a class="thumb-wrap" href="{preview_href}">
 {thumb_html}
       </a>
-{banner_html}      <h2><a href="{preview_href}">{title}</a></h2>
+{banner_html}      <h2><a href="{preview_href}">{title}</a>\
+<span class="page-badge" title="Pages in rendered output">{data_pages} pp</span></h2>
       <p class="desc">{description}</p>
+      <div class="tags">
+{tag_chips}
+      </div>
       <div class="links">
 {link_list}
       </div>
+      {copy_button}
       <div class="meta"><code>{basename}.md</code></div>
+      {md_template}
     </article>
 """
 
@@ -482,6 +843,45 @@ def render_card(ex: Example) -> str:
             "does not render to PDF; the card is shown for completeness.</div>\n"
         )
 
+    # Build the tag chip list. The first chip is always the doc-type
+    # (rendered with the ``.tag.type`` accent); subsequent chips are the
+    # feature flags in canonical order.
+    type_label = dict(DOCTYPE_CHIPS).get(ex.doc_type, ex.doc_type.title())
+    chip_lines = [
+        f'        <span class="tag type">{_esc(type_label)}</span>'
+    ]
+    feature_label = dict(FEATURE_CHIPS)
+    for feat in ex.features:
+        if feat in feature_label:
+            chip_lines.append(
+                f'        <span class="tag">{_esc(feature_label[feat])}</span>'
+            )
+    tag_chips = "\n".join(chip_lines)
+
+    # Copy-markdown button (and the hidden JSON payload that carries the .md
+    # text) only emitted when there's actual source to copy.
+    if ex.md_source:
+        copy_button = (
+            '<button type="button" class="copy-md" '
+            'aria-label="Copy Markdown source to clipboard">'
+            'Copy markdown</button>'
+        )
+        # JSON-encode the .md text so it can survive embedding in a
+        # ``<script type="application/json">`` element without colliding with
+        # the browser-test anchor regex (which matches ``href="#..."`` even
+        # inside <template> nodes). The JSON-encoded form has no ``href=``
+        # substring and is robust to all the metacharacters mdlout examples
+        # carry.
+        encoded = json.dumps(ex.md_source)
+        md_template = (
+            '<script type="application/json" class="md-source">'
+            + encoded
+            + '</script>'
+        )
+    else:
+        copy_button = ""
+        md_template = ""
+
     return CARD_TEMPLATE.format(
         preview_href=_esc(preview_href),
         thumb_html=thumb_html,
@@ -490,6 +890,13 @@ def render_card(ex: Example) -> str:
         description=_esc(ex.description) or "&nbsp;",
         link_list=link_list,
         basename=_esc(ex.basename),
+        data_type=_esc(ex.doc_type),
+        data_features=_esc(",".join(ex.features)),
+        data_pages=ex.page_count,
+        data_title=_esc(ex.title),
+        tag_chips=tag_chips,
+        copy_button=copy_button,
+        md_template=md_template,
     )
 
 
@@ -540,23 +947,77 @@ def render_preview(ex: Example, preview_svg_name: str | None) -> str:
     )
 
 
+def _render_chip_row(chip_defs: list[tuple[str, str]],
+                     present_ids: set[str]) -> str:
+    """Render a row of filter-chip buttons.
+
+    Only chips that some example actually carries make it into the bar -- a
+    chip nobody can match would be confusing. Chips are emitted in the
+    canonical order defined in ``DOCTYPE_CHIPS`` / ``FEATURE_CHIPS``.
+    """
+    out: list[str] = []
+    for chip_id, label in chip_defs:
+        if chip_id not in present_ids:
+            continue
+        out.append(
+            f'    <button type="button" class="chip" '
+            f'data-value="{_esc(chip_id)}">{_esc(label)}</button>'
+        )
+    if not out:
+        # Keep the row non-empty so the layout doesn't collapse.
+        out.append('    <span style="color: var(--muted); '
+                   'font-size: 0.82rem;">(none)</span>')
+    return "\n".join(out)
+
+
 def render_page(examples: list[Example]) -> str:
     cards = "\n".join(render_card(ex) for ex in examples)
     broken_count = sum(1 for ex in examples if ex.broken)
     broken_note = (
         f", {broken_count} flagged as known-broken" if broken_count else ""
     )
+    # Build the chip rows from the union of doc-types and features actually
+    # present in the example set.
+    present_types = {ex.doc_type for ex in examples}
+    present_features: set[str] = set()
+    for ex in examples:
+        present_features.update(ex.features)
+    type_chips = _render_chip_row(DOCTYPE_CHIPS, present_types)
+    feature_chips = _render_chip_row(FEATURE_CHIPS, present_features)
     return PAGE_TEMPLATE.format(
         cards=cards,
         count=len(examples),
         plural="" if len(examples) == 1 else "s",
         broken_note=broken_note,
+        type_chips=type_chips,
+        feature_chips=feature_chips,
     )
 
 
 # ---------------------------------------------------------------------------
 # Driver
 # ---------------------------------------------------------------------------
+
+
+def _populate_metadata(ex: Example) -> None:
+    """Fill in the doc_type / features / page_count / md_source fields on ``ex``.
+
+    Best-effort: a missing .md or HTML file simply leaves the corresponding
+    field empty. The function never raises.
+    """
+    if ex.md_path is not None:
+        try:
+            ex.md_source = ex.md_path.read_text(encoding="utf-8")
+        except OSError:
+            ex.md_source = ""
+    fm, _ = parse_frontmatter(ex.md_source) if ex.md_source else ({}, "")
+    ex.doc_type = detect_doc_type(ex.basename, fm)
+    ex.features = detect_features(ex.md_source) if ex.md_source else []
+    if ex.html_path is not None:
+        ex.page_count = count_pages_html(ex.html_path)
+    if ex.page_count == 0:
+        # PDF fallback - matches the rendered page count even when no HTML.
+        ex.page_count = count_pages_pdf(ex.pdf_path)
 
 
 def collect_examples() -> list[Example]:
@@ -580,18 +1041,18 @@ def collect_examples() -> list[Example]:
             title = basename.replace("_", " ")
             description = FALLBACK_DESCRIPTIONS.get(basename, "")
 
-        examples.append(
-            Example(
-                basename=basename,
-                md_path=md_arg,
-                pdf_path=pdf,
-                html_path=html_arg,
-                thumb_path=None,  # filled in below if generation succeeds
-                title=title,
-                description=description,
-                broken=basename in KNOWN_BROKEN,
-            )
+        ex = Example(
+            basename=basename,
+            md_path=md_arg,
+            pdf_path=pdf,
+            html_path=html_arg,
+            thumb_path=None,  # filled in below if generation succeeds
+            title=title,
+            description=description,
+            broken=basename in KNOWN_BROKEN,
         )
+        _populate_metadata(ex)
+        examples.append(ex)
 
     for basename in extra_basenames:
         md_path = EXAMPLES_DIR / f"{basename}.md"
@@ -601,18 +1062,18 @@ def collect_examples() -> list[Example]:
         else:
             title = basename.replace("_", " ")
             description = FALLBACK_DESCRIPTIONS.get(basename, "")
-        examples.append(
-            Example(
-                basename=basename,
-                md_path=md_arg,
-                pdf_path=OUT_DIR / f"{basename}.pdf",  # missing on disk
-                html_path=None,
-                thumb_path=None,
-                title=title,
-                description=description,
-                broken=True,
-            )
+        ex = Example(
+            basename=basename,
+            md_path=md_arg,
+            pdf_path=OUT_DIR / f"{basename}.pdf",  # missing on disk
+            html_path=None,
+            thumb_path=None,
+            title=title,
+            description=description,
+            broken=True,
         )
+        _populate_metadata(ex)
+        examples.append(ex)
 
     return examples
 
