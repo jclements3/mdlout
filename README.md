@@ -255,8 +255,19 @@ mdlout/
   README.md        # this file
 ```
 
+## Recipes
+
+Common-document recipes (research paper, book chapter, letter, CV, slides),
+math/music/diagram embedding, citations, figure and table numbering,
+syntax highlighting, debugging tips, and size-trimming flags are collected
+in [docs/best_practices.md](docs/best_practices.md).
+
 ## Further reading
 
+- [docs/best_practices.md](docs/best_practices.md) — copy-pasteable
+  recipes for common doc types, plus advice on embedding math, music,
+  diagrams, citations, and cross-references; debugging and performance
+  tips.
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — project architecture and
   design overview (audience: users picking mdlout for a real document, and
   prospective contributors).
