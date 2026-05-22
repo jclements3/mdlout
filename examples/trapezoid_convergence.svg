@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="340" height="220" viewBox="0 0 340 220">
+  <rect x="0" y="0" width="340" height="220" fill="white"/>
+  <!-- axes -->
+  <line x1="50" y1="190" x2="320" y2="190" stroke="black" stroke-width="1"/>
+  <line x1="50" y1="20"  x2="50"  y2="190" stroke="black" stroke-width="1"/>
+  <!-- gridlines -->
+  <g stroke="#ccc" stroke-width="0.5">
+    <line x1="50" y1="50"  x2="320" y2="50"/>
+    <line x1="50" y1="90"  x2="320" y2="90"/>
+    <line x1="50" y1="130" x2="320" y2="130"/>
+    <line x1="50" y1="170" x2="320" y2="170"/>
+  </g>
+  <!-- trapezoidal: slope -2 line, from (60, 40) to (300, 184) -->
+  <line x1="60" y1="40" x2="300" y2="184" stroke="#1f77b4" stroke-width="2"/>
+  <g fill="#1f77b4">
+    <circle cx="60"  cy="40"  r="3"/>
+    <circle cx="108" cy="68"  r="3"/>
+    <circle cx="156" cy="98"  r="3"/>
+    <circle cx="204" cy="126" r="3"/>
+    <circle cx="252" cy="155" r="3"/>
+    <circle cx="300" cy="184" r="3"/>
+  </g>
+  <!-- Simpson: slope -4 line, much steeper, from (60, 22) to (240, 184) -->
+  <line x1="60" y1="22" x2="240" y2="184" stroke="#d62728" stroke-width="2" stroke-dasharray="5,3"/>
+  <g fill="#d62728">
+    <circle cx="60"  cy="22"  r="3"/>
+    <circle cx="105" cy="62"  r="3"/>
+    <circle cx="150" cy="103" r="3"/>
+    <circle cx="195" cy="144" r="3"/>
+    <circle cx="240" cy="184" r="3"/>
+  </g>
+  <!-- labels -->
+  <text x="170" y="210" font-family="Helvetica, Arial, sans-serif" font-size="11" text-anchor="middle">log n</text>
+  <text x="20"  y="105" font-family="Helvetica, Arial, sans-serif" font-size="11" transform="rotate(-90 20 105)" text-anchor="middle">log |error|</text>
+  <text x="310" y="175" font-family="Helvetica, Arial, sans-serif" font-size="10" fill="#1f77b4" text-anchor="end">Trapezoid (slope -2)</text>
+  <text x="250" y="40"  font-family="Helvetica, Arial, sans-serif" font-size="10" fill="#d62728" text-anchor="start">Simpson (slope -4)</text>
+</svg>

@@ -241,6 +241,32 @@ def generate_thumbnail(pdf_path: Path, out_png: Path) -> bool:
     return True
 
 
+def generate_preview_svg(pdf_path: Path, out_svg: Path) -> bool:
+    """Render page 1 of ``pdf_path`` to an SVG at ``out_svg``.
+
+    Used by the per-example preview landing page so the page-1 hero scales
+    cleanly. Falls back to False if ``pdftocairo`` is missing or fails -
+    the preview page then renders without the SVG hero.
+    """
+    try:
+        subprocess.run(
+            [
+                "pdftocairo",
+                "-svg",
+                "-f", "1",
+                "-l", "1",
+                str(pdf_path),
+                str(out_svg),
+            ],
+            check=True,
+            capture_output=True,
+        )
+    except (subprocess.CalledProcessError, FileNotFoundError) as exc:
+        print(f"  pdftocairo failed for {pdf_path.name}: {exc}", file=sys.stderr)
+        return False
+    return out_svg.exists()
+
+
 # ---------------------------------------------------------------------------
 # HTML rendering
 # ---------------------------------------------------------------------------
@@ -326,16 +352,97 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
 
 
 CARD_TEMPLATE = """    <article class="card">
-      <a class="thumb-wrap" href="{html_or_pdf_href}">
+      <a class="thumb-wrap" href="{preview_href}">
 {thumb_html}
       </a>
-{banner_html}      <h2><a href="{html_or_pdf_href}">{title}</a></h2>
+{banner_html}      <h2><a href="{preview_href}">{title}</a></h2>
       <p class="desc">{description}</p>
       <div class="links">
 {link_list}
       </div>
       <div class="meta"><code>{basename}.md</code></div>
     </article>
+"""
+
+
+PREVIEW_TEMPLATE = """<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>{title} - mdlout preview</title>
+<style>
+  :root {{
+    --fg: #1a1a1a;
+    --muted: #555;
+    --bg: #fafafa;
+    --card-bg: #ffffff;
+    --border: #d8d8d8;
+    --accent: #2c5aa0;
+    --warn-bg: #fff4d6;
+    --warn-border: #e0b94a;
+  }}
+  * {{ box-sizing: border-box; }}
+  html, body {{ margin: 0; padding: 0; background: var(--bg); color: var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    line-height: 1.5; }}
+  header, main, footer {{ max-width: 1000px; margin: 0 auto; padding: 1.4rem 1.5rem; }}
+  header {{ padding-bottom: 0.4rem; }}
+  header .back a {{ color: var(--accent); text-decoration: none; font-size: 0.92rem; }}
+  header .back a:hover {{ text-decoration: underline; }}
+  header h1 {{ margin: 0.5rem 0 0.3rem 0; font-size: 1.8rem; }}
+  header p.desc {{ margin: 0.3rem 0 0.6rem 0; color: var(--muted); font-size: 1.02rem; }}
+  header .meta {{ font-size: 0.85rem; color: var(--muted); }}
+  main {{ padding-top: 0.6rem; }}
+  .actions {{ margin-bottom: 1.0rem; }}
+  .actions a {{ display: inline-block; background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: 4px; padding: 0.45rem 0.9rem; margin-right: 0.5rem; margin-bottom: 0.4rem;
+    color: var(--accent); text-decoration: none; font-size: 0.94rem; }}
+  .actions a:hover {{ border-color: var(--accent); background: #f0f5ff; }}
+  .hero {{ background: var(--card-bg); border: 1px solid var(--border); border-radius: 6px;
+    padding: 1rem; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }}
+  .hero .frame {{ display: flex; align-items: flex-start; justify-content: center;
+    background: #f4f4f4; border: 1px solid var(--border); border-radius: 4px;
+    overflow: hidden; padding: 0.6rem; }}
+  .hero .frame svg, .hero .frame img {{ display: block; max-width: 100%; height: auto;
+    background: white; box-shadow: 0 0 4px rgba(0,0,0,0.08); }}
+  .hero .caption {{ color: var(--muted); font-size: 0.85rem; margin-top: 0.6rem; text-align: center; }}
+  .no-svg {{ color: var(--muted); padding: 2rem; text-align: center; }}
+  .banner {{ background: var(--warn-bg); border: 1px solid var(--warn-border);
+    padding: 0.5rem 0.7rem; border-radius: 4px; font-size: 0.9rem; color: #6b4f10;
+    margin-bottom: 1rem; }}
+  footer {{ border-top: 1px solid var(--border); margin-top: 1.5rem; padding-top: 1rem;
+    color: var(--muted); font-size: 0.88rem; }}
+  footer a {{ color: var(--accent); text-decoration: none; }}
+  footer a:hover {{ text-decoration: underline; }}
+  code {{ background: #f0f0f0; padding: 0.05rem 0.25rem; border-radius: 3px;
+    font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 0.88em; }}
+</style>
+</head>
+<body>
+<header>
+  <p class="back"><a href="index.html">&larr; Back to gallery</a></p>
+  <h1>{title}</h1>
+  <p class="desc">{description}</p>
+  <p class="meta">Source: <code>{basename}.md</code></p>
+</header>
+<main>
+{banner_html}  <div class="actions">
+{action_links}
+  </div>
+  <div class="hero">
+    <div class="frame">
+{hero_html}
+    </div>
+    <p class="caption">Page 1 of the rendered PDF (rasterised to SVG by <code>pdftocairo</code>).</p>
+  </div>
+</main>
+<footer>
+  <p><a href="index.html">Back to gallery</a> &middot;
+     <a href="../README.md">examples/README.md</a> &middot;
+     <a href="../../README.md">project README</a></p>
+</footer>
+</body>
+</html>
 """
 
 
@@ -352,17 +459,16 @@ def render_card(ex: Example) -> str:
     else:
         thumb_html = '        <div class="no-thumb">(no thumbnail available)</div>'
 
-    # Prefer the HTML render as the primary link target; fall back to the PDF
-    # if the HTML version isn't committed.
-    if ex.html_path is not None:
-        primary = ex.html_path.name
-    else:
-        primary = ex.pdf_path.name
+    # Preview landing page is the primary link target. We always generate one
+    # (named ``<basename>_preview.html``); even broken examples get a card
+    # whose preview surfaces the warning banner.
+    preview_href = f"{ex.basename}_preview.html"
 
-    links: list[str] = []
+    links: list[str] = [f'<a href="{_esc(preview_href)}">Preview</a>']
     if ex.html_path is not None:
         links.append(f'<a href="{_esc(ex.html_path.name)}">HTML</a>')
-    links.append(f'<a href="{_esc(ex.pdf_path.name)}">PDF</a>')
+    if ex.pdf_path.exists():
+        links.append(f'<a href="{_esc(ex.pdf_path.name)}">PDF</a>')
     if ex.md_path is not None:
         # Source lives one directory up from examples/out/.
         src_href = f"../{ex.md_path.name}"
@@ -377,13 +483,60 @@ def render_card(ex: Example) -> str:
         )
 
     return CARD_TEMPLATE.format(
-        html_or_pdf_href=_esc(primary),
+        preview_href=_esc(preview_href),
         thumb_html=thumb_html,
         banner_html=banner_html,
         title=_esc(ex.title),
         description=_esc(ex.description) or "&nbsp;",
         link_list=link_list,
         basename=_esc(ex.basename),
+    )
+
+
+def render_preview(ex: Example, preview_svg_name: str | None) -> str:
+    """Render a per-example landing page.
+
+    ``preview_svg_name`` is the basename of the page-1 SVG (relative to
+    ``examples/out/``), or None if SVG generation failed. We fall back to
+    inlining the PNG thumbnail in that case so the page is never empty.
+    """
+    action_items: list[str] = []
+    if ex.html_path is not None:
+        action_items.append(f'    <a href="{_esc(ex.html_path.name)}">View full HTML</a>')
+    if ex.pdf_path.exists():
+        action_items.append(f'    <a href="{_esc(ex.pdf_path.name)}">Download PDF</a>')
+    if ex.md_path is not None:
+        src_href = f"../{ex.md_path.name}"
+        action_items.append(f'    <a href="{_esc(src_href)}">Source .md</a>')
+    action_links = "\n".join(action_items) if action_items else "    <span>&nbsp;</span>"
+
+    if preview_svg_name is not None:
+        hero_html = (
+            f'      <object type="image/svg+xml" data="{_esc(preview_svg_name)}" '
+            f'aria-label="Page 1 of {_esc(ex.title)}"></object>'
+        )
+    elif ex.thumb_path is not None:
+        hero_html = (
+            f'      <img src="{_esc(ex.thumb_path.name)}" '
+            f'alt="Page 1 thumbnail of {_esc(ex.title)}">'
+        )
+    else:
+        hero_html = '      <div class="no-svg">(no preview available)</div>'
+
+    banner_html = ""
+    if ex.broken:
+        banner_html = (
+            '  <div class="banner">Known issue: this example currently '
+            "does not render to PDF. The preview below may be unavailable.</div>\n"
+        )
+
+    return PREVIEW_TEMPLATE.format(
+        title=_esc(ex.title),
+        description=_esc(ex.description) or "&nbsp;",
+        basename=_esc(ex.basename),
+        banner_html=banner_html,
+        action_links=action_links,
+        hero_html=hero_html,
     )
 
 
@@ -475,6 +628,11 @@ def main() -> int:
                 f"warning: '{tool}' not found on PATH; thumbnails will be skipped",
                 file=sys.stderr,
             )
+    if shutil.which("pdftocairo") is None:
+        print(
+            "warning: 'pdftocairo' not found on PATH; preview SVGs will be skipped",
+            file=sys.stderr,
+        )
 
     examples = collect_examples()
     if not examples:
@@ -482,22 +640,38 @@ def main() -> int:
 
     print(f"Generating gallery for {len(examples)} example(s)...")
     thumb_count = 0
+    preview_count = 0
     for ex in examples:
         if not ex.pdf_path.exists():
             print(f"  {ex.basename}: pdf missing, skipping thumbnail")
-            continue
-        target = OUT_DIR / f"thumb-{ex.basename}.png"
-        ok = generate_thumbnail(ex.pdf_path, target)
-        if ok:
-            ex.thumb_path = target
-            thumb_count += 1
-            print(f"  {ex.basename}: thumbnail -> {target.name}")
+            preview_svg_name: str | None = None
         else:
-            print(f"  {ex.basename}: thumbnail generation failed")
+            target = OUT_DIR / f"thumb-{ex.basename}.png"
+            ok = generate_thumbnail(ex.pdf_path, target)
+            if ok:
+                ex.thumb_path = target
+                thumb_count += 1
+                print(f"  {ex.basename}: thumbnail -> {target.name}")
+            else:
+                print(f"  {ex.basename}: thumbnail generation failed")
+
+            preview_svg_path = OUT_DIR / f"preview-{ex.basename}.svg"
+            if generate_preview_svg(ex.pdf_path, preview_svg_path):
+                preview_svg_name = preview_svg_path.name
+                preview_count += 1
+                print(f"  {ex.basename}: preview SVG -> {preview_svg_path.name}")
+            else:
+                preview_svg_name = None
+
+        preview_path = OUT_DIR / f"{ex.basename}_preview.html"
+        preview_path.write_text(render_preview(ex, preview_svg_name), encoding="utf-8")
 
     index_path = OUT_DIR / "index.html"
     index_path.write_text(render_page(examples), encoding="utf-8")
-    print(f"Wrote {index_path} ({thumb_count}/{len(examples)} thumbnails).")
+    print(
+        f"Wrote {index_path} ({thumb_count}/{len(examples)} thumbnails, "
+        f"{preview_count}/{len(examples)} preview SVGs, {len(examples)} preview pages)."
+    )
     return 0
 
 

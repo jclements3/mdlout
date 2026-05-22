@@ -37,10 +37,11 @@ Galley
 @PP
 :   Start a new paragraph with the configured paragraph gap.
 
-A pipe table of common Lout document types:
+A pipe table of common Lout document types (note the alignment markers in
+the separator row: left-aligned, centred, right-aligned):
 
-| Type    | Package    | Headings           |
-|---------|------------|--------------------|
+| Type    |  Package   |          Headings  |
+|:--------|:----------:|-------------------:|
 | doc     | `doc`      | `@Display` styled  |
 | report  | `report`   | `@Section`         |
 | book    | `book`     | `@Chapter`         |

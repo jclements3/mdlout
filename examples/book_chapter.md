@@ -36,10 +36,12 @@ two governments --- and through the wet spring it had hung there
 unremarked, a patch of brown ink and yellowed cartouche above the
 kettle. It was only on the morning of the twenty-ninth that she
 looked up from her coffee and saw, quite plainly, that the river had
-moved.@FootNote { In Aliyah's defense, the Old Veil had been known to
+moved.[^veil-history]
+
+[^veil-history]: In Aliyah's defense, the Old Veil had been known to
 shift its course three or four times a century even before the
 cartographic incidents began; one can hardly blame her for assuming
-mundane causes at first. }
+mundane causes at first.
 
 The Veil itself --- the river, that is, not the basin --- had spent
 the previous century making a slow easterly migration of perhaps half

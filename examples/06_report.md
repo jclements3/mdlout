@@ -19,7 +19,11 @@ converter. The toolchain is split into three layers: a single-file Python
 front end that parses Markdown and emits Lout source, a forked C implementation
 of Lout (3.43, William8000 fork) that turns Lout into PostScript or SVG, and a
 thin wrapper that produces PDF (via `ps2pdf`) or HTML (by wrapping the SVG back
-end's output).
+end's output).[^toc-note]
+
+[^toc-note]: The `[TOC]` placeholder above is auto-populated in HTML mode
+from the document's headings; in PDF mode Lout's `@MakeContents` setup
+clause renders an equivalent table of contents.
 
 ## Architecture
 
