@@ -1,0 +1,31 @@
+###########################################################################
+#  graphic_rotated_show - raw @Graphic with PostScript `show` after a    #
+#  rotate; exercises text-orientation propagation through the embedded   #
+#  PS interpreter (regression guard for the rotated-label fix in        #
+#  svg_ps_show).  Mirrors the diagf.lpg ldiagshowtags idiom              #
+#  (translate N rotate offset moveto show) used by @Diag's compass-      #
+#  point label demo.                                                     #
+###########################################################################
+
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+A rotated-text figure: each label is rendered along a different bearing.
+@DP
+@CentredDisplay {
+   "gsave"
+   "  /Times-Roman findfont 10 pt scalefont setfont"
+   "  0.5 setlinewidth"
+   "  xsize 2 div ysize 2 div translate"
+   "  0 0 30 0 360 arc stroke"
+   "  0 1 11 {"
+   "     /i exch def"
+   "     gsave"
+   "        i 30 mul rotate"
+   "        35 0 moveto"
+   "        (label) show"
+   "     grestore"
+   "  } for"
+   "grestore"
+} @Graphic { 8c @Wide 6c @High }
+@End @Text
