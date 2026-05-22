@@ -35,3 +35,27 @@ for f in examples/*.md; do
   ./mdlout.py "$f" -o "/tmp/$(basename "${f%.md}.html")" 2>&1 | tail -3
 done
 ```
+
+## Visual gallery
+
+The committed reference renderings under `examples/out/` are also indexed
+by a self-contained gallery page at
+[`examples/out/index.html`](out/index.html). Each card carries a page-1
+thumbnail of the PDF build plus links to the HTML render, the PDF, and
+the Markdown source. Examples that currently fail to render to PDF (as
+of writing, `02_typography.md`) appear with a "known issue" banner so
+the gallery stays a complete inventory.
+
+Regenerate the gallery (and the `thumb-*.png` previews) after refreshing
+any reference outputs:
+
+```bash
+python3 examples/generate_gallery.py
+```
+
+The generator is stdlib-only and shells out to `pdftoppm` and ImageMagick
+`convert` -- the same tools used by the visual-regression tests. It is
+idempotent: re-running it overwrites both the thumbnails and the
+`index.html` in place. The thumbnails (`examples/out/thumb-*.png`) and
+`index.html` are explicitly tracked by `.gitignore` even though the rest
+of `examples/out/` is curated to HTML/PDF only.

@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>mdlout - rendered examples</title>
+<style>
+  :root {
+    --fg: #1a1a1a;
+    --muted: #555;
+    --bg: #fafafa;
+    --card-bg: #ffffff;
+    --border: #d8d8d8;
+    --accent: #2c5aa0;
+    --warn-bg: #fff4d6;
+    --warn-border: #e0b94a;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    line-height: 1.45; }
+  header, footer { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem 0.5rem; }
+  header h1 { margin: 0 0 0.4rem 0; font-size: 1.9rem; }
+  header p  { margin: 0.3rem 0; color: var(--muted); }
+  main { max-width: 1100px; margin: 0 auto; padding: 1.2rem 1.5rem 2rem; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 1.2rem; }
+  .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 6px;
+    padding: 0.9rem; display: flex; flex-direction: column; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
+  .card .thumb-wrap { display: flex; align-items: center; justify-content: center;
+    background: #eee; border: 1px solid var(--border); border-radius: 4px;
+    min-height: 230px; margin-bottom: 0.7rem; overflow: hidden; }
+  .card img.thumb { display: block; max-width: 100%; height: auto; }
+  .card .no-thumb { color: var(--muted); font-size: 0.9rem; padding: 1rem; text-align: center; }
+  .card h2 { font-size: 1.05rem; margin: 0 0 0.3rem 0; }
+  .card h2 a { color: var(--fg); text-decoration: none; }
+  .card h2 a:hover { color: var(--accent); text-decoration: underline; }
+  .card p.desc { margin: 0 0 0.7rem 0; color: var(--muted); font-size: 0.92rem; flex: 1 1 auto; }
+  .card .links { font-size: 0.88rem; }
+  .card .links a { color: var(--accent); text-decoration: none; margin-right: 0.6rem; }
+  .card .links a:hover { text-decoration: underline; }
+  .banner { background: var(--warn-bg); border: 1px solid var(--warn-border);
+    padding: 0.4rem 0.6rem; border-radius: 4px; font-size: 0.85rem;
+    color: #6b4f10; margin-bottom: 0.6rem; }
+  .meta { font-size: 0.78rem; color: var(--muted); margin-top: 0.4rem; }
+  footer { border-top: 1px solid var(--border); margin-top: 2rem; padding-top: 1rem;
+    color: var(--muted); font-size: 0.88rem; }
+  footer a { color: var(--accent); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+  code { background: #f0f0f0; padding: 0.05rem 0.25rem; border-radius: 3px;
+    font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 0.88em; }
+</style>
+</head>
+<body>
+<header>
+  <h1>mdlout - rendered examples</h1>
+  <p>A visual gallery of the committed reference renderings under
+     <code>examples/out/</code>. Each thumbnail shows page 1 of the PDF
+     build; the links go to the full HTML render, the PDF, and the
+     Markdown source.</p>
+  <p>Regenerate with <code>python3 examples/generate_gallery.py</code>.
+     Thumbnails are extracted from the committed PDFs with
+     <code>pdftoppm</code> + ImageMagick <code>convert</code>.</p>
+</header>
+<main>
+  <section class="grid">
+    <article class="card">
+      <a class="thumb-wrap" href="01_hello.html">
+        <img class="thumb" src="thumb-01_hello.png" alt="Page 1 thumbnail of Hello" loading="lazy">
+      </a>
+      <h2><a href="01_hello.html">Hello</a></h2>
+      <p class="desc">Hello from mdlout! This single paragraph is the smallest smoke test in the suite — if this page renders, the markdown → Lout → output pipeline is alive.</p>
+      <div class="links">
+        <a href="01_hello.html">HTML</a>
+        <a href="01_hello.pdf">PDF</a>
+        <a href="../01_hello.md">source</a>
+      </div>
+      <div class="meta"><code>01_hello.md</code></div>
+    </article>
+
+    <article class="card">
+      <a class="thumb-wrap" href="03_lists_and_tables.html">
+        <img class="thumb" src="thumb-03_lists_and_tables.png" alt="Page 1 thumbnail of Lists and tables" loading="lazy">
+      </a>
+      <h2><a href="03_lists_and_tables.html">Lists and tables</a></h2>
+      <p class="desc">Bullet, numbered, task, definition lists; pipe and grid tables.</p>
+      <div class="links">
+        <a href="03_lists_and_tables.html">HTML</a>
+        <a href="03_lists_and_tables.pdf">PDF</a>
+        <a href="../03_lists_and_tables.md">source</a>
+      </div>
+      <div class="meta"><code>03_lists_and_tables.md</code></div>
+    </article>
+
+    <article class="card">
+      <a class="thumb-wrap" href="04_math.html">
+        <img class="thumb" src="thumb-04_math.png" alt="Page 1 thumbnail of Math block sampler" loading="lazy">
+      </a>
+      <h2><a href="04_math.html">Math block sampler</a></h2>
+      <p class="desc">This file exercises both block-level math ($$...$$ and fenced math blocks) and inline math ($...$). Real LaTeX math in every block.</p>
+      <div class="links">
+        <a href="04_math.html">HTML</a>
+        <a href="04_math.pdf">PDF</a>
+        <a href="../04_math.md">source</a>
+      </div>
+      <div class="meta"><code>04_math.md</code></div>
+    </article>
+
+    <article class="card">
+      <a class="thumb-wrap" href="05_music.html">
+        <img class="thumb" src="thumb-05_music.png" alt="Page 1 thumbnail of Music sampler" loading="lazy">
+      </a>
+      <h2><a href="05_music.html">Music sampler</a></h2>
+      <p class="desc">Three ABC blocks of increasing complexity. The third one uses the %%score directive to lock two staves into a piano/harp grand-staff layout.</p>
+      <div class="links">
+        <a href="05_music.html">HTML</a>
+        <a href="05_music.pdf">PDF</a>
+        <a href="../05_music.md">source</a>
+      </div>
+      <div class="meta"><code>05_music.md</code></div>
+    </article>
+
+    <article class="card">
+      <a class="thumb-wrap" href="06_report.html">
+        <img class="thumb" src="thumb-06_report.png" alt="Page 1 thumbnail of Markdown-to-Lout Pipeline Status" loading="lazy">
+      </a>
+      <h2><a href="06_report.html">Markdown-to-Lout Pipeline Status</a></h2>
+      <p class="desc">This report documents the current state of the mdlout Markdown-to-Lout converter. The toolchain is split into three layers: a single-file Python front end that parses Markdown and emits Lout source, a forked C...</p>
+      <div class="links">
+        <a href="06_report.html">HTML</a>
+        <a href="06_report.pdf">PDF</a>
+        <a href="../06_report.md">source</a>
+      </div>
+      <div class="meta"><code>06_report.md</code></div>
+    </article>
+
+    <article class="card">
+      <a class="thumb-wrap" href="07_raw_lout_and_svg.html">
+        <img class="thumb" src="thumb-07_raw_lout_and_svg.png" alt="Page 1 thumbnail of Raw passthrough sampler" loading="lazy">
+      </a>
+      <h2><a href="07_raw_lout_and_svg.html">Raw passthrough sampler</a></h2>
+      <p class="desc">This file exercises the two raw-passthrough fenced-code conventions: lout for arbitrary Lout source and svg for arbitrary SVG snippets. The latter should be routed through the @SVG macro once it lands.</p>
+      <div class="links">
+        <a href="07_raw_lout_and_svg.html">HTML</a>
+        <a href="07_raw_lout_and_svg.pdf">PDF</a>
+        <a href="../07_raw_lout_and_svg.md">source</a>
+      </div>
+      <div class="meta"><code>07_raw_lout_and_svg.md</code></div>
+    </article>
+
+    <article class="card">
+      <a class="thumb-wrap" href="08_kitchen_sink.html">
+        <img class="thumb" src="thumb-08_kitchen_sink.png" alt="Page 1 thumbnail of mdlout Kitchen Sink" loading="lazy">
+      </a>
+      <h2><a href="08_kitchen_sink.html">mdlout Kitchen Sink</a></h2>
+      <p class="desc">This is the kitchen-sink regression document. It mixes every feature the other examples exercise into one file: headings at three levels, lists, tables, math, music, code, raw Lout, and the full inline-formatting...</p>
+      <div class="links">
+        <a href="08_kitchen_sink.html">HTML</a>
+        <a href="08_kitchen_sink.pdf">PDF</a>
+        <a href="../08_kitchen_sink.md">source</a>
+      </div>
+      <div class="meta"><code>08_kitchen_sink.md</code></div>
+    </article>
+
+    <article class="card">
+      <a class="thumb-wrap" href="book_chapter.html">
+        <img class="thumb" src="thumb-book_chapter.png" alt="Page 1 thumbnail of The Cartographers of Veil" loading="lazy">
+      </a>
+      <h2><a href="book_chapter.html">The Cartographers of Veil</a></h2>
+      <p class="desc">It had been raining for three weeks when Aliyah first noticed that the map was changing on its own. She had pinned it to the wall of her flat on the eighth of March --- a battered survey chart of the Veil basin, the...</p>
+      <div class="links">
+        <a href="book_chapter.html">HTML</a>
+        <a href="book_chapter.pdf">PDF</a>
+        <a href="../book_chapter.md">source</a>
+      </div>
+      <div class="meta"><code>book_chapter.md</code></div>
+    </article>
+
+    <article class="card">
+      <a class="thumb-wrap" href="complex_diag.html">
+        <img class="thumb" src="thumb-complex_diag.png" alt="Page 1 thumbnail of Complex Diagrams" loading="lazy">
+      </a>
+      <h2><a href="complex_diag.html">Complex Diagrams</a></h2>
+      <p class="desc">This document pushes Lout&#x27;s diag package harder than diaggallery.md: a real grammar in railroad-diagram form, a binary search tree, a flowchart with mixed arrow styles, and a single diagram that combines several...</p>
+      <div class="links">
+        <a href="complex_diag.html">HTML</a>
+        <a href="complex_diag.pdf">PDF</a>
+        <a href="../complex_diag.md">source</a>
+      </div>
+      <div class="meta"><code>complex_diag.md</code></div>
+    </article>
+
+    <article class="card">
+      <a class="thumb-wrap" href="cv.html">
+        <img class="thumb" src="thumb-cv.png" alt="Page 1 thumbnail of Curriculum Vitae" loading="lazy">
+      </a>
+      <h2><a href="cv.html">Curriculum Vitae</a></h2>
+      <p class="desc">Senior audio DSP engineer with seven years of shipped real-time C++ on embedded ARM and desktop platforms. Particular focus on convolution reverberation, room correction, and low-latency scheduling. Comfortable across...</p>
+      <div class="links">
+        <a href="cv.html">HTML</a>
+        <a href="cv.pdf">PDF</a>
+        <a href="../cv.md">source</a>
+      </div>
+      <div class="meta"><code>cv.md</code></div>
+    </article>
+
+    <article class="card">
+      <a class="thumb-wrap" href="diag_gallery.html">
+        <img class="thumb" src="thumb-diag_gallery.png" alt="Page 1 thumbnail of Lout Diagram Gallery" loading="lazy">
+      </a>
+      <h2><a href="diag_gallery.html">Lout Diagram Gallery</a></h2>
+      <p class="desc">This document exercises every documented feature of Lout&#x27;s @Diag package (the diag library, from chapter 9 of the Lout User&#x27;s Guide). Each example uses the lout raw passthrough fence -- mdlout does not yet have a...</p>
+      <div class="links">
+        <a href="diag_gallery.html">HTML</a>
+        <a href="diag_gallery.pdf">PDF</a>
+        <a href="../diag_gallery.md">source</a>
+      </div>
+      <div class="meta"><code>diag_gallery.md</code></div>
+    </article>
+
+    <article class="card">
+      <a class="thumb-wrap" href="letter.html">
+        <img class="thumb" src="thumb-letter.png" alt="Page 1 thumbnail of Letter" loading="lazy">
+      </a>
+      <h2><a href="letter.html">Letter</a></h2>
+      <p class="desc">Formal US business letter built on type: doc plus raw-Lout passthrough.</p>
+      <div class="links">
+        <a href="letter.html">HTML</a>
+        <a href="letter.pdf">PDF</a>
+        <a href="../letter.md">source</a>
+      </div>
+      <div class="meta"><code>letter.md</code></div>
+    </article>
+
+    <article class="card">
+      <a class="thumb-wrap" href="scientific_paper.html">
+        <img class="thumb" src="thumb-scientific_paper.png" alt="Page 1 thumbnail of A Comparative Study of the Trapezoidal and Simpson&#x27;s Rules for Numerical Quadrature" loading="lazy">
+      </a>
+      <h2><a href="scientific_paper.html">A Comparative Study of the Trapezoidal and Simpson&#x27;s Rules for Numerical Quadrature</a></h2>
+      <p class="desc">We revisit two classical Newton-Cotes quadrature rules --- the composite trapezoidal rule and Simpson&#x27;s 1/3 rule --- and quantify their accuracy on a small but informative battery of test integrals. For smooth...</p>
+      <div class="links">
+        <a href="scientific_paper.html">HTML</a>
+        <a href="scientific_paper.pdf">PDF</a>
+        <a href="../scientific_paper.md">source</a>
+      </div>
+      <div class="meta"><code>scientific_paper.md</code></div>
+    </article>
+
+    <article class="card">
+      <a class="thumb-wrap" href="slides_basic.html">
+        <img class="thumb" src="thumb-slides_basic.png" alt="Page 1 thumbnail of An Introduction to Lout" loading="lazy">
+      </a>
+      <h2><a href="slides_basic.html">An Introduction to Lout</a></h2>
+      <p class="desc">A six-slide tour of the document formatting system</p>
+      <div class="links">
+        <a href="slides_basic.html">HTML</a>
+        <a href="slides_basic.pdf">PDF</a>
+        <a href="../slides_basic.md">source</a>
+      </div>
+      <div class="meta"><code>slides_basic.md</code></div>
+    </article>
+
+    <article class="card">
+      <a class="thumb-wrap" href="02_typography.pdf">
+        <div class="no-thumb">(no thumbnail available)</div>
+      </a>
+      <div class="banner">Known issue: this example currently does not render to PDF; the card is shown for completeness.</div>
+      <h2><a href="02_typography.pdf">Typography sampler</a></h2>
+      <p class="desc">mdlout supports the usual collection of inline spans. This paragraph mixes bold, italic, and bold italic with a sprinkling of inline code spans referring to things like argv[0] and os.path.join.</p>
+      <div class="links">
+        <a href="02_typography.pdf">PDF</a>
+        <a href="../02_typography.md">source</a>
+      </div>
+      <div class="meta"><code>02_typography.md</code></div>
+    </article>
+
+  </section>
+</main>
+<footer>
+  <p><a href="../README.md">examples/README.md</a> &middot;
+     <a href="../../README.md">project README</a> &middot;
+     <a href="../../TODO.md">TODO</a></p>
+  <p>15 examples indexed, 1 flagged as known-broken.</p>
+</footer>
+</body>
+</html>
