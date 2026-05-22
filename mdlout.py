@@ -32,6 +32,9 @@ from enum import Enum, auto
 from pathlib import Path
 
 
+VERSION = "0.2.0"
+
+
 # ---------------------------------------------------------------------------
 # Lout special-character escaping
 # ---------------------------------------------------------------------------
@@ -3559,6 +3562,141 @@ def _run_serve(args, port: int) -> None:
 
 
 # ---------------------------------------------------------------------------
+# --check and --init helpers
+# ---------------------------------------------------------------------------
+
+def _run_check(input_path: str) -> int:
+    """Parse-only mode: run md -> Lout pipeline without invoking lout.
+
+    Prints "OK: {path} ({N} blocks)" on success and returns 0.
+    Prints "{path}:{line}:{col}: {message}" (line/col elided if not
+    recoverable) to stderr on failure and returns 2.
+    """
+    try:
+        if input_path == '-':
+            md_text = sys.stdin.read()
+        else:
+            with open(input_path, encoding='utf-8') as f:
+                md_text = f.read()
+        _reset_xref_state()
+        global _cite_format, _output_format, _highlight_enabled
+        frontmatter, md_body = parse_frontmatter(md_text)
+        _cite_format = (frontmatter.get('references_format')
+                        or frontmatter.get('references-format')
+                        or 'numeric').lower()
+        if _cite_format not in ('numeric', 'alpha'):
+            _cite_format = 'numeric'
+        _output_format = 'html'
+        _highlight_enabled = True
+        md_body = _scan_citations(md_body)
+        md_body = _scan_footnotes(md_body)
+        _scan_fig_tab_labels(md_body, frontmatter.get('type', 'doc').lower())
+        blocks = parse_markdown(md_body)
+        blocks = _inject_bibliography(blocks)
+        _scan_html_headings(blocks)
+        # generate_lout exercises every block's emission path.
+        generate_lout(blocks, frontmatter)
+    except Exception as e:
+        line = getattr(e, 'lineno', None)
+        col = getattr(e, 'colno', None) or getattr(e, 'offset', None)
+        prefix = input_path
+        if line is not None:
+            prefix += f':{line}'
+            if col is not None:
+                prefix += f':{col}'
+        print(f'{prefix}: {e}', file=sys.stderr)
+        return 2
+    print(f'OK: {input_path} ({len(blocks)} blocks)')
+    return 0
+
+
+_INIT_INDEX_MD = '''\
+---
+title: My mdlout document
+author: Your Name
+date: 2026-05-22
+type: doc
+---
+
+# Hello
+
+This is a starter document for **mdlout**.  Edit `index.md` and
+rebuild with:
+
+    ./mdlout.py index.md --serve
+
+## Features
+
+- Math: $E = mc^2$
+- Lists, tables, links, footnotes -- see `examples/` in the
+  mdlout repo for the full feature surface.
+
+## A code block
+
+```python
+print("hello, mdlout")
+```
+'''
+
+_INIT_MYDEFS = '# Add your Lout macro definitions here\n'
+
+_INIT_GITIGNORE = '*.html\n*.pdf\n*.ps\n*.lt\n'
+
+_INIT_README_TMPL = '''\
+# {name}
+
+Built with [mdlout](https://github.com/jclements3/mdlout).
+
+## Quick start
+
+    ./mdlout.py index.md           # build HTML
+    ./mdlout.py index.md --format=pdf
+    ./mdlout.py index.md --serve   # live preview on http://127.0.0.1:8080/
+'''
+
+
+def _run_init(target: str) -> int:
+    """Scaffold a new mdlout project under target dir.
+
+    Refuses to clobber a non-empty existing directory.
+    """
+    path = Path(target)
+    if path.exists():
+        if not path.is_dir():
+            print(f'mdlout --init: {target!s} exists and is not a directory',
+                  file=sys.stderr)
+            return 1
+        if any(path.iterdir()):
+            print(f'mdlout --init: {target!s} is not empty; refusing to clobber',
+                  file=sys.stderr)
+            return 1
+    path.mkdir(parents=True, exist_ok=True)
+
+    name = path.resolve().name or 'mdlout-project'
+    (path / 'index.md').write_text(_INIT_INDEX_MD, encoding='utf-8')
+    (path / 'mydefs').write_text(_INIT_MYDEFS, encoding='utf-8')
+    (path / '.gitignore').write_text(_INIT_GITIGNORE, encoding='utf-8')
+    (path / 'README.md').write_text(
+        _INIT_README_TMPL.format(name=name), encoding='utf-8')
+
+    if target == '.':
+        display = '.'
+    elif os.path.isabs(target):
+        display = target
+    else:
+        display = f'./{target}'
+    cmd_path = 'index.md' if target == '.' else f'{target}/index.md'
+    print(f'Initialised mdlout project in {display}')
+    print('  index.md       (starter markdown)')
+    print('  mydefs         (Lout macro definitions)')
+    print('  .gitignore     (build artefacts)')
+    print('  README.md')
+    print()
+    print(f'Next: ./mdlout.py {cmd_path} --serve')
+    return 0
+
+
+# ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
 
@@ -3567,7 +3705,22 @@ def main() -> None:
         prog='mdlout',
         description='Convert Markdown → Lout → HTML (default) or PDF.',
     )
-    parser.add_argument('input', help='Input Markdown file (- for stdin)')
+    parser.add_argument(
+        '--version', action='version', version=f'mdlout {VERSION}',
+    )
+    parser.add_argument(
+        '--check', action='store_true',
+        help='Parse-only: run the md -> Lout pipeline without invoking '
+             'the lout binary. Exit 0 on success, 2 on parse failure. '
+             'Useful for CI / pre-commit hooks.',
+    )
+    parser.add_argument(
+        '--init', nargs='?', const='.', default=None, metavar='DIR',
+        help='Scaffold a new mdlout project (index.md, mydefs, .gitignore, '
+             'README.md) in DIR (default: current directory). Refuses to '
+             'clobber a non-empty directory.',
+    )
+    parser.add_argument('input', nargs='?', help='Input Markdown file (- for stdin)')
     parser.add_argument('-o', '--output', help='Output file (default: INPUT.html or INPUT.pdf)')
 
     parser.add_argument(
@@ -3657,6 +3810,18 @@ def main() -> None:
     )
 
     args = parser.parse_args()
+
+    # --init: scaffold and exit, no input file required.
+    if args.init is not None:
+        sys.exit(_run_init(args.init))
+
+    # All remaining modes require an input file.
+    if not args.input:
+        parser.error('the following arguments are required: input')
+
+    # --check: parse-only, never touches the lout binary.
+    if args.check:
+        sys.exit(_run_check(args.input))
 
     # --ps and --pdf are legacy / format-overriding flags
     if args.ps or args.pdf:
