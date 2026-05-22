@@ -80,7 +80,12 @@ for psfile in "$WORK"/ps/ps-*.png; do
     n=$(basename "$psfile" .png | sed 's/ps-//')
     svgfile="$WORK/svg/svg-${n}.png"
     difffile="$WORK/diff/diff-${n}.png"
-    read w h < <(identify -format "%w %h" "$psfile")
+    # `identify -format "%w %h"` emits no trailing newline, so `read`
+    # returns 1 even though both variables were populated. With
+    # `set -euo pipefail` that aborts the loop on iteration 1, so we
+    # tolerate the non-zero exit explicitly. (Adding `\n` to the
+    # format string would also work but is less defensive.)
+    read w h < <(identify -format "%w %h" "$psfile") || true
     total=$((w * h))
     if [[ ! -f "$svgfile" ]]; then
         ink=$(convert "$psfile" -threshold 50% -negate -format "%[fx:int(w*h*mean)]" info: 2>/dev/null || echo "$total")
