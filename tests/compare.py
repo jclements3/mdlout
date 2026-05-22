@@ -60,11 +60,21 @@ GRAPHICS_HEAVY = {
 }
 
 # Verdict thresholds.
+#
+# History: graphics-heavy used to be 20% / 0.75 SSIM back when the
+# `@Graphic` PostScript fallback was an XML comment. With the embedded
+# PS interpreter in z53.c and the Symbol-font glyph table both in, the
+# worst graphics-heavy snippet on the current corpus is colour_mixed at
+# 0.49% AE-ratio / 0.9926 SSIM (see tests/out/results.json). The
+# tightened bar below leaves a ~1.5% pixel-diff margin and ~0.04 SSIM
+# margin above the worst-passing snippet to absorb CI jitter. If/when
+# a new snippet exceeds these, prefer fixing the back-end before
+# loosening the threshold again.
 TEXT_PIXEL_THRESHOLD = 0.05       # AE-ratio < 5%  -> "excellent" gate
-GRAPHICS_PIXEL_THRESHOLD = 0.20   # AE-ratio < 20% -> passing gate
+GRAPHICS_PIXEL_THRESHOLD = 0.02   # AE-ratio < 2%  -> graphics-heavy passing gate
 STRICT_SSIM_THRESHOLD = 0.95      # SSIM >= 0.95 -> "excellent"
 TEXT_SSIM_THRESHOLD = 0.85        # SSIM >= 0.85 -> passing
-GRAPHICS_SSIM_THRESHOLD = 0.75    # SSIM >= 0.75 -> graphics-heavy passing
+GRAPHICS_SSIM_THRESHOLD = 0.95    # SSIM >= 0.95 -> graphics-heavy passing
 
 
 # ----------------------------------------------------------------------

@@ -21,7 +21,18 @@ manifest at the top of that file.
 | Tier       | Pixel-diff threshold | SSIM threshold       | Used for                                                |
 |------------|----------------------|----------------------|---------------------------------------------------------|
 | `strict`   | AE-ratio &lt; 5 %    | SSIM &ge; 0.85       | Text-heavy snippets.  Excellent gate: SSIM &ge; 0.95.   |
-| `graphics` | AE-ratio &lt; 20 %   | SSIM &ge; 0.75       | Anything in the `GRAPHICS_HEAVY` set in `compare.py`.   |
+| `graphics` | AE-ratio &lt; 2 %    | SSIM &ge; 0.95       | Anything in the `GRAPHICS_HEAVY` set in `compare.py`.   |
+
+The graphics-heavy tier used to be `< 20 %` / `>= 0.75` SSIM back when
+the `@Graphic` raw-PostScript path emitted an XML comment fallback.
+With the embedded PS interpreter and the Symbol-font glyph table now
+in place, every graphics-heavy snippet on the current corpus clears
+the strict text gate (worst case as of 2026-05-22: `colour_mixed` at
+0.49 % AE-ratio / SSIM 0.9926). The tightened bar above leaves a
+~1.5 % pixel-diff margin and a ~0.04 SSIM margin above the
+worst-passing snippet to absorb CI jitter; any future regression past
+those should be fixed in `z53.c` rather than absorbed by reloosening
+the threshold.
 
 A snippet that clears the strict pixel gate and the 0.95 SSIM gate is
 recorded as `PASS-EXCELLENT`; one that only clears the looser pair is
