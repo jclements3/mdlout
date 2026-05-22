@@ -2,14 +2,14 @@
   "status": "ok",
   "chrome": "/mnt/c/Program Files/Google/Chrome/Application/chrome.exe",
   "wsl_windows_chrome": true,
-  "pass": 0,
-  "fail": 1,
-  "total": 1,
+  "pass": 31,
+  "fail": 0,
+  "total": 31,
   "examples": [
     {
-      "name": "04_math.html",
-      "ok": false,
-      "dom_bytes": 2000485,
+      "name": "01_hello.html",
+      "ok": true,
+      "dom_bytes": 1990210,
       "error": "",
       "stderr_tail": "",
       "checks": [
@@ -22,10 +22,10 @@
         },
         {
           "name": "katex",
-          "ok": false,
-          "expected": 8,
-          "found": 7,
-          "detail": "only 7 .katex matches for 8 spans"
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
         },
         {
           "name": "abcjs",
@@ -39,6 +39,1326 @@
           "ok": true,
           "expected": 1,
           "found": 1,
+          "detail": ""
+        },
+        {
+          "name": "hljs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        }
+      ]
+    },
+    {
+      "name": "01_hello_preview.html",
+      "ok": true,
+      "dom_bytes": 3747,
+      "error": "",
+      "stderr_tail": "",
+      "checks": [
+        {
+          "name": "loaded",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": ""
+        },
+        {
+          "name": "katex",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "abcjs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "anchors",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "hljs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        }
+      ]
+    },
+    {
+      "name": "02_typography.html",
+      "ok": true,
+      "dom_bytes": 2009363,
+      "error": "",
+      "stderr_tail": "",
+      "checks": [
+        {
+          "name": "loaded",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": ""
+        },
+        {
+          "name": "katex",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "abcjs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "anchors",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": ""
+        },
+        {
+          "name": "hljs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        }
+      ]
+    },
+    {
+      "name": "02_typography_preview.html",
+      "ok": true,
+      "dom_bytes": 3812,
+      "error": "",
+      "stderr_tail": "",
+      "checks": [
+        {
+          "name": "loaded",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": ""
+        },
+        {
+          "name": "katex",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "abcjs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "anchors",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "hljs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        }
+      ]
+    },
+    {
+      "name": "03_lists_and_tables.html",
+      "ok": true,
+      "dom_bytes": 2052773,
+      "error": "",
+      "stderr_tail": "",
+      "checks": [
+        {
+          "name": "loaded",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": ""
+        },
+        {
+          "name": "katex",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "abcjs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "anchors",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": ""
+        },
+        {
+          "name": "hljs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        }
+      ]
+    },
+    {
+      "name": "03_lists_and_tables_preview.html",
+      "ok": true,
+      "dom_bytes": 3746,
+      "error": "",
+      "stderr_tail": "",
+      "checks": [
+        {
+          "name": "loaded",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": ""
+        },
+        {
+          "name": "katex",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "abcjs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "anchors",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "hljs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        }
+      ]
+    },
+    {
+      "name": "04_math.html",
+      "ok": true,
+      "dom_bytes": 2032886,
+      "error": "",
+      "stderr_tail": "",
+      "checks": [
+        {
+          "name": "loaded",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": ""
+        },
+        {
+          "name": "katex",
+          "ok": true,
+          "expected": 8,
+          "found": 29,
+          "detail": ""
+        },
+        {
+          "name": "abcjs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "anchors",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": ""
+        },
+        {
+          "name": "hljs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        }
+      ]
+    },
+    {
+      "name": "04_math_preview.html",
+      "ok": true,
+      "dom_bytes": 3760,
+      "error": "",
+      "stderr_tail": "",
+      "checks": [
+        {
+          "name": "loaded",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": ""
+        },
+        {
+          "name": "katex",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "abcjs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "anchors",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "hljs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        }
+      ]
+    },
+    {
+      "name": "05_music.html",
+      "ok": true,
+      "dom_bytes": 2023262,
+      "error": "",
+      "stderr_tail": "",
+      "checks": [
+        {
+          "name": "loaded",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": ""
+        },
+        {
+          "name": "katex",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "abcjs",
+          "ok": true,
+          "expected": 3,
+          "found": 3,
+          "detail": ""
+        },
+        {
+          "name": "anchors",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": ""
+        },
+        {
+          "name": "hljs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        }
+      ]
+    },
+    {
+      "name": "05_music_preview.html",
+      "ok": true,
+      "dom_bytes": 3759,
+      "error": "",
+      "stderr_tail": "",
+      "checks": [
+        {
+          "name": "loaded",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": ""
+        },
+        {
+          "name": "katex",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "abcjs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "anchors",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "hljs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        }
+      ]
+    },
+    {
+      "name": "06_report.html",
+      "ok": true,
+      "dom_bytes": 2057108,
+      "error": "",
+      "stderr_tail": "",
+      "checks": [
+        {
+          "name": "loaded",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": ""
+        },
+        {
+          "name": "katex",
+          "ok": true,
+          "expected": 1,
+          "found": 4,
+          "detail": ""
+        },
+        {
+          "name": "abcjs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "anchors",
+          "ok": true,
+          "expected": 9,
+          "found": 9,
+          "detail": ""
+        },
+        {
+          "name": "hljs",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": ""
+        }
+      ]
+    },
+    {
+      "name": "06_report_preview.html",
+      "ok": true,
+      "dom_bytes": 3893,
+      "error": "",
+      "stderr_tail": "",
+      "checks": [
+        {
+          "name": "loaded",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": ""
+        },
+        {
+          "name": "katex",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "abcjs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "anchors",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "hljs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        }
+      ]
+    },
+    {
+      "name": "07_raw_lout_and_svg.html",
+      "ok": true,
+      "dom_bytes": 2013952,
+      "error": "",
+      "stderr_tail": "",
+      "checks": [
+        {
+          "name": "loaded",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": ""
+        },
+        {
+          "name": "katex",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "abcjs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "anchors",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": ""
+        },
+        {
+          "name": "hljs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        }
+      ]
+    },
+    {
+      "name": "07_raw_lout_and_svg_preview.html",
+      "ok": true,
+      "dom_bytes": 3905,
+      "error": "",
+      "stderr_tail": "",
+      "checks": [
+        {
+          "name": "loaded",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": ""
+        },
+        {
+          "name": "katex",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "abcjs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "anchors",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "hljs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        }
+      ]
+    },
+    {
+      "name": "08_kitchen_sink.html",
+      "ok": true,
+      "dom_bytes": 2074362,
+      "error": "",
+      "stderr_tail": "",
+      "checks": [
+        {
+          "name": "loaded",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": ""
+        },
+        {
+          "name": "katex",
+          "ok": true,
+          "expected": 2,
+          "found": 8,
+          "detail": ""
+        },
+        {
+          "name": "abcjs",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": ""
+        },
+        {
+          "name": "anchors",
+          "ok": true,
+          "expected": 10,
+          "found": 10,
+          "detail": ""
+        },
+        {
+          "name": "hljs",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": ""
+        }
+      ]
+    },
+    {
+      "name": "08_kitchen_sink_preview.html",
+      "ok": true,
+      "dom_bytes": 3887,
+      "error": "",
+      "stderr_tail": "",
+      "checks": [
+        {
+          "name": "loaded",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": ""
+        },
+        {
+          "name": "katex",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "abcjs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "anchors",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "hljs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        }
+      ]
+    },
+    {
+      "name": "book_chapter.html",
+      "ok": true,
+      "dom_bytes": 2044162,
+      "error": "",
+      "stderr_tail": "",
+      "checks": [
+        {
+          "name": "loaded",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": ""
+        },
+        {
+          "name": "katex",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "abcjs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "anchors",
+          "ok": true,
+          "expected": 2,
+          "found": 2,
+          "detail": ""
+        },
+        {
+          "name": "hljs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        }
+      ]
+    },
+    {
+      "name": "book_chapter_preview.html",
+      "ok": true,
+      "dom_bytes": 3893,
+      "error": "",
+      "stderr_tail": "",
+      "checks": [
+        {
+          "name": "loaded",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": ""
+        },
+        {
+          "name": "katex",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "abcjs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "anchors",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "hljs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        }
+      ]
+    },
+    {
+      "name": "complex_diag.html",
+      "ok": true,
+      "dom_bytes": 2164796,
+      "error": "",
+      "stderr_tail": "",
+      "checks": [
+        {
+          "name": "loaded",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": ""
+        },
+        {
+          "name": "katex",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "abcjs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "anchors",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": ""
+        },
+        {
+          "name": "hljs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        }
+      ]
+    },
+    {
+      "name": "complex_diag_preview.html",
+      "ok": true,
+      "dom_bytes": 3862,
+      "error": "",
+      "stderr_tail": "",
+      "checks": [
+        {
+          "name": "loaded",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": ""
+        },
+        {
+          "name": "katex",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "abcjs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "anchors",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "hljs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        }
+      ]
+    },
+    {
+      "name": "cv.html",
+      "ok": true,
+      "dom_bytes": 2053704,
+      "error": "",
+      "stderr_tail": "",
+      "checks": [
+        {
+          "name": "loaded",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": ""
+        },
+        {
+          "name": "katex",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "abcjs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "anchors",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": ""
+        },
+        {
+          "name": "hljs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        }
+      ]
+    },
+    {
+      "name": "cv_preview.html",
+      "ok": true,
+      "dom_bytes": 3818,
+      "error": "",
+      "stderr_tail": "",
+      "checks": [
+        {
+          "name": "loaded",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": ""
+        },
+        {
+          "name": "katex",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "abcjs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "anchors",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "hljs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        }
+      ]
+    },
+    {
+      "name": "diag_gallery.html",
+      "ok": true,
+      "dom_bytes": 2166803,
+      "error": "",
+      "stderr_tail": "",
+      "checks": [
+        {
+          "name": "loaded",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": ""
+        },
+        {
+          "name": "katex",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "abcjs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "anchors",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": ""
+        },
+        {
+          "name": "hljs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        }
+      ]
+    },
+    {
+      "name": "diag_gallery_preview.html",
+      "ok": true,
+      "dom_bytes": 3875,
+      "error": "",
+      "stderr_tail": "",
+      "checks": [
+        {
+          "name": "loaded",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": ""
+        },
+        {
+          "name": "katex",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "abcjs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "anchors",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "hljs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        }
+      ]
+    },
+    {
+      "name": "index.html",
+      "ok": true,
+      "dom_bytes": 15620,
+      "error": "",
+      "stderr_tail": "",
+      "checks": [
+        {
+          "name": "loaded",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": ""
+        },
+        {
+          "name": "katex",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "abcjs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "anchors",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "hljs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        }
+      ]
+    },
+    {
+      "name": "letter.html",
+      "ok": true,
+      "dom_bytes": 2033609,
+      "error": "",
+      "stderr_tail": "",
+      "checks": [
+        {
+          "name": "loaded",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": ""
+        },
+        {
+          "name": "katex",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "abcjs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "anchors",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": ""
+        },
+        {
+          "name": "hljs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        }
+      ]
+    },
+    {
+      "name": "letter_preview.html",
+      "ok": true,
+      "dom_bytes": 3659,
+      "error": "",
+      "stderr_tail": "",
+      "checks": [
+        {
+          "name": "loaded",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": ""
+        },
+        {
+          "name": "katex",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "abcjs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "anchors",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "hljs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        }
+      ]
+    },
+    {
+      "name": "scientific_paper.html",
+      "ok": true,
+      "dom_bytes": 2451167,
+      "error": "",
+      "stderr_tail": "",
+      "checks": [
+        {
+          "name": "loaded",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": ""
+        },
+        {
+          "name": "katex",
+          "ok": true,
+          "expected": 96,
+          "found": 292,
+          "detail": ""
+        },
+        {
+          "name": "abcjs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "anchors",
+          "ok": true,
+          "expected": 13,
+          "found": 13,
+          "detail": ""
+        },
+        {
+          "name": "hljs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        }
+      ]
+    },
+    {
+      "name": "scientific_paper_preview.html",
+      "ok": true,
+      "dom_bytes": 4082,
+      "error": "",
+      "stderr_tail": "",
+      "checks": [
+        {
+          "name": "loaded",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": ""
+        },
+        {
+          "name": "katex",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "abcjs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "anchors",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "hljs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        }
+      ]
+    },
+    {
+      "name": "slides_basic.html",
+      "ok": true,
+      "dom_bytes": 2088369,
+      "error": "",
+      "stderr_tail": "",
+      "checks": [
+        {
+          "name": "loaded",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": ""
+        },
+        {
+          "name": "katex",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "abcjs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "anchors",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": ""
+        },
+        {
+          "name": "hljs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        }
+      ]
+    },
+    {
+      "name": "slides_basic_preview.html",
+      "ok": true,
+      "dom_bytes": 3719,
+      "error": "",
+      "stderr_tail": "",
+      "checks": [
+        {
+          "name": "loaded",
+          "ok": true,
+          "expected": 1,
+          "found": 1,
+          "detail": ""
+        },
+        {
+          "name": "katex",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "abcjs",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
+          "detail": ""
+        },
+        {
+          "name": "anchors",
+          "ok": true,
+          "expected": 0,
+          "found": 0,
           "detail": ""
         },
         {

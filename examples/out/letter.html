@@ -375,7 +375,7 @@
 
 </article>
 </main>
-<script>window.renderMath=function(){if(typeof renderMathInElement!=='function')return;renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});};
+<script>window.renderMath=function(){if(typeof katex==='undefined')return;document.querySelectorAll('span.math').forEach(function(s){if(s.dataset.rendered)return;var tex=(s.textContent||'').trim();if(!tex)return;try{katex.render(tex,s,{displayMode:s.classList.contains('math-display'),throwOnError:false});s.dataset.rendered='1';}catch(e){s.textContent='[math error: '+e.message+']';}});};
 window.renderMusic=function(){if(typeof ABCJS==='undefined')return;document.querySelectorAll('div.abc-music').forEach(function(d){var src=d.dataset.abc||d.textContent||'';d.textContent='';try{ABCJS.renderAbc(d,src,{responsive:'resize'});}catch(e){d.textContent='[abcjs error: '+e.message+']';}});};
 function _mdloutInit(){window.renderMath&&renderMath();window.renderMusic&&renderMusic();}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',_mdloutInit);else _mdloutInit();</script>
 </body>

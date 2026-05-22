@@ -1718,7 +1718,7 @@ def _block_to_lout(block: Block) -> str:
             for g in groups:
                 joined.append(re.sub(r'[\s\t\n]+', ' ', g).strip())
             body = ' \\\\ '.join(p for p in joined if p)
-            return f'@LP\n@CentredDisplay @Math {{ "{_lout_string_encode(body)}" }}'
+            return f'@LP\n@CentredDisplay @DMath {{ "{_lout_string_encode(body)}" }}'
         case BlockType.ABC:
             _needs_svgmacros = True
             return f'@LP\n@ABC {{ "{_lout_string_encode(block.content)}" }}'
@@ -2502,15 +2502,26 @@ def _build_html_scaffold(
     # defer-loaded CDN scripts can call them after they arrive.
     init_js_parts: list[str] = []
     if math_engine:
+        # mdlout emits <span class="math">BARE-LATEX</span> (no $..$
+        # delimiters), so KaTeX's auto-render renderMathInElement -- which
+        # scans text content for delimiters -- never sees the spans.
+        # Render each span explicitly via katex.render() and pick
+        # displayMode from a .math-display class set by @DMath.
         init_js_parts.append(
             "window.renderMath=function(){"
-            "if(typeof renderMathInElement!=='function')return;"
-            "renderMathInElement(document.body,{delimiters:["
-            "{left:'$$',right:'$$',display:true},"
-            "{left:'$',right:'$',display:false},"
-            "{left:'\\\\(',right:'\\\\)',display:false},"
-            "{left:'\\\\[',right:'\\\\]',display:true}"
-            "],throwOnError:false});"
+            "if(typeof katex==='undefined')return;"
+            "document.querySelectorAll('span.math').forEach(function(s){"
+            "if(s.dataset.rendered)return;"
+            "var tex=(s.textContent||'').trim();"
+            "if(!tex)return;"
+            "try{"
+            "katex.render(tex,s,{"
+            "displayMode:s.classList.contains('math-display'),"
+            "throwOnError:false"
+            "});"
+            "s.dataset.rendered='1';"
+            "}catch(e){s.textContent='[math error: '+e.message+']';}"
+            "});"
             "};"
         )
     if music_engine:
