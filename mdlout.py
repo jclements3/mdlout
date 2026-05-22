@@ -109,6 +109,14 @@ _fn_defs: dict[str, str] = {}
 _html_headings: list[tuple[int, str, str]] = []
 _html_toc_requested: bool = False
 
+# Alt text for every markdown image / @SVGFile / @IncludeGraphic emitted in
+# this build, in document order. Lout's SVG back end produces opaque graphics
+# that don't surface their source path or alt text; we keep the markdown
+# `![alt](url)` text here so the HTML scaffold can announce them to screen
+# readers via a visually-hidden landmark list (one <figure role="img"
+# aria-label="..."> per entry).
+_html_image_alts: list[tuple[str, str]] = []  # (alt, url)
+
 # Output format the current build targets. Set by _build_once before
 # generate_lout runs. Read by code paths that need to emit HTML-specific
 # markers (e.g. footnote refs, TOC placeholders) into the Lout stream.
@@ -131,6 +139,7 @@ def _reset_xref_state() -> None:
     _fn_defs.clear()
     _html_headings.clear()
     _highlight_langs.clear()
+    _html_image_alts.clear()
     global _cite_format, _html_toc_requested
     _cite_format = 'numeric'
     _html_toc_requested = False
@@ -465,6 +474,10 @@ def _convert_inline_inner(text: str) -> str:
         label = m.group(3)
         num = _fig_labels.get(label, '?')
         global _needs_svgmacros
+        # Record alt text for HTML a11y annotation. The visible caption is
+        # already rendered by Lout below; this list feeds the scaffold's
+        # hidden <figure role="img" aria-label> sidecar (screen readers).
+        _html_image_alts.append((alt or f'Figure {num}', url))
         if url.lower().endswith('.svg'):
             _needs_svgmacros = True
             graphic = f'@SVGFile {{ "{url}" }}'
@@ -482,8 +495,12 @@ def _convert_inline_inner(text: str) -> str:
     # back-end inlines the file's contents verbatim); everything else falls
     # back to @IncludeGraphic.
     def _image_repl(m: re.Match) -> str:
+        alt = m.group(1)
         url = m.group(2)
         global _needs_svgmacros
+        # Capture alt for HTML a11y; Lout's SVG back end doesn't propagate
+        # this so we surface it through a hidden landmark in the scaffold.
+        _html_image_alts.append((alt or url, url))
         if url.lower().endswith('.svg'):
             _needs_svgmacros = True
             return _ph_put(f'@SVGFile {{ "{url}" }}')
@@ -2308,6 +2325,8 @@ def _build_html_scaffold(
     music_engine: bool = True,
     embed_fonts: bool = True,
     highlight: bool = True,
+    lang: str = 'en',
+    a11y: bool = True,
 ) -> tuple[str, dict[str, str | None]]:
     """Wrap raw SVG output from lout -G in a self-contained HTML5 document.
 
@@ -2547,19 +2566,102 @@ def _build_html_scaffold(
         )
         head = '\n'.join(head_parts)
 
+    # ---- A11y scaffolding ---------------------------------------------------
+    # WCAG 2.1: surface a meaningful landmark structure (skip-link, <main>,
+    # <header>, <nav>, <article>, <aside>) plus an image-alt manifest so
+    # screen-reader users can navigate a document whose visible content is
+    # otherwise locked inside opaque <svg> page renders. The PDF/PS output is
+    # untouched -- this branch only fires for HTML.
+    a11y_lang = lang or 'en'
+    if a11y:
+        head_parts.append(
+            '<style>'
+            # Skip-link: hidden until focused (WCAG 2.4.1 bypass blocks).
+            '.skip-link{position:absolute;top:-40px;left:0;background:#000;'
+            'color:#fff;padding:.5em 1em;z-index:1000;text-decoration:none}'
+            '.skip-link:focus{top:0}'
+            # Visible focus ring on every focusable element (WCAG 2.4.7).
+            'a:focus,button:focus,[tabindex]:focus{outline:2px solid #0645ad;'
+            'outline-offset:2px}'
+            # Visually hidden but screen-reader-readable list of image alts.
+            '.mdlout-img-alts{position:absolute;left:-9999px;width:1px;'
+            'height:1px;overflow:hidden}'
+            # <header><p> duplicates the visible title baked into the SVG;
+            # hide visually but leave it in the AT tree as a landmark name.
+            '.mdlout-doc-title{position:absolute;left:-9999px;width:1px;'
+            'height:1px;overflow:hidden}'
+            # Make sure the SVG itself doesn't trap focus when tabbing past.
+            'svg.lout-page{outline:none}'
+            '</style>'
+        )
+        head = '\n'.join(head_parts)
+
     body_parts = []
+    if a11y:
+        body_parts.append(
+            '<a href="#main" class="skip-link">Skip to content</a>'
+        )
+        # <header> as a landmark only -- the visible title and any markdown
+        # # H1 already render inside the SVG, and the hidden-anchor block
+        # below carries the H1/H2/... structure for screen-reader navigation.
+        # Adding a second <h1> here would corrupt the heading outline.
+        body_parts.append(
+            '<header role="banner" aria-label="Document header">'
+            f'<p class="mdlout-doc-title">{_html_escape(title)}</p>'
+            '</header>'
+        )
     if head_anchors:
         body_parts.append(head_anchors)
+    # Image alt manifest: one <figure role="img" aria-label="..."> per
+    # markdown image, in source order. Hidden visually (the rendered glyphs
+    # live inside the SVG) but announced by AT.
+    if a11y and _html_image_alts:
+        body_parts.append('<div class="mdlout-img-alts" aria-hidden="false">')
+        body_parts.append(
+            '<h2>Images</h2>'
+        )
+        for alt, url in _html_image_alts:
+            body_parts.append(
+                f'<figure role="img" aria-label="{_html_escape(alt)}">'
+                f'<figcaption>{_html_escape(alt)}'
+                f' (<span class="img-src">{_html_escape(url)}</span>)'
+                f'</figcaption></figure>'
+            )
+        body_parts.append('</div>')
     if toc_html:
+        # If a11y is on, wrap the TOC in <nav> with aria-label so screen
+        # readers can target it directly. _build_html_toc already emits
+        # <nav class="toc">, so we don't double-wrap; just patch aria-label.
+        if a11y:
+            toc_html = toc_html.replace(
+                '<nav class="toc">',
+                '<nav class="toc" aria-label="Table of contents">',
+                1,
+            )
         body_parts.append(toc_html)
-    body_parts.append(svg)
+    if a11y:
+        body_parts.append('<main id="main" role="main" aria-label="Document body">')
+        body_parts.append('<article aria-label="Rendered document pages">')
+        body_parts.append(svg)
+        body_parts.append('</article>')
+        body_parts.append('</main>')
+    else:
+        body_parts.append(svg)
     if footnotes_html:
+        # _build_html_footnotes emits <aside class="footnotes">; add an
+        # aria-label so screen-reader rotor lists name it clearly.
+        if a11y:
+            footnotes_html = footnotes_html.replace(
+                '<aside class="footnotes">',
+                '<aside class="footnotes" aria-label="Footnotes">',
+                1,
+            )
         body_parts.append(footnotes_html)
     body_inner = '\n'.join(body_parts)
 
     return (
         '<!DOCTYPE html>\n'
-        f'<html lang="en">\n<head>\n{head}\n</head>\n'
+        f'<html lang="{_html_escape(a11y_lang)}">\n<head>\n{head}\n</head>\n'
         f'<body>\n{body_inner}\n'
         f'<script>{init_js}</script>\n'
         '</body>\n</html>\n'
@@ -2684,6 +2786,46 @@ def _html_escape(s: str) -> str:
     )
 
 
+# Mapping from Lout @InitialLanguage names (a sampling of the most-common
+# language packs in lout/include/lang*) to BCP-47 codes for <html lang>.
+# Anything not in the table passes through unchanged so users can already
+# write a BCP-47 tag like "en-GB" in their frontmatter if they want.
+_LOUT_LANG_TO_BCP47 = {
+    'english':     'en',
+    'ukenglish':   'en-GB',
+    'usenglish':   'en-US',
+    'french':      'fr',
+    'german':      'de',
+    'oldgerman':   'de',
+    'spanish':     'es',
+    'italian':     'it',
+    'portuguese':  'pt',
+    'dutch':       'nl',
+    'swedish':     'sv',
+    'norwegian':   'no',
+    'danish':      'da',
+    'finnish':     'fi',
+    'russian':     'ru',
+    'czech':       'cs',
+    'slovak':      'sk',
+    'polish':      'pl',
+    'hungarian':   'hu',
+    'croatian':    'hr',
+    'catalan':     'ca',
+}
+
+
+def _lout_lang_to_bcp47(lout_lang: str | None) -> str | None:
+    """Translate a Lout @InitialLanguage value (e.g. 'English') to a BCP-47
+    code (e.g. 'en') so we can put it in <html lang="...">. Unknown inputs
+    are returned as-is (lowercased) so authors can pass through a real
+    BCP-47 tag already. None / empty -> None."""
+    if not lout_lang:
+        return None
+    key = lout_lang.strip().lower().replace('-', '').replace(' ', '')
+    return _LOUT_LANG_TO_BCP47.get(key, lout_lang.strip())
+
+
 def _run_ps2pdf(ps_file: str, pdf_file: str) -> None:
     """Convert PostScript to PDF using ps2pdf (Ghostscript)."""
     ps2pdf = shutil.which('ps2pdf')
@@ -2805,6 +2947,16 @@ def _build_once(args) -> str | None:
                 except RuntimeError as e:
                     print(f'  text-as-paths disabled: {e}', file=sys.stderr)
             title = frontmatter.get('title') or input_stem
+            # Resolve <html lang="...">: prefer an explicit `html-lang`
+            # frontmatter field (BCP-47 friendly), otherwise reuse the
+            # Lout `language` field by mapping common names down to two-
+            # letter codes, otherwise default to "en".
+            html_lang = (
+                frontmatter.get('html-lang')
+                or frontmatter.get('html_lang')
+                or _lout_lang_to_bcp47(frontmatter.get('language'))
+                or 'en'
+            )
             html, asset_info = _build_html_scaffold(
                 svg,
                 title,
@@ -2813,6 +2965,8 @@ def _build_once(args) -> str | None:
                 music_engine=not args.no_music_engine,
                 embed_fonts=not args.no_font_embedding,
                 highlight=not args.no_highlight,
+                lang=html_lang,
+                a11y=not getattr(args, 'no_a11y', False),
             )
             # Inject the live-reload <script> just before </body> so the
             # browser opens an EventSource to /events. Only active in
@@ -3083,6 +3237,13 @@ def main() -> None:
              'blocks. With highlighting on (default), HTML-mode code blocks '
              'render as a <pre><code class="language-XYZ"> the browser '
              'colourises via the highlight.js CDN.',
+    )
+    parser.add_argument(
+        '--no-a11y', action='store_true',
+        help='Omit accessibility scaffolding (semantic landmarks, skip link, '
+             'image-alt manifest, focus-ring styles) from the HTML output. '
+             'Produces marginally smaller HTML but fails WCAG 2.1 AA on '
+             'multiple criteria; only use for diff/regression tooling.',
     )
     parser.add_argument(
         '--text-as-paths', action='store_true',
