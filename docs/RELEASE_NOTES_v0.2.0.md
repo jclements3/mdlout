@@ -52,12 +52,31 @@ bit-identically; `z49.c` is frozen.
 
 Full details: see [CHANGELOG.md](../CHANGELOG.md#020---2026-05-22).
 
-## How to create the GitHub release (manual instructions)
+## How to publish the GitHub release (manual instructions)
 
-The automated `gh release create` step was deferred for v0.2.0
-because the same commit that carries the updated CHANGELOG also
-adds `.github/workflows/ci.yml` + `user-guide-diff.yml`, and the
-current `gh` token is missing the `workflow` OAuth scope.
+The automated `gh release create` step needs the `workflow` OAuth
+scope because the v0.2.0 commit chain includes
+`.github/workflows/ci.yml` + `user-guide-diff.yml`. The release
+was attempted in non-interactive automation, succeeded as a tag
+on the default branch tip (3f4d8af, which lacks the updated
+CHANGELOG), and was then rolled back — both the GitHub release
+and the remote tag — so it can be republished cleanly against the
+correct commit.
+
+Current state:
+
+- Local `v0.2.0` annotated tag exists, points at `f86faca` (the
+  commit on top of the workflows + CHANGELOG cut), and contains
+  the message `mdlout v0.2.0 — SVG/HTML as primary output,
+  accessibility, PS-vs-SVG parity`.
+- Local branch `main` is 2 commits ahead of `origin/main`
+  (`dc1be74` workflows + CHANGELOG re-cut, `f86faca` this notes
+  file).
+- No release and no `v0.2.0` tag on `origin`. There is no name
+  collision; the recreate path is safe.
+- The companion submodule tag `svg-backend-v0.2` was pushed
+  successfully to the `fork` remote (jclements3/lout) and points
+  at commit `a3e9d04` on branch `svg-backend`.
 
 To finish the release:
 
@@ -66,21 +85,16 @@ To finish the release:
 
        gh auth refresh -s workflow
 
-2. Push the v0.2.0 commit and tag (the tag is already created
-   locally and points at `HEAD`):
+2. Push the v0.2.0 commit chain and tag together. The tag is
+   already created locally and points at `f86faca`; pushing the
+   branch first ensures the commit is on the remote when the tag
+   lands:
 
        git push origin main
        git push origin v0.2.0
 
-3. Publish the GitHub release. The body can be the contents of
-   this file (everything above the "How to create" section), or
-   the v0.2.0 section of `CHANGELOG.md`:
+3. Publish the GitHub release with this file as the body:
 
        gh release create v0.2.0 \
          --title "v0.2.0 — SVG/HTML output, accessibility, PS-vs-SVG parity" \
-         --notes-file docs/RELEASE_NOTES_v0.2.0.md \
-         --latest
-
-The submodule tag `svg-backend-v0.2` has already been pushed to
-`https://github.com/jclements3/lout` (the `fork` remote) and points
-at commit `a3e9d04` on branch `svg-backend`.
+         --notes-file docs/RELEASE_NOTES_v0.2.0.md
