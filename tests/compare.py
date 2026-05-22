@@ -30,7 +30,9 @@ from __future__ import annotations
 import html
 import json
 import struct
+import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 # ----------------------------------------------------------------------
@@ -332,6 +334,329 @@ th { background: #f3f3f3; text-align: left; }
 
 
 # ----------------------------------------------------------------------
+# Bisect: localize the lines in a snippet responsible for a diff.
+# ----------------------------------------------------------------------
+# Line prefixes that must always be kept (framing/preamble/postamble).
+_FRAMING_PREFIXES = (
+    "@SysInclude",
+    "@Include",
+    "@Use",
+)
+# Line patterns that open/close the document body; we keep these too.
+_FRAMING_SUBSTRINGS = (
+    "@Begin",
+    "@End",
+)
+
+
+def _line_is_framing(line: str) -> bool:
+    ls = line.strip()
+    if not ls or ls.startswith("#"):
+        return True
+    for pref in _FRAMING_PREFIXES:
+        if ls.startswith(pref):
+            return True
+    # @Doc @Text @Begin / @Report ... / @End @Text
+    for sub in _FRAMING_SUBSTRINGS:
+        if sub in ls and ls.startswith("@"):
+            return True
+    return False
+
+
+def _split_into_blocks(text: str) -> list[tuple[int, int, str]]:
+    """Split a .lt source into atomic blocks. Coarse-grain when possible
+    (blank-line separated paragraphs), fine-grain (line-by-line) when the
+    file is dense. Returns [(start_line, end_line, block_text), ...]
+    (1-indexed, inclusive). Each block is either entirely framing or
+    entirely removable -- never mixed."""
+    lines = text.splitlines(keepends=True)
+    n = len(lines)
+    blocks: list[tuple[int, int, str]] = []
+    i = 0
+    while i < n:
+        # Group consecutive blank lines as a single framing block.
+        if lines[i].strip() == "":
+            start = i
+            while i < n and lines[i].strip() == "":
+                i += 1
+            blocks.append((start + 1, i, "".join(lines[start:i])))
+            continue
+        # Group consecutive framing lines as one framing block.
+        if _line_is_framing(lines[i]):
+            start = i
+            while i < n and lines[i].strip() != "" and _line_is_framing(lines[i]):
+                i += 1
+            blocks.append((start + 1, i, "".join(lines[start:i])))
+            continue
+        # Group consecutive removable lines as individual single-line blocks
+        # so the bisector can excise them at line granularity.
+        # (One line per block keeps things simple; the search still
+        # binary-searches over the body_idxs list.)
+        blocks.append((i + 1, i + 1, lines[i]))
+        i += 1
+    return blocks
+
+
+def _is_framing(block_text: str) -> bool:
+    stripped = block_text.strip()
+    if not stripped:
+        return True
+    for line in stripped.splitlines():
+        if not _line_is_framing(line):
+            return False
+    return True
+
+
+def _render_and_diff(
+    lt_text: str,
+    name: str,
+    repo_dir: Path,
+    tmp_dir: Path,
+    ref_ps_png: Path,
+) -> tuple[float | None, float | None]:
+    """Render the given .lt source through lout's PS and SVG backends,
+    rasterize the first page of each, and compute (pixel_diff_ratio,
+    ssim) against the given reference PS PNG. Returns (None, None) on
+    rendering failure."""
+    lout_dir = repo_dir / "lout"
+    lout_bin = lout_dir / "lout"
+    if not lout_bin.exists():
+        return (None, None)
+
+    lt_path = tmp_dir / f"{name}.lt"
+    lt_path.write_text(lt_text, encoding="utf-8")
+    ps_path = tmp_dir / f"{name}.ps"
+    svg_path = tmp_dir / f"{name}.svg"
+    ps_png = tmp_dir / f"{name}.ps.png"
+    svg_png = tmp_dir / f"{name}.svg.png"
+    svg_norm = tmp_dir / f"{name}.svg.norm.png"
+    diff_png = tmp_dir / f"{name}.diff.png"
+
+    def lout(extra: list[str]) -> bool:
+        try:
+            subprocess.run(
+                [str(lout_bin),
+                 "-I", str(lout_dir / "include"),
+                 "-D", str(lout_dir / "data"),
+                 "-F", str(lout_dir / "font"),
+                 "-C", str(lout_dir / "maps"),
+                 "-H", str(lout_dir / "hyph"),
+                 "-s"] + extra + [str(lt_path)],
+                cwd=str(tmp_dir),
+                check=True, capture_output=True, timeout=60,
+            )
+            return True
+        except (subprocess.CalledProcessError, subprocess.TimeoutExpired,
+                FileNotFoundError):
+            return False
+
+    if not lout(["-o", str(ps_path)]):
+        return (None, None)
+    if not lout(["-G", "-o", str(svg_path)]):
+        return (None, None)
+
+    try:
+        subprocess.run(
+            ["gs", "-q", "-dSAFER", "-dNOPAUSE", "-dBATCH",
+             "-sDEVICE=png16m", "-r150", "-dFirstPage=1", "-dLastPage=1",
+             f"-sOutputFile={ps_png}", str(ps_path)],
+            check=True, capture_output=True, timeout=60,
+        )
+    except Exception:
+        return (None, None)
+
+    svg_for_rsvg = svg_path
+    try:
+        svg_text = svg_path.read_text(encoding="utf-8", errors="replace")
+    except Exception:
+        svg_text = ""
+    n_svg = svg_text.count("<svg ")
+    if n_svg > 1:
+        p1 = tmp_dir / f"{name}.svg.p1.svg"
+        out_lines: list[str] = []
+        in_svg = False
+        done = False
+        for line in svg_text.splitlines(keepends=True):
+            if done:
+                break
+            if line.startswith("<?xml") and not in_svg:
+                out_lines.append(line)
+                continue
+            if line.startswith("<svg "):
+                if not in_svg:
+                    in_svg = True
+                    out_lines.append(line)
+                    continue
+                else:
+                    break
+            if in_svg:
+                out_lines.append(line)
+                if line.startswith("</svg>"):
+                    done = True
+        p1.write_text("".join(out_lines), encoding="utf-8")
+        svg_for_rsvg = p1
+
+    try:
+        subprocess.run(
+            ["rsvg-convert", "-d", "150", "-p", "150", "-f", "png",
+             "-o", str(svg_png), str(svg_for_rsvg)],
+            check=True, capture_output=True, timeout=60,
+        )
+    except Exception:
+        return (None, None)
+
+    try:
+        geom = subprocess.run(
+            ["identify", "-format", "%wx%h", str(ref_ps_png)],
+            check=True, capture_output=True, timeout=30,
+        ).stdout.decode().strip()
+        subprocess.run(
+            ["convert", str(svg_png), "-background", "white",
+             "-gravity", "northwest", "-extent", geom, str(svg_norm)],
+            check=True, capture_output=True, timeout=30,
+        )
+    except Exception:
+        svg_norm = svg_png
+
+    try:
+        proc = subprocess.run(
+            ["compare", "-metric", "AE", "-fuzz", "2%",
+             str(ref_ps_png), str(svg_norm), str(diff_png)],
+            capture_output=True, timeout=60,
+        )
+        ae_raw = proc.stderr.decode().strip()
+        digits = "".join(c for c in ae_raw if c.isdigit())
+        ae = int(digits) if digits else None
+    except Exception:
+        ae = None
+
+    size = png_size(ref_ps_png)
+    pixel_diff_ratio = None
+    if size and ae is not None:
+        w, h = size
+        if w * h > 0:
+            pixel_diff_ratio = ae / float(w * h)
+
+    ssim_val = compute_ssim(ref_ps_png, svg_norm)
+    return (pixel_diff_ratio, ssim_val)
+
+
+def _is_failing(
+    pixel_diff_ratio: float | None,
+    ssim_val: float | None,
+    is_graphics: bool,
+) -> bool:
+    if pixel_diff_ratio is None:
+        return True
+    return classify(pixel_diff_ratio, ssim_val, is_graphics) == "FAIL"
+
+
+def _fmt_metrics(pr: float | None, sv: float | None) -> str:
+    pr_s = f"{pr:.4%}" if isinstance(pr, float) else "?"
+    sv_s = f"{sv:.4f}" if isinstance(sv, float) else "?"
+    return f"ratio={pr_s}, ssim={sv_s}"
+
+
+def bisect_snippet(name: str) -> int:
+    """Locate the smallest contiguous block range of a snippet that, when
+    kept (with the rest of the body removed), still reproduces a FAIL
+    verdict. Prints a localized line range and excerpt."""
+    script_dir = Path(__file__).resolve().parent
+    repo_dir = script_dir.parent
+    snip_dir = script_dir / "snippets"
+    out_dir = script_dir / "out"
+    lt_path = snip_dir / f"{name}.lt"
+    if not lt_path.exists():
+        print(f"bisect: snippet not found: {lt_path}", file=sys.stderr)
+        return 2
+
+    ref_ps_png = out_dir / f"{name}.ps.png"
+    if not ref_ps_png.exists():
+        print(f"bisect: reference PS PNG missing: {ref_ps_png}\n"
+              f"       Run tests/run_all.sh first.", file=sys.stderr)
+        return 2
+
+    is_graphics = name in GRAPHICS_HEAVY
+    full_text = lt_path.read_text(encoding="utf-8")
+    blocks = _split_into_blocks(full_text)
+    if not blocks:
+        print("bisect: snippet appears to be empty.", file=sys.stderr)
+        return 2
+
+    body_idxs = [i for i, (_, _, t) in enumerate(blocks) if not _is_framing(t)]
+    if not body_idxs:
+        print("bisect: no removable body blocks found "
+              "(snippet is all framing).", file=sys.stderr)
+        return 2
+
+    def assemble(keep_idxs: set[int]) -> str:
+        parts: list[str] = []
+        for i, (_, _, t) in enumerate(blocks):
+            if _is_framing(t) or i in keep_idxs:
+                parts.append(t)
+                if not t.endswith("\n"):
+                    parts.append("\n")
+                parts.append("\n")
+        return "".join(parts)
+
+    with tempfile.TemporaryDirectory(prefix=f"bisect_{name}_") as td:
+        tmp_dir = Path(td)
+        full_keep = set(body_idxs)
+        pr, sv = _render_and_diff(assemble(full_keep), name,
+                                  repo_dir, tmp_dir, ref_ps_png)
+        if not _is_failing(pr, sv, is_graphics):
+            print(f"bisect: snippet {name!r} currently PASSES "
+                  f"({_fmt_metrics(pr, sv)}). Nothing to localize.")
+            return 0
+        print(f"bisect: full snippet FAILS ({_fmt_metrics(pr, sv)}); "
+              f"searching among {len(body_idxs)} body block(s)...")
+
+        lo = 0
+        hi = len(body_idxs)
+        steps = 0
+        max_steps = 32
+        while hi - lo > 1 and steps < max_steps:
+            steps += 1
+            mid = (lo + hi) // 2
+            left_keep = set(body_idxs[lo:mid])
+            pr_l, sv_l = _render_and_diff(assemble(left_keep), name,
+                                          repo_dir, tmp_dir, ref_ps_png)
+            if _is_failing(pr_l, sv_l, is_graphics):
+                print(f"  step {steps}: keep blocks [{lo}..{mid - 1}] "
+                      f"-> FAIL ({_fmt_metrics(pr_l, sv_l)})")
+                hi = mid
+                continue
+            right_keep = set(body_idxs[mid:hi])
+            pr_r, sv_r = _render_and_diff(assemble(right_keep), name,
+                                          repo_dir, tmp_dir, ref_ps_png)
+            if _is_failing(pr_r, sv_r, is_graphics):
+                print(f"  step {steps}: keep blocks [{mid}..{hi - 1}] "
+                      f"-> FAIL ({_fmt_metrics(pr_r, sv_r)})")
+                lo = mid
+                continue
+            print(f"  step {steps}: neither half alone fails "
+                  f"(left {_fmt_metrics(pr_l, sv_l)}, "
+                  f"right {_fmt_metrics(pr_r, sv_r)}); "
+                  f"diff is distributed across both halves.")
+            break
+
+    final_idxs = body_idxs[lo:hi]
+    if not final_idxs:
+        print("bisect: could not localize a culprit block.")
+        return 1
+    start_line = blocks[final_idxs[0]][0]
+    end_line = blocks[final_idxs[-1]][1]
+    excerpt = "\n".join(blocks[i][2].rstrip("\n") for i in final_idxs)
+    print()
+    print(f"Diff localized to lines {start_line}-{end_line} "
+          f"({len(final_idxs)} block(s)):")
+    print("-" * 60)
+    print(excerpt)
+    print("-" * 60)
+    return 0
+
+
+# ----------------------------------------------------------------------
 # Main.
 # ----------------------------------------------------------------------
 def main() -> int:
@@ -442,4 +767,6 @@ def main() -> int:
 
 
 if __name__ == "__main__":
+    if len(sys.argv) >= 3 and sys.argv[1] == "--bisect":
+        sys.exit(bisect_snippet(sys.argv[2]))
     sys.exit(main())

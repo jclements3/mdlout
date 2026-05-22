@@ -1,0 +1,215 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<title>mdlout per-snippet history</title>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+       Helvetica, Arial, sans-serif; margin: 1.5rem; color: #1c1c1c; }
+h1 { margin-top: 0; }
+h2 { margin: 1.2rem 0 0.4rem 0; font-size: 1.05rem; }
+.layout { display: flex; gap: 1.5rem; align-items: flex-start; }
+.sidebar { flex: 0 0 240px; max-height: 80vh; overflow-y: auto;
+           border: 1px solid #ddd; border-radius: 4px; padding: 0.4rem; }
+.sidebar ul { list-style: none; padding: 0; margin: 0; }
+.sidebar li { padding: 0.22rem 0.4rem; font-size: 0.86rem;
+              cursor: pointer; border-radius: 3px; }
+.sidebar li:hover { background: #f3f3f3; }
+.sidebar li.active { background: #d6e5ff; font-weight: 600; }
+.main { flex: 1; min-width: 0; }
+.chart { background:#fff; border:1px solid #ddd; display:block;
+         max-width: 100%; }
+.chart-title { font-weight: 600; margin: 0 0 0.3rem 0; }
+.chart-subtitle { font-size: 0.8rem; color:#555; margin: 0 0 0.4rem 0; }
+.muted { color:#777; }
+.panel { margin: 0 0 1.2rem 0; }
+table { border-collapse: collapse; margin-top: 1rem; }
+th, td { padding: 0.25rem 0.55rem; border-bottom: 1px solid #eee;
+         font-size: 0.82rem; font-variant-numeric: tabular-nums; }
+th { background:#f3f3f3; text-align: left; }
+code { font-family: ui-monospace, Menlo, Consolas, monospace;
+       font-size: 0.82rem; }
+.search { width: 100%; padding: 0.3rem; box-sizing: border-box;
+          margin-bottom: 0.4rem; font-size: 0.86rem; }
+.badge { display: inline-block; padding: 0.1rem 0.45rem; border-radius:
+         0.4rem; font-weight: 600; font-size: 0.72rem; }
+.b-pass-excellent { background: #bff0c8; color: #054d18; }
+.b-pass { background: #d6f5dc; color: #0e6620; }
+.b-fail { background: #f8d6d6; color: #8a1212; }
+.b-skip { background: #eaeaea; color: #555; }
+</style></head><body>
+<h1>mdlout per-snippet history</h1>
+<p class='muted'>62 snippet(s), 62 record(s) across 1 run(s).</p><div class='layout'><div class='sidebar'><input type='text' class='search' id='filter' placeholder='Filter snippets...'><ul id='snip-list'><li data-snippet='arrow_into_circle'><span class='badge b-pass-excellent'>P</span> arrow_into_circle</li><li data-snippet='box_curve'><span class='badge b-pass-excellent'>P</span> box_curve</li><li data-snippet='box_shadow'><span class='badge b-pass-excellent'>P</span> box_shadow</li><li data-snippet='box_shadow_overlap'><span class='badge b-pass-excellent'>P</span> box_shadow_overlap</li><li data-snippet='box_simple'><span class='badge b-pass-excellent'>P</span> box_simple</li><li data-snippet='bullet_list'><span class='badge b-pass-excellent'>P</span> bullet_list</li><li data-snippet='cite_basic'><span class='badge b-pass-excellent'>P</span> cite_basic</li><li data-snippet='code_highlight'><span class='badge b-pass-excellent'>P</span> code_highlight</li><li data-snippet='colour_mixed'><span class='badge b-pass-excellent'>P</span> colour_mixed</li><li data-snippet='colour_text'><span class='badge b-pass-excellent'>P</span> colour_text</li><li data-snippet='crossref_pageof'><span class='badge b-pass-excellent'>P</span> crossref_pageof</li><li data-snippet='diag_arrow_curved'><span class='badge b-pass-excellent'>P</span> diag_arrow_curved</li><li data-snippet='diag_arrow_solid'><span class='badge b-pass-excellent'>P</span> diag_arrow_solid</li><li data-snippet='diag_arrowstyle_gallery'><span class='badge b-pass-excellent'>P</span> diag_arrowstyle_gallery</li><li data-snippet='diag_ellipse_with_tag'><span class='badge b-pass-excellent'>P</span> diag_ellipse_with_tag</li><li data-snippet='diag_labels_complex'><span class='badge b-pass-excellent'>P</span> diag_labels_complex</li><li data-snippet='diag_multi_link'><span class='badge b-pass-excellent'>P</span> diag_multi_link</li><li data-snippet='diag_multicol'><span class='badge b-pass-excellent'>P</span> diag_multicol</li><li data-snippet='diag_syntax'><span class='badge b-pass-excellent'>P</span> diag_syntax</li><li data-snippet='diag_tree_simple'><span class='badge b-pass-excellent'>P</span> diag_tree_simple</li><li data-snippet='display_overhead'><span class='badge b-pass-excellent'>P</span> display_overhead</li><li data-snippet='eq_basic'><span class='badge b-pass-excellent'>P</span> eq_basic</li><li data-snippet='eq_braced_systems'><span class='badge b-pass-excellent'>P</span> eq_braced_systems</li><li data-snippet='eq_continued_fraction'><span class='badge b-pass-excellent'>P</span> eq_continued_fraction</li><li data-snippet='eq_integral_summation'><span class='badge b-pass-excellent'>P</span> eq_integral_summation</li><li data-snippet='eq_matrix'><span class='badge b-pass-excellent'>P</span> eq_matrix</li><li data-snippet='eq_matrix_3x3'><span class='badge b-pass-excellent'>P</span> eq_matrix_3x3</li><li data-snippet='eq_matrix_4x4'><span class='badge b-pass-excellent'>P</span> eq_matrix_4x4</li><li data-snippet='eq_nested_supsub'><span class='badge b-pass-excellent'>P</span> eq_nested_supsub</li><li data-snippet='fig_multi'><span class='badge b-pass-excellent'>P</span> fig_multi</li><li data-snippet='fig_numbering'><span class='badge b-pass-excellent'>P</span> fig_numbering</li><li data-snippet='footnote_wired'><span class='badge b-pass-excellent'>P</span> footnote_wired</li><li data-snippet='graph_axes_negative'><span class='badge b-pass-excellent'>P</span> graph_axes_negative</li><li data-snippet='graph_log_scale'><span class='badge b-pass-excellent'>P</span> graph_log_scale</li><li data-snippet='graphic_circle'><span class='badge b-pass-excellent'>P</span> graphic_circle</li><li data-snippet='graphic_line'><span class='badge b-pass-excellent'>P</span> graphic_line</li><li data-snippet='graphic_stress'><span class='badge b-pass-excellent'>P</span> graphic_stress</li><li data-snippet='graphic_trig'><span class='badge b-pass-excellent'>P</span> graphic_trig</li><li data-snippet='headings'><span class='badge b-pass-excellent'>P</span> headings</li><li data-snippet='indented_code'><span class='badge b-pass-excellent'>P</span> indented_code</li><li data-snippet='index_basic'><span class='badge b-pass-excellent'>P</span> index_basic</li><li data-snippet='multi_column'><span class='badge b-pass-excellent'>P</span> multi_column</li><li data-snippet='numbered_list'><span class='badge b-pass-excellent'>P</span> numbered_list</li><li data-snippet='paragraph_fill'><span class='badge b-pass-excellent'>P</span> paragraph_fill</li><li data-snippet='references_basic'><span class='badge b-pass-excellent'>P</span> references_basic</li><li data-snippet='rule_full'><span class='badge b-pass-excellent'>P</span> rule_full</li><li data-snippet='rule_local'><span class='badge b-pass-excellent'>P</span> rule_local</li><li data-snippet='sym_greek_full'><span class='badge b-pass-excellent'>P</span> sym_greek_full</li><li data-snippet='sym_special'><span class='badge b-pass-excellent'>P</span> sym_special</li><li data-snippet='syntax_diag_repeat'><span class='badge b-pass-excellent'>P</span> syntax_diag_repeat</li><li data-snippet='table_align'><span class='badge b-pass-excellent'>P</span> table_align</li><li data-snippet='table_longtable'><span class='badge b-pass-excellent'>P</span> table_longtable</li><li data-snippet='table_multi_row'><span class='badge b-pass-excellent'>P</span> table_multi_row</li><li data-snippet='table_simple'><span class='badge b-pass-excellent'>P</span> table_simple</li><li data-snippet='table_spanned_columns'><span class='badge b-pass-excellent'>P</span> table_spanned_columns</li><li data-snippet='text_basic'><span class='badge b-pass-excellent'>P</span> text_basic</li><li data-snippet='text_sizes'><span class='badge b-pass-excellent'>P</span> text_sizes</li><li data-snippet='text_styles'><span class='badge b-pass-excellent'>P</span> text_styles</li><li data-snippet='toc_auto'><span class='badge b-pass-excellent'>P</span> toc_auto</li><li data-snippet='transform_rotate'><span class='badge b-pass-excellent'>P</span> transform_rotate</li><li data-snippet='tree_4level'><span class='badge b-pass-excellent'>P</span> tree_4level</li><li data-snippet='tree_deep'><span class='badge b-pass-excellent'>P</span> tree_deep</li></ul></div><div class='main' id='detail'><p class='muted'>Select a snippet from the list.</p></div></div><script id='snip-data' type='application/json'>{"arrow_into_circle": [{"timestamp": "2026-05-22T22:40:50Z", "commit": "839c361a00e7a1b4168c2b770cf40ab003300157", "name": "arrow_into_circle", "status": "OK", "verdict": "PASS-EXCELLENT", "ae": 8750, "pixel_diff_ratio": 0.004023062493103321, "ssim": 0.994286607543779, "graphics_heavy": false}], "box_curve": [{"timestamp": "2026-05-22T22:40:50Z", "commit": "839c361a00e7a1b4168c2b770cf40ab003300157", "name": "box_curve", "status": "OK", "verdict": "PASS-EXCELLENT", "ae": 5679, "pixel_diff_ratio": 0.002611082502666716, "ssim": 0.9951741940394246, "graphics_heavy": true}], "box_shadow": [{"timestamp": "2026-05-22T22:40:50Z", "commit": "839c361a00e7a1b4168c2b770cf40ab003300157", "name": "box_shadow", "status": "OK", "verdict": "PASS-EXCELLENT", "ae": 5902, "pixel_diff_ratio": 0.00271361312391952, "ssim": 0.9972631245406517, "graphics_heavy": true}], "box_shadow_overlap": [{"timestamp": "2026-05-22T22:40:50Z", "commit": "839c361a00e7a1b4168c2b770cf40ab003300157", "name": "box_shadow_overlap", "status": "OK", "verdict": "PASS-EXCELLENT", "ae": 14513, "pixel_diff_ratio": 0.006672766395703829, "ssim": 0.9928264851615366, "graphics_heavy": false}], "box_simple": [{"timestamp": "2026-05-22T22:40:50Z", "commit": "839c361a00e7a1b4168c2b770cf40ab003300157", "name": "box_simple", "status": "OK", "verdict": "PASS-EXCELLENT", "ae": 5050, "pixel_diff_ratio": 0.0023218817817339168, "ssim": 0.9977043221414434, "graphics_heavy": false}], "bullet_list": [{"timestamp": "2026-05-22T22:40:50Z", "commit": "839c361a00e7a1b4168c2b770cf40ab003300157", "name": "bullet_list", "status": "OK", "verdict": "PASS-EXCELLENT", "ae": 4534, "pixel_diff_ratio": 0.002084636039283481, "ssim": 0.9974244205889105, "graphics_heavy": false}], "cite_basic": [{"timestamp": "2026-05-22T22:40:50Z", "commit": "839c361a00e7a1b4168c2b770cf40ab003300157", "name": "cite_basic", "status": "OK", "verdict": "PASS-EXCELLENT", "ae": 15358, "pixel_diff_ratio": 0.007061279287894949, "ssim": 0.9912741006273579, "graphics_heavy": false}], "code_highlight": [{"timestamp": "2026-05-22T22:40:50Z", "commit": "839c361a00e7a1b4168c2b770cf40ab003300157", "name": "code_highlight", "status": "OK", "verdict": "PASS-EXCELLENT", "ae": 6633, "pixel_diff_ratio": 0.003049711259057638, "ssim": 0.994738760354938, "graphics_heavy": false}], "colour_mixed": [{"timestamp": "2026-05-22T22:40:50Z", "commit": "839c361a00e7a1b4168c2b770cf40ab003300157", "name": "colour_mixed", "status": "OK", "verdict": "PASS-EXCELLENT", "ae": 10729, "pixel_diff_ratio": 0.004932964284400633, "ssim": 0.99424627557909, "graphics_heavy": true}], "colour_text": [{"timestamp": "2026-05-22T22:40:50Z", "commit": "839c361a00e7a1b4168c2b770cf40ab003300157", "name": "colour_text", "status": "OK", "verdict": "PASS-EXCELLENT", "ae": 8326, "pixel_diff_ratio": 0.0038281163791518006, "ssim": 0.995587055365782, "graphics_heavy": false}], "crossref_pageof": [{"timestamp": "2026-05-22T22:40:50Z", "commit": "839c361a00e7a1b4168c2b770cf40ab003300157", "name": "crossref_pageof", "status": "OK", "verdict": "PASS-EXCELLENT", "ae": 1869, "pixel_diff_ratio": 0.0008593261485268695, "ssim": 0.9993088580242839, "graphics_heavy": false}], "diag_arrow_curved": [{"timestamp": "2026-05-22T22:40:50Z", "commit": "839c361a00e7a1b4168c2b770cf40ab003300157", "name": "diag_arrow_curved", "status": "OK", "verdict": "PASS-EXCELLENT", "ae": 681, "pixel_diff_ratio": 0.0003131092066060985, "ssim": 0.999493827267403, "graphics_heavy": false}], "diag_arrow_solid": [{"timestamp": "2026-05-22T22:40:50Z", "commit": "839c361a00e7a1b4168c2b770cf40ab003300157", "name": "diag_arrow_solid", "status": "OK", "verdict": "PASS-EXCELLENT", "ae": 1312, "pixel_diff_ratio": 0.000603229484680178, "ssim": 0.9990670733414819, "graphics_heavy": false}], "diag_arrowstyle_gallery": [{"timestamp": "2026-05-22T22:40:50Z", "commit": "839c361a00e7a1b4168c2b770cf40ab003300157", "name": "diag_arrowstyle_gallery", "status": "OK", "verdict": "PASS-EXCELLENT", "ae": 8817, "pixel_diff_ratio": 0.004053867657336227, "ssim": 0.9915813464868451, "graphics_heavy": false}], "diag_ellipse_with_tag": [{"timestamp": "2026-05-22T22:40:50Z", "commit": "839c361a00e7a1b4168c2b770cf40ab003300157", "name": "diag_ellipse_with_tag", "status": "OK", "verdict": "PASS-EXCELLENT", "ae": 2058, "pixel_diff_ratio": 0.0009462242983779012, "ssim": 0.9971074149957593, "graphics_heavy": false}], "diag_labels_complex": [{"timestamp": "2026-05-22T22:40:50Z", "commit": "839c361a00e7a1b4168c2b770cf40ab003300157", "name": "diag_labels_complex", "status": "OK", "verdict": "PASS-EXCELLENT", "ae": 8983, "pixel_diff_ratio": 0.00413019090006253, "ssim": 0.9925738475189304, "graphics_heavy": true}], "diag_multi_link": [{"timestamp": "2026-05-22T22:40:50Z", "commit": "839c361a00e7a1b4168c2b770cf40ab003300157", "name": "diag_multi_link", "status": "OK", "verdict": "PASS-EXCELLENT", "ae": 2856, "pixel_diff_ratio": 0.001313127597748924, "ssim": 0.9982764930357224, "graphics_heavy": false}], "diag_multicol": [{"timestamp": "2026-05-22T22:40:50Z", "commit": "839c361a00e7a1b4168c2b770cf40ab003300157", "name": "diag_multicol", "status": "OK", "verdict": "PASS-EXCELLENT", "ae": 23453, "pixel_diff_ratio": 0.010783186817228823, "ssim": 0.9884653124663703, "graphics_heavy": false}], "diag_syntax": [{"timestamp": "2026-05-22T22:40:50Z", "commit": "839c361a00e7a1b4168c2b770cf40ab003300157", "name": "diag_syntax", "status": "OK", "verdict": "PASS-EXCELLENT", "ae": 2480, "pixel_diff_ratio": 0.0011402508551881414, "ssim": 0.998369692045649, "graphics_heavy": false}], "diag_tree_simple": [{"timestamp": "2026-05-22T22:40:50Z", "commit": "839c361a00e7a1b4168c2b770cf40ab003300157", "name": "diag_tree_simple", "status": "OK", "verdict": "PASS-EXCELLENT", "ae": 2438, "pixel_diff_ratio": 0.0011209401552212455, "ssim": 0.9986338648740908, "graphics_heavy": false}], "display_overhead": [{"timestamp": "2026-05-22T22:40:50Z", "commit": "839c361a00e7a1b4168c2b770cf40ab003300157", "name": "display_overhead", "status": "OK", "verdict": "PASS-EXCELLENT", "ae": 3413, "pixel_diff_ratio": 0.0015692242615956155, "ssim": 0.9974407164563313, "graphics_heavy": false}], "eq_basic": [{"timestamp": "2026-05-22T22:40:50Z", "commit": "839c361a00e7a1b4168c2b770cf40ab003300157", "name": "eq_basic", "status": "OK", "verdict": "PASS-EXCELLENT", "ae": 1066, "pixel_diff_ratio": 0.0004901239563026447, "ssim": 0.9988640386041766, "graphics_heavy": false}], "eq_braced_systems": [{"timestamp": "2026-05-22T22:40:50Z", "commit": "839c361a00e7a1b4168c2b770cf40ab003300157", "name": "eq_braced_systems", "status": "OK", "verdict": "PASS-EXCELLENT", "ae": 8190, "pixel_diff_ratio": 0.003765586493544709, "ssim": 0.9936551752725749, "graphics_heavy": false}], "eq_continued_fraction": [{"timestamp": "2026-05-22T22:40:50Z", "commit": "839c361a00e7a1b4168c2b770cf40ab003300157", "name": "eq_continued_fraction", "status": "OK", "verdict": "PASS-EXCELLENT", "ae": 12571, "pixel_diff_ratio": 0.005779876411520212, "ssim": 0.9922899545592414, "graphics_heavy": false}], "eq_integral_summation": [{"timestamp": "2026-05-22T22:40:50Z", "commit": "839c361a00e7a1b4168c2b770cf40ab003300157", "name": "eq_integral_summation", "status": "OK", "verdict": "PASS-EXCELLENT", "ae": 5673, "pixel_diff_ratio": 0.0026083238312428736, "ssim": 0.9952196388309908, "graphics_heavy": true}], "eq_matrix": [{"timestamp": "2026-05-22T22:40:50Z", "commit": "839c361a00e7a1b4168c2b770cf40ab003300157", "name": "eq_matrix", "status": "OK", "verdict": "PASS-EXCELLENT", "ae": 1933, "pixel_diff_ratio": 0.0008887519770478538, "ssim": 0.9984888343001972, "graphics_heavy": true}], "eq_matrix_3x3": [{"timestamp": "2026-05-22T22:40:50Z", "commit": "839c361a00e7a1b4168c2b770cf40ab003300157", "name": "eq_matrix_3x3", "status": "OK", "verdict": "PASS-EXCELLENT", "ae": 2815, "pixel_diff_ratio": 0.0012942766763526686, "ssim": 0.9978137119396481, "graphics_heavy": true}], "eq_matrix_4x4": [{"timestamp": "2026-05-22T22:40:50Z", "commit": "839c361a00e7a1b4168c2b770cf40ab003300157", "name": "eq_matrix_4x4", "status": "OK", "verdict": "PASS-EXCELLENT", "ae": 8183, "pixel_diff_ratio": 0.0037623680435502262, "ssim": 0.9946254969899944, "graphics_heavy": false}], "eq_nested_supsub": [{"timestamp": "2026-05-22T22:40:50Z", "commit": "839c361a00e7a1b4168c2b770cf40ab003300157", "name": "eq_nested_supsub", "status": "OK", "verdict": "PASS-EXCELLENT", "ae": 4769, "pixel_diff_ratio": 0.0021926840033839705, "ssim": 0.9971316335516733, "graphics_heavy": false}], "fig_multi": [{"timestamp": "2026-05-22T22:40:50Z", "commit": "839c361a00e7a1b4168c2b770cf40ab003300157", "name": "fig_multi", "status": "OK", "verdict": "PASS-EXCELLENT", "ae": 3363, "pixel_diff_ratio": 0.0015462353330635966, "ssim": 0.9976309941766934, "graphics_heavy": true}], "fig_numbering": [{"timestamp": "2026-05-22T22:40:50Z", "commit": "839c361a00e7a1b4168c2b770cf40ab003300157", "name": "fig_numbering", "status": "OK", "verdict": "PASS-EXCELLENT", "ae": 19771, "pixel_diff_ratio": 0.009090282120130945, "ssim": 0.9880974971214086, "graphics_heavy": false}], "footnote_wired": [{"timestamp": "2026-05-22T22:40:50Z", "commit": "839c361a00e7a1b4168c2b770cf40ab003300157", "name": "footnote_wired", "status": "OK", "verdict": "PASS-EXCELLENT", "ae": 9869, "pixel_diff_ratio": 0.004537554713649907, "ssim": 0.9950695473885319, "graphics_heavy": false}], "graph_axes_negative": [{"timestamp": "2026-05-22T22:40:50Z", "commit": "839c361a00e7a1b4168c2b770cf40ab003300157", "name": "graph_axes_negative", "status": "OK", "verdict": "PASS-EXCELLENT", "ae": 7028, "pixel_diff_ratio": 0.003231323794460588, "ssim": 0.9962748478455618, "graphics_heavy": false}], "graph_log_scale": [{"timestamp": "2026-05-22T22:40:50Z", "commit": "839c361a00e7a1b4168c2b770cf40ab003300157", "name": "graph_log_scale", "status": "OK", "verdict": "PASS-EXCELLENT", "ae": 9755, "pixel_diff_ratio": 0.004485139956596903, "ssim": 0.9941803688032517, "graphics_heavy": false}], "graphic_circle": [{"timestamp": "2026-05-22T22:40:50Z", "commit": "839c361a00e7a1b4168c2b770cf40ab003300157", "name": "graphic_circle", "status": "OK", "verdict": "PASS-EXCELLENT", "ae": 3365, "pixel_diff_ratio": 0.0015471548902048773, "ssim": 0.9979415078497381, "graphics_heavy": true}], "graphic_line": [{"timestamp": "2026-05-22T22:40:50Z", "commit": "839c361a00e7a1b4168c2b770cf40ab003300157", "name": "graphic_line", "status": "OK", "verdict": "PASS-EXCELLENT", "ae": 3144, "pixel_diff_ratio": 0.0014455438260933535, "ssim": 0.9976882640764644, "graphics_heavy": true}], "graphic_stress": [{"timestamp": "2026-05-22T22:40:50Z", "commit": "839c361a00e7a1b4168c2b770cf40ab003300157", "name": "graphic_stress", "status": "OK", "verdict": "PASS-EXCELLENT", "ae": 4772, "pixel_diff_ratio": 0.0021940633390958916, "ssim": 0.9953577417562206, "graphics_heavy": true}], "graphic_trig": [{"timestamp": "2026-05-22T22:40:50Z", "commit": "839c361a00e7a1b4168c2b770cf40ab003300157", "name": "graphic_trig", "status": "OK", "verdict": "PASS-EXCELLENT", "ae": 5862, "pixel_diff_ratio": 0.002695221981093905, "ssim": 0.99124687554178, "graphics_heavy": false}], "headings": [{"timestamp": "2026-05-22T22:40:50Z", "commit": "839c361a00e7a1b4168c2b770cf40ab003300157", "name": "headings", "status": "OK", "verdict": "PASS-EXCELLENT", "ae": 3450, "pixel_diff_ratio": 0.0015862360687093095, "ssim": 0.9984315500032467, "graphics_heavy": false}], "indented_code": [{"timestamp": "2026-05-22T22:40:50Z", "commit": "839c361a00e7a1b4168c2b770cf40ab003300157", "name": "indented_code", "status": "OK", "verdict": "PASS-EXCELLENT", "ae": 12499, "pixel_diff_ratio": 0.005746772354434104, "ssim": 0.9919958401120172, "graphics_heavy": false}], "index_basic": [{"timestamp": "2026-05-22T22:40:50Z", "commit": "839c361a00e7a1b4168c2b770cf40ab003300157", "name": "index_basic", "status": "OK", "verdict": "PASS-EXCELLENT", "ae": 1068, "pixel_diff_ratio": 0.0004910435134439254, "ssim": 0.9995816199849802, "graphics_heavy": false}], "multi_column": [{"timestamp": "2026-05-22T22:40:50Z", "commit": "839c361a00e7a1b4168c2b770cf40ab003300157", "name": "multi_column", "status": "OK", "verdict": "PASS-EXCELLENT", "ae": 20925, "pixel_diff_ratio": 0.009620866590649943, "ssim": 0.9898309994041492, "graphics_heavy": false}], "numbered_list": [{"timestamp": "2026-05-22T22:40:50Z", "commit": "839c361a00e7a1b4168c2b770cf40ab003300157", "name": "numbered_list", "status": "OK", "verdict": "PASS-EXCELLENT", "ae": 3929, "pixel_diff_ratio": 0.0018064700040460514, "ssim": 0.9979667247167604, "graphics_heavy": false}], "paragraph_fill": [{"timestamp": "2026-05-22T22:40:50Z", "commit": "839c361a00e7a1b4168c2b770cf40ab003300157", "name": "paragraph_fill", "status": "OK", "verdict": "PASS-EXCELLENT", "ae": 25161, "pixel_diff_ratio": 0.011568488615882591, "ssim": 0.9876447690293354, "graphics_heavy": false}], "references_basic": [{"timestamp": "2026-05-22T22:40:50Z", "commit": "839c361a00e7a1b4168c2b770cf40ab003300157", "name": "references_basic", "status": "OK", "verdict": "PASS-EXCELLENT", "ae": 1349, "pixel_diff_ratio": 0.000620241291793872, "ssim": 0.9994525452589059, "graphics_heavy": false}], "rule_full": [{"timestamp": "2026-05-22T22:40:50Z", "commit": "839c361a00e7a1b4168c2b770cf40ab003300157", "name": "rule_full", "status": "OK", "verdict": "PASS-EXCELLENT", "ae": 4081, "pixel_diff_ratio": 0.0018763563467833891, "ssim": 0.9975007761205887, "graphics_heavy": true}], "rule_local": [{"timestamp": "2026-05-22T22:40:50Z", "commit": "839c361a00e7a1b4168c2b770cf40ab003300157", "name": "rule_local", "status": "OK", "verdict": "PASS-EXCELLENT", "ae": 4357, "pixel_diff_ratio": 0.0020032552322801337, "ssim": 0.997345165209045, "graphics_heavy": true}], "sym_greek_full": [{"timestamp": "2026-05-22T22:40:50Z", "commit": "839c361a00e7a1b4168c2b770cf40ab003300157", "name": "sym_greek_full", "status": "OK", "verdict": "PASS-EXCELLENT", "ae": 4481, "pixel_diff_ratio": 0.002060267775039541, "ssim": 0.9958051741799545, "graphics_heavy": false}], "sym_special": [{"timestamp": "2026-05-22T22:40:50Z", "commit": "839c361a00e7a1b4168c2b770cf40ab003300157", "name": "sym_special", "status": "OK", "verdict": "PASS-EXCELLENT", "ae": 9958, "pixel_diff_ratio": 0.0045784750064369, "ssim": 0.992722037884445, "graphics_heavy": false}], "syntax_diag_repeat": [{"timestamp": "2026-05-22T22:40:50Z", "commit": "839c361a00e7a1b4168c2b770cf40ab003300157", "name": "syntax_diag_repeat", "status": "OK", "verdict": "PASS-EXCELLENT", "ae": 2168, "pixel_diff_ratio": 0.0009967999411483429, "ssim": 0.9984725453816014, "graphics_heavy": true}], "table_align": [{"timestamp": "2026-05-22T22:40:50Z", "commit": "839c361a00e7a1b4168c2b770cf40ab003300157", "name": "table_align", "status": "OK", "verdict": "PASS-EXCELLENT", "ae": 11148, "pixel_diff_ratio": 0.005125611505498952, "ssim": 0.9948767847409701, "graphics_heavy": false}], "table_longtable": [{"timestamp": "2026-05-22T22:40:50Z", "commit": "839c361a00e7a1b4168c2b770cf40ab003300157", "name": "table_longtable", "status": "OK", "verdict": "PASS-EXCELLENT", "ae": 31749, "pixel_diff_ratio": 0.014597509839261412, "ssim": 0.9824231761381456, "graphics_heavy": false}], "table_multi_row": [{"timestamp": "2026-05-22T22:40:50Z", "commit": "839c361a00e7a1b4168c2b770cf40ab003300157", "name": "table_multi_row", "status": "OK", "verdict": "PASS-EXCELLENT", "ae": 13065, "pixel_diff_ratio": 0.0060070070254165595, "ssim": 0.9944156207358177, "graphics_heavy": false}], "table_simple": [{"timestamp": "2026-05-22T22:40:50Z", "commit": "839c361a00e7a1b4168c2b770cf40ab003300157", "name": "table_simple", "status": "OK", "verdict": "PASS-EXCELLENT", "ae": 9165, "pixel_diff_ratio": 0.004213870599919079, "ssim": 0.9939144393599672, "graphics_heavy": false}], "table_spanned_columns": [{"timestamp": "2026-05-22T22:40:50Z", "commit": "839c361a00e7a1b4168c2b770cf40ab003300157", "name": "table_spanned_columns", "status": "OK", "verdict": "PASS-EXCELLENT", "ae": 19506, "pixel_diff_ratio": 0.008968440798911244, "ssim": 0.9930756900576062, "graphics_heavy": false}], "text_basic": [{"timestamp": "2026-05-22T22:40:50Z", "commit": "839c361a00e7a1b4168c2b770cf40ab003300157", "name": "text_basic", "status": "OK", "verdict": "PASS-EXCELLENT", "ae": 12339, "pixel_diff_ratio": 0.005673207783131644, "ssim": 0.9937254993013487, "graphics_heavy": false}], "text_sizes": [{"timestamp": "2026-05-22T22:40:50Z", "commit": "839c361a00e7a1b4168c2b770cf40ab003300157", "name": "text_sizes", "status": "OK", "verdict": "PASS-EXCELLENT", "ae": 6037, "pixel_diff_ratio": 0.0027756832309559715, "ssim": 0.9964688966081754, "graphics_heavy": false}], "text_styles": [{"timestamp": "2026-05-22T22:40:50Z", "commit": "839c361a00e7a1b4168c2b770cf40ab003300157", "name": "text_styles", "status": "OK", "verdict": "PASS-EXCELLENT", "ae": 7474, "pixel_diff_ratio": 0.003436385036966197, "ssim": 0.996358779731869, "graphics_heavy": false}], "toc_auto": [{"timestamp": "2026-05-22T22:40:50Z", "commit": "839c361a00e7a1b4168c2b770cf40ab003300157", "name": "toc_auto", "status": "OK", "verdict": "PASS-EXCELLENT", "ae": 5662, "pixel_diff_ratio": 0.002603266266965829, "ssim": 0.9973694990562908, "graphics_heavy": false}], "transform_rotate": [{"timestamp": "2026-05-22T22:40:50Z", "commit": "839c361a00e7a1b4168c2b770cf40ab003300157", "name": "transform_rotate", "status": "OK", "verdict": "PASS-EXCELLENT", "ae": 3528, "pixel_diff_ratio": 0.0016220987972192591, "ssim": 0.9981829757170884, "graphics_heavy": true}], "tree_4level": [{"timestamp": "2026-05-22T22:40:50Z", "commit": "839c361a00e7a1b4168c2b770cf40ab003300157", "name": "tree_4level", "status": "OK", "verdict": "PASS-EXCELLENT", "ae": 8026, "pixel_diff_ratio": 0.0036901828079596868, "ssim": 0.9953928620665126, "graphics_heavy": false}], "tree_deep": [{"timestamp": "2026-05-22T22:40:50Z", "commit": "839c361a00e7a1b4168c2b770cf40ab003300157", "name": "tree_deep", "status": "OK", "verdict": "PASS-EXCELLENT", "ae": 4272, "pixel_diff_ratio": 0.0019641740537757017, "ssim": 0.9978596752201391, "graphics_heavy": true}]}</script>
+<script>
+(function() {
+  var data = JSON.parse(document.getElementById('snip-data').textContent);
+  var list = document.getElementById('snip-list');
+  var detail = document.getElementById('detail');
+  var filter = document.getElementById('filter');
+
+  function fmtTs(ts) {
+    if (!ts) return '?';
+    return ts.slice(0, 16).replace('T', ' ');
+  }
+
+  function escapeXml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function drawChart(records, key, title, fmt, colour) {
+    var W = 640, H = 200, padL = 60, padR = 18, padT = 18, padB = 36;
+    var innerW = W - padL - padR, innerH = H - padT - padB;
+    var vals = [], times = [];
+    for (var i = 0; i < records.length; i++) {
+      var v = records[i][key];
+      if (typeof v === 'number' && isFinite(v)) {
+        vals.push(v);
+      } else {
+        vals.push(null);
+      }
+      times.push(records[i].timestamp || '');
+    }
+    var nums = vals.filter(function(v){return typeof v === 'number';});
+    if (nums.length === 0) {
+      return "<section class='panel'><p class='chart-title'>" + escapeXml(title) +
+             "</p><p class='muted'>No numeric data.</p></section>";
+    }
+    var vmin = Math.min.apply(null, nums);
+    var vmax = Math.max.apply(null, nums);
+    if (vmin === vmax) {
+      var eps = Math.max(Math.abs(vmin) * 0.01, 1e-6);
+      vmin -= eps; vmax += eps;
+    }
+    var n = records.length;
+    function xpos(i) {
+      if (n === 1) return padL + innerW / 2;
+      return padL + innerW * (i / (n - 1));
+    }
+    function ypos(v) {
+      return padT + innerH - innerH * (v - vmin) / (vmax - vmin);
+    }
+    var segs = [], cur = [];
+    var circles = '';
+    for (var i = 0; i < n; i++) {
+      if (typeof vals[i] === 'number') {
+        var x = xpos(i), y = ypos(vals[i]);
+        cur.push(x.toFixed(1) + ',' + y.toFixed(1));
+        circles += "<circle cx='" + x.toFixed(1) + "' cy='" + y.toFixed(1) +
+                   "' r='2.7' fill='" + colour + "'>" +
+                   "<title>" + escapeXml(fmt(vals[i])) + "  @  " +
+                   escapeXml(times[i]) + "</title></circle>";
+      } else {
+        if (cur.length >= 2) segs.push(cur);
+        cur = [];
+      }
+    }
+    if (cur.length >= 2) segs.push(cur);
+    var polylines = '';
+    for (var j = 0; j < segs.length; j++) {
+      polylines += "<polyline fill='none' stroke='" + colour +
+                   "' stroke-width='1.6' points='" + segs[j].join(' ') + "'/>";
+    }
+    var axes =
+      "<line x1='"+padL+"' y1='"+padT+"' x2='"+padL+"' y2='"+(padT+innerH)+
+      "' stroke='#888' stroke-width='0.8'/>" +
+      "<line x1='"+padL+"' y1='"+(padT+innerH)+"' x2='"+(padL+innerW)+
+      "' y2='"+(padT+innerH)+"' stroke='#888' stroke-width='0.8'/>";
+    var midY = padT + innerH / 2;
+    axes += "<line x1='"+padL+"' y1='"+midY.toFixed(1)+"' x2='"+(padL+innerW)+
+            "' y2='"+midY.toFixed(1)+"' stroke='#eee' stroke-width='0.8'/>";
+    var labels =
+      "<text x='"+(padL-4)+"' y='"+(padT+4)+"' text-anchor='end' font-size='10'>"+
+        escapeXml(fmt(vmax)) + "</text>" +
+      "<text x='"+(padL-4)+"' y='"+(midY+3).toFixed(1)+
+        "' text-anchor='end' font-size='10'>"+
+        escapeXml(fmt((vmin+vmax)/2)) + "</text>" +
+      "<text x='"+(padL-4)+"' y='"+(padT+innerH)+
+        "' text-anchor='end' font-size='10'>"+
+        escapeXml(fmt(vmin)) + "</text>";
+    var tickXml = '';
+    var ntick = Math.min(5, n);
+    for (var k = 0; k < ntick; k++) {
+      var idx = ntick === 1 ? 0 : Math.round(k * (n - 1) / (ntick - 1));
+      var tx = xpos(idx);
+      tickXml += "<text x='"+tx.toFixed(1)+"' y='"+(padT+innerH+14)+
+                 "' text-anchor='middle' font-size='9' fill='#555'>"+
+                 escapeXml(fmtTs(times[idx])) + "</text>";
+    }
+    var svg = "<svg class='chart' width='"+W+"' height='"+H+
+              "' viewBox='0 0 "+W+" "+H+"'>" +
+              axes + polylines + circles + labels + tickXml + "</svg>";
+    return "<section class='panel'><p class='chart-title'>" +
+           escapeXml(title) + "</p>" + svg + "</section>";
+  }
+
+  function fmt4(v) { return v.toFixed(4); }
+  function fmtPct(v) { return (v * 100).toFixed(3) + '%'; }
+
+  function renderSnippet(name) {
+    var rs = data[name] || [];
+    var html = "<h2>" + escapeXml(name) + "</h2>";
+    html += "<p class='chart-subtitle'>" + rs.length + " record(s).</p>";
+    html += drawChart(rs, 'pixel_diff_ratio',
+                      'AE diff_ratio over time', fmtPct, '#0a58ca');
+    html += drawChart(rs, 'ssim', 'SSIM over time', fmt4, '#6f42c1');
+
+    html += "<table><thead><tr><th>Timestamp</th><th>Commit</th>" +
+            "<th>Verdict</th><th>AE</th><th>diff_ratio</th><th>SSIM</th>" +
+            "</tr></thead><tbody>";
+    var sorted = rs.slice().reverse();
+    for (var i = 0; i < Math.min(sorted.length, 30); i++) {
+      var r = sorted[i];
+      var ratio = (typeof r.pixel_diff_ratio === 'number') ?
+                  (r.pixel_diff_ratio * 100).toFixed(3) + '%' : '&mdash;';
+      var ssim = (typeof r.ssim === 'number') ? r.ssim.toFixed(4) : '&mdash;';
+      var verdict = r.verdict || 'SKIP';
+      var cls = ({'PASS-EXCELLENT':'b-pass-excellent','PASS':'b-pass',
+                  'FAIL':'b-fail'})[verdict] || 'b-skip';
+      var ae = (r.ae === null || typeof r.ae === 'undefined') ?
+               '&mdash;' : escapeXml(r.ae);
+      html += "<tr><td>" + escapeXml(fmtTs(r.timestamp)) +
+              "</td><td><code>" + escapeXml((r.commit||'?').slice(0,12)) +
+              "</code></td>" +
+              "<td><span class='badge "+cls+"'>" + escapeXml(verdict) +
+              "</span></td>" +
+              "<td>" + ae + "</td><td>" + ratio + "</td><td>" + ssim +
+              "</td></tr>";
+    }
+    html += "</tbody></table>";
+    detail.innerHTML = html;
+  }
+
+  list.addEventListener('click', function(ev) {
+    var li = ev.target.closest('li[data-snippet]');
+    if (!li) return;
+    var items = list.querySelectorAll('li');
+    for (var i = 0; i < items.length; i++) items[i].classList.remove('active');
+    li.classList.add('active');
+    renderSnippet(li.getAttribute('data-snippet'));
+  });
+
+  filter.addEventListener('input', function() {
+    var q = filter.value.toLowerCase();
+    var items = list.querySelectorAll('li');
+    for (var i = 0; i < items.length; i++) {
+      var nm = items[i].getAttribute('data-snippet') || '';
+      items[i].style.display = (nm.toLowerCase().indexOf(q) >= 0) ? '' : 'none';
+    }
+  });
+
+  var latestSnip = null, latestTs = '';
+  Object.keys(data).forEach(function(nm) {
+    var rs = data[nm];
+    if (rs.length === 0) return;
+    var ts = rs[rs.length - 1].timestamp || '';
+    if (ts > latestTs) { latestTs = ts; latestSnip = nm; }
+  });
+  if (latestSnip) {
+    var target = list.querySelector("li[data-snippet='" +
+      latestSnip.replace(/'/g, "\\'") + "']");
+    if (target) {
+      target.classList.add('active');
+      renderSnippet(latestSnip);
+    }
+  }
+})();
+</script>
+</body></html>

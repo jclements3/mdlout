@@ -75,6 +75,7 @@ def collect_snippet_metrics(results_json: Path) -> dict:
             "snippets_total": 0,
             "mean_ae_ratio": None,
             "snippet_mean_ssim": None,
+            "snippets": [],
         }
     data = json.loads(results_json.read_text(encoding="utf-8"))
     counts = data.get("counts", {}) or {}
@@ -88,6 +89,7 @@ def collect_snippet_metrics(results_json: Path) -> dict:
             [s.get("pixel_diff_ratio") for s in snippets]
         ),
         "snippet_mean_ssim": safe_mean([s.get("ssim") for s in snippets]),
+        "snippets": snippets,
     }
 
 
@@ -759,6 +761,329 @@ def render_html(jsonl_path: Path, html_path: Path) -> None:
 
 
 # ----------------------------------------------------------------------
+# Per-snippet history (Item 2).
+# ----------------------------------------------------------------------
+def append_snippet_history(
+    snip_jsonl: Path,
+    timestamp: str,
+    commit: str,
+    snippets: list,
+) -> int:
+    """Append one JSON record per snippet to tests/snippet_history.jsonl.
+    Returns the count of records written."""
+    if not snippets:
+        return 0
+    with snip_jsonl.open("a", encoding="utf-8") as fh:
+        for s in snippets:
+            record = {
+                "timestamp": timestamp,
+                "commit": commit,
+                "name": s.get("name"),
+                "status": s.get("status"),
+                "verdict": s.get("verdict"),
+                "ae": s.get("ae"),
+                "pixel_diff_ratio": s.get("pixel_diff_ratio"),
+                "ssim": s.get("ssim"),
+                "graphics_heavy": bool(s.get("graphics_heavy", False)),
+            }
+            fh.write(json.dumps(record) + "\n")
+    return len(snippets)
+
+
+SNIPPET_HTML_HEAD = """<!doctype html>
+<html><head><meta charset="utf-8">
+<title>mdlout per-snippet history</title>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+       Helvetica, Arial, sans-serif; margin: 1.5rem; color: #1c1c1c; }
+h1 { margin-top: 0; }
+h2 { margin: 1.2rem 0 0.4rem 0; font-size: 1.05rem; }
+.layout { display: flex; gap: 1.5rem; align-items: flex-start; }
+.sidebar { flex: 0 0 240px; max-height: 80vh; overflow-y: auto;
+           border: 1px solid #ddd; border-radius: 4px; padding: 0.4rem; }
+.sidebar ul { list-style: none; padding: 0; margin: 0; }
+.sidebar li { padding: 0.22rem 0.4rem; font-size: 0.86rem;
+              cursor: pointer; border-radius: 3px; }
+.sidebar li:hover { background: #f3f3f3; }
+.sidebar li.active { background: #d6e5ff; font-weight: 600; }
+.main { flex: 1; min-width: 0; }
+.chart { background:#fff; border:1px solid #ddd; display:block;
+         max-width: 100%; }
+.chart-title { font-weight: 600; margin: 0 0 0.3rem 0; }
+.chart-subtitle { font-size: 0.8rem; color:#555; margin: 0 0 0.4rem 0; }
+.muted { color:#777; }
+.panel { margin: 0 0 1.2rem 0; }
+table { border-collapse: collapse; margin-top: 1rem; }
+th, td { padding: 0.25rem 0.55rem; border-bottom: 1px solid #eee;
+         font-size: 0.82rem; font-variant-numeric: tabular-nums; }
+th { background:#f3f3f3; text-align: left; }
+code { font-family: ui-monospace, Menlo, Consolas, monospace;
+       font-size: 0.82rem; }
+.search { width: 100%; padding: 0.3rem; box-sizing: border-box;
+          margin-bottom: 0.4rem; font-size: 0.86rem; }
+.badge { display: inline-block; padding: 0.1rem 0.45rem; border-radius:
+         0.4rem; font-weight: 600; font-size: 0.72rem; }
+.b-pass-excellent { background: #bff0c8; color: #054d18; }
+.b-pass { background: #d6f5dc; color: #0e6620; }
+.b-fail { background: #f8d6d6; color: #8a1212; }
+.b-skip { background: #eaeaea; color: #555; }
+</style></head><body>
+<h1>mdlout per-snippet history</h1>
+"""
+
+
+def render_snippet_history(snip_jsonl: Path, html_path: Path) -> None:
+    """Render snippet_history.html: vanilla-JS sidebar list of snippet
+    names; selecting one shows AE diff_ratio + SSIM line charts over
+    time. All data is embedded as JSON; charts are drawn client-side as
+    inline SVG paths -- no external deps."""
+    records: list[dict] = []
+    if snip_jsonl.exists():
+        for line in snip_jsonl.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                records.append(json.loads(line))
+            except json.JSONDecodeError:
+                continue
+
+    by_name: dict[str, list[dict]] = {}
+    for r in records:
+        nm = r.get("name")
+        if not nm:
+            continue
+        by_name.setdefault(nm, []).append(r)
+    for nm in by_name:
+        by_name[nm].sort(key=lambda r: r.get("timestamp", ""))
+
+    snippet_names = sorted(by_name.keys())
+
+    parts = [SNIPPET_HTML_HEAD]
+    if not snippet_names:
+        parts.append("<p class='muted'>No per-snippet history yet. "
+                     "Run <code>tests/run_all.sh</code>.</p></body></html>")
+        html_path.write_text("".join(parts), encoding="utf-8")
+        return
+
+    n_records = len(records)
+    n_runs = len({r.get("timestamp") for r in records})
+    parts.append(
+        f"<p class='muted'>{len(snippet_names)} snippet(s), "
+        f"{n_records} record(s) across {n_runs} run(s).</p>"
+    )
+
+    parts.append("<div class='layout'>")
+    parts.append("<div class='sidebar'>")
+    parts.append("<input type='text' class='search' id='filter' "
+                 "placeholder='Filter snippets...'>")
+    parts.append("<ul id='snip-list'>")
+    for nm in snippet_names:
+        latest = by_name[nm][-1]
+        verdict = latest.get("verdict") or "SKIP"
+        cls = {
+            "PASS-EXCELLENT": "b-pass-excellent",
+            "PASS": "b-pass",
+            "FAIL": "b-fail",
+        }.get(verdict, "b-skip")
+        parts.append(
+            f"<li data-snippet='{html.escape(nm)}'>"
+            f"<span class='badge {cls}'>{html.escape(verdict[:1])}</span> "
+            f"{html.escape(nm)}</li>"
+        )
+    parts.append("</ul></div>")
+
+    parts.append("<div class='main' id='detail'>")
+    parts.append("<p class='muted'>Select a snippet from the list.</p>")
+    parts.append("</div>")
+    parts.append("</div>")
+
+    data_blob = json.dumps(by_name)
+    parts.append("<script id='snip-data' type='application/json'>")
+    parts.append(data_blob.replace("</", "<\\/"))
+    parts.append("</script>")
+
+    parts.append(r"""
+<script>
+(function() {
+  var data = JSON.parse(document.getElementById('snip-data').textContent);
+  var list = document.getElementById('snip-list');
+  var detail = document.getElementById('detail');
+  var filter = document.getElementById('filter');
+
+  function fmtTs(ts) {
+    if (!ts) return '?';
+    return ts.slice(0, 16).replace('T', ' ');
+  }
+
+  function escapeXml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function drawChart(records, key, title, fmt, colour) {
+    var W = 640, H = 200, padL = 60, padR = 18, padT = 18, padB = 36;
+    var innerW = W - padL - padR, innerH = H - padT - padB;
+    var vals = [], times = [];
+    for (var i = 0; i < records.length; i++) {
+      var v = records[i][key];
+      if (typeof v === 'number' && isFinite(v)) {
+        vals.push(v);
+      } else {
+        vals.push(null);
+      }
+      times.push(records[i].timestamp || '');
+    }
+    var nums = vals.filter(function(v){return typeof v === 'number';});
+    if (nums.length === 0) {
+      return "<section class='panel'><p class='chart-title'>" + escapeXml(title) +
+             "</p><p class='muted'>No numeric data.</p></section>";
+    }
+    var vmin = Math.min.apply(null, nums);
+    var vmax = Math.max.apply(null, nums);
+    if (vmin === vmax) {
+      var eps = Math.max(Math.abs(vmin) * 0.01, 1e-6);
+      vmin -= eps; vmax += eps;
+    }
+    var n = records.length;
+    function xpos(i) {
+      if (n === 1) return padL + innerW / 2;
+      return padL + innerW * (i / (n - 1));
+    }
+    function ypos(v) {
+      return padT + innerH - innerH * (v - vmin) / (vmax - vmin);
+    }
+    var segs = [], cur = [];
+    var circles = '';
+    for (var i = 0; i < n; i++) {
+      if (typeof vals[i] === 'number') {
+        var x = xpos(i), y = ypos(vals[i]);
+        cur.push(x.toFixed(1) + ',' + y.toFixed(1));
+        circles += "<circle cx='" + x.toFixed(1) + "' cy='" + y.toFixed(1) +
+                   "' r='2.7' fill='" + colour + "'>" +
+                   "<title>" + escapeXml(fmt(vals[i])) + "  @  " +
+                   escapeXml(times[i]) + "</title></circle>";
+      } else {
+        if (cur.length >= 2) segs.push(cur);
+        cur = [];
+      }
+    }
+    if (cur.length >= 2) segs.push(cur);
+    var polylines = '';
+    for (var j = 0; j < segs.length; j++) {
+      polylines += "<polyline fill='none' stroke='" + colour +
+                   "' stroke-width='1.6' points='" + segs[j].join(' ') + "'/>";
+    }
+    var axes =
+      "<line x1='"+padL+"' y1='"+padT+"' x2='"+padL+"' y2='"+(padT+innerH)+
+      "' stroke='#888' stroke-width='0.8'/>" +
+      "<line x1='"+padL+"' y1='"+(padT+innerH)+"' x2='"+(padL+innerW)+
+      "' y2='"+(padT+innerH)+"' stroke='#888' stroke-width='0.8'/>";
+    var midY = padT + innerH / 2;
+    axes += "<line x1='"+padL+"' y1='"+midY.toFixed(1)+"' x2='"+(padL+innerW)+
+            "' y2='"+midY.toFixed(1)+"' stroke='#eee' stroke-width='0.8'/>";
+    var labels =
+      "<text x='"+(padL-4)+"' y='"+(padT+4)+"' text-anchor='end' font-size='10'>"+
+        escapeXml(fmt(vmax)) + "</text>" +
+      "<text x='"+(padL-4)+"' y='"+(midY+3).toFixed(1)+
+        "' text-anchor='end' font-size='10'>"+
+        escapeXml(fmt((vmin+vmax)/2)) + "</text>" +
+      "<text x='"+(padL-4)+"' y='"+(padT+innerH)+
+        "' text-anchor='end' font-size='10'>"+
+        escapeXml(fmt(vmin)) + "</text>";
+    var tickXml = '';
+    var ntick = Math.min(5, n);
+    for (var k = 0; k < ntick; k++) {
+      var idx = ntick === 1 ? 0 : Math.round(k * (n - 1) / (ntick - 1));
+      var tx = xpos(idx);
+      tickXml += "<text x='"+tx.toFixed(1)+"' y='"+(padT+innerH+14)+
+                 "' text-anchor='middle' font-size='9' fill='#555'>"+
+                 escapeXml(fmtTs(times[idx])) + "</text>";
+    }
+    var svg = "<svg class='chart' width='"+W+"' height='"+H+
+              "' viewBox='0 0 "+W+" "+H+"'>" +
+              axes + polylines + circles + labels + tickXml + "</svg>";
+    return "<section class='panel'><p class='chart-title'>" +
+           escapeXml(title) + "</p>" + svg + "</section>";
+  }
+
+  function fmt4(v) { return v.toFixed(4); }
+  function fmtPct(v) { return (v * 100).toFixed(3) + '%'; }
+
+  function renderSnippet(name) {
+    var rs = data[name] || [];
+    var html = "<h2>" + escapeXml(name) + "</h2>";
+    html += "<p class='chart-subtitle'>" + rs.length + " record(s).</p>";
+    html += drawChart(rs, 'pixel_diff_ratio',
+                      'AE diff_ratio over time', fmtPct, '#0a58ca');
+    html += drawChart(rs, 'ssim', 'SSIM over time', fmt4, '#6f42c1');
+
+    html += "<table><thead><tr><th>Timestamp</th><th>Commit</th>" +
+            "<th>Verdict</th><th>AE</th><th>diff_ratio</th><th>SSIM</th>" +
+            "</tr></thead><tbody>";
+    var sorted = rs.slice().reverse();
+    for (var i = 0; i < Math.min(sorted.length, 30); i++) {
+      var r = sorted[i];
+      var ratio = (typeof r.pixel_diff_ratio === 'number') ?
+                  (r.pixel_diff_ratio * 100).toFixed(3) + '%' : '&mdash;';
+      var ssim = (typeof r.ssim === 'number') ? r.ssim.toFixed(4) : '&mdash;';
+      var verdict = r.verdict || 'SKIP';
+      var cls = ({'PASS-EXCELLENT':'b-pass-excellent','PASS':'b-pass',
+                  'FAIL':'b-fail'})[verdict] || 'b-skip';
+      var ae = (r.ae === null || typeof r.ae === 'undefined') ?
+               '&mdash;' : escapeXml(r.ae);
+      html += "<tr><td>" + escapeXml(fmtTs(r.timestamp)) +
+              "</td><td><code>" + escapeXml((r.commit||'?').slice(0,12)) +
+              "</code></td>" +
+              "<td><span class='badge "+cls+"'>" + escapeXml(verdict) +
+              "</span></td>" +
+              "<td>" + ae + "</td><td>" + ratio + "</td><td>" + ssim +
+              "</td></tr>";
+    }
+    html += "</tbody></table>";
+    detail.innerHTML = html;
+  }
+
+  list.addEventListener('click', function(ev) {
+    var li = ev.target.closest('li[data-snippet]');
+    if (!li) return;
+    var items = list.querySelectorAll('li');
+    for (var i = 0; i < items.length; i++) items[i].classList.remove('active');
+    li.classList.add('active');
+    renderSnippet(li.getAttribute('data-snippet'));
+  });
+
+  filter.addEventListener('input', function() {
+    var q = filter.value.toLowerCase();
+    var items = list.querySelectorAll('li');
+    for (var i = 0; i < items.length; i++) {
+      var nm = items[i].getAttribute('data-snippet') || '';
+      items[i].style.display = (nm.toLowerCase().indexOf(q) >= 0) ? '' : 'none';
+    }
+  });
+
+  var latestSnip = null, latestTs = '';
+  Object.keys(data).forEach(function(nm) {
+    var rs = data[nm];
+    if (rs.length === 0) return;
+    var ts = rs[rs.length - 1].timestamp || '';
+    if (ts > latestTs) { latestTs = ts; latestSnip = nm; }
+  });
+  if (latestSnip) {
+    var target = list.querySelector("li[data-snippet='" +
+      latestSnip.replace(/'/g, "\\'") + "']");
+    if (target) {
+      target.classList.add('active');
+      renderSnippet(latestSnip);
+    }
+  }
+})();
+</script>
+</body></html>""")
+
+    html_path.write_text("".join(parts), encoding="utf-8")
+
+
+# ----------------------------------------------------------------------
 # Main.
 # ----------------------------------------------------------------------
 def main() -> int:
@@ -768,6 +1093,8 @@ def main() -> int:
     manifest_json = script_dir / "user_guide_diff" / "manifest.json"
     jsonl_path = script_dir / "history.jsonl"
     html_path = script_dir / "history.html"
+    snip_jsonl = script_dir / "snippet_history.jsonl"
+    snip_html = script_dir / "snippet_history.html"
 
     t0 = time.monotonic()
     timestamp = datetime.datetime.now(datetime.timezone.utc).strftime(
@@ -823,8 +1150,17 @@ def main() -> int:
 
     render_html(jsonl_path, html_path)
 
+    # Per-snippet history: one record per snippet per run.
+    n_snip = append_snippet_history(
+        snip_jsonl, timestamp, commit, snip.get("snippets") or []
+    )
+    render_snippet_history(snip_jsonl, snip_html)
+
     print(f"history: appended record for {commit[:12]} -> {jsonl_path.name}")
     print(f"history: rendered viewer -> {html_path.name}")
+    print(f"history: appended {n_snip} per-snippet record(s) "
+          f"-> {snip_jsonl.name}")
+    print(f"history: rendered per-snippet viewer -> {snip_html.name}")
     return 0
 
 
