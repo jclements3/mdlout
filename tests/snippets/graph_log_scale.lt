@@ -1,0 +1,28 @@
+###########################################################################
+#  graph_log_scale - a @Graph with a base-10 logarithmic y axis,
+#  plotting an exponential function as a straight line.  Exercises the
+#  ylog option and the corresponding tick-generation path.
+###########################################################################
+
+@SysInclude { graph }
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+Exponential growth plotted on a log-scaled y axis:
+@DP
+@CentredDisplay -2p @Font @Graph
+   style { axes }
+   width { 8c }
+   height { 5c }
+   ylog { 10 }
+   xticks { 0@ 1@ 2@ 3@ 4@ 5@ }
+   yticks { 1@ 10@ 100@ 1000@ 10000@ }
+   belowcaption { x }
+   leftcaption { y (log scale) }
+{
+   @Data pairs { solid }
+   {
+      0 1   1 10   2 100   3 1000   4 10000
+   }
+}
+@End @Text

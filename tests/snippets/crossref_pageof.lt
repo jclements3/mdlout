@@ -1,0 +1,37 @@
+###########################################################################
+#  crossref_pageof - a tiny @Report with both forward and backward
+#  cross references via @PageOf / @NumberOf / @TitleOf.  Exercises the
+#  multi-pass cross-reference resolution machinery: on the first pass
+#  the references render blank, on the second they pick up the right
+#  page and section numbers from the .li database.
+###########################################################################
+
+@SysInclude { report }
+
+@Report
+    @Title { Cross-reference Smoke Test }
+    @Author { Tester }
+    @InitialLanguage { English }
+//
+
+@Section
+    @Title { Introduction }
+    @Tag { intro }
+@Begin
+@PP
+This document exists to exercise Lout's forward and backward reference
+machinery.  In Section @NumberOf { conclusions } (page
+@PageOf { conclusions }) we will revisit the topic, and the
+section there is called "@TitleOf { conclusions }".  The last page of
+this document is page @PageOf { last.page }.
+@End @Section
+
+@Section
+    @Title { Conclusions }
+    @Tag { conclusions }
+@Begin
+@PP
+As foreshadowed in Section @NumberOf { intro } (page
+@PageOf { intro }), we wrap things up here.  The intro section was
+called "@TitleOf { intro }".
+@End @Section

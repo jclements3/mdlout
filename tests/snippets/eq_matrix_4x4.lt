@@ -1,0 +1,19 @@
+###########################################################################
+#  eq_matrix_4x4 - a 4x4 bracketed matrix, deeper than eq_matrix_3x3,
+#  with mixed numeric / variable / scripted entries. Forces the matrix
+#  layout machinery to balance four columns of unequal natural widths.
+###########################################################################
+
+@SysInclude { eq }
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+A 4x4 identity-shaped matrix with scripted off-diagonals:
+@DP
+@CentredDisplay @Eq { A = left [ matrix
+   above { acol { 1 } { a sub 21 } { a sub 31 } { a sub 41 } }
+   above { acol { a sub 12 } { 1 } { a sub 32 } { a sub 42 } }
+   above { acol { a sub 13 } { a sub 23 } { 1 } { a sub 43 } }
+   above { acol { a sub 14 } { a sub 24 } { a sub 34 } { 1 } }
+] right ] }
+@End @Text

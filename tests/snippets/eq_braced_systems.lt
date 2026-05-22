@@ -1,0 +1,32 @@
+###########################################################################
+#  eq_braced_systems - a case-analysis ("piecewise") system of equations
+#  using @Eq left brace, exercising large-fence growth and column
+#  alignment via @Eq col / piles.  Also covers vector / column-vector
+#  notation as a separate sub-display.
+###########################################################################
+
+@SysInclude { eq }
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+A piecewise function:
+@DP
+@CentredDisplay @Eq {
+   f ( x ) = left "{" matrix
+      above { acol { x sup 2 + 1 } { 2 x } { 0 } }
+      above {
+         acol
+            { roman "if" ~~ x > 0 }
+            { roman "if" ~~ x = 0 }
+            { roman "if" ~~ x < 0 }
+      }
+}
+@DP
+A column vector:
+@DP
+@CentredDisplay @Eq {
+   v = left [ matrix
+      above { acol { v sub 1 } { v sub 2 } { v sub 3 } }
+   ] right ]
+}
+@End @Text

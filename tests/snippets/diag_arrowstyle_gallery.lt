@@ -1,0 +1,37 @@
+###########################################################################
+#  diag_arrowstyle_gallery - one @Link per arrowstyle, laid out as a
+#  vertical column of node pairs. Audits every arrowstyle Lout knows
+#  about: solid, open, halfopen, solidwithbar, curvedsolid, curvedopen,
+#  curvedhalfopen. Useful as a single-page reference image and as a
+#  regression detector once the SVG back-end ports all seven heads.
+###########################################################################
+
+@SysInclude { diag }
+@SysInclude { doc }
+@Doc @Text @Begin
+
+@CentredDisplay @Diag {
+A1:: @Node { src } ||3c B1:: @Node { dst }
+//
+A2:: @Node { src } ||3c B2:: @Node { dst }
+//
+A3:: @Node { src } ||3c B3:: @Node { dst }
+//
+A4:: @Node { src } ||3c B4:: @Node { dst }
+//
+A5:: @Node { src } ||3c B5:: @Node { dst }
+//
+A6:: @Node { src } ||3c B6:: @Node { dst }
+//
+A7:: @Node { src } ||3c B7:: @Node { dst }
+//
+@Link from { A1 } to { B1 } arrow { yes } arrowstyle { solid }
+@Link from { A2 } to { B2 } arrow { yes } arrowstyle { open }
+@Link from { A3 } to { B3 } arrow { yes } arrowstyle { halfopen }
+@Link from { A4 } to { B4 } arrow { yes } arrowstyle { solidwithbar }
+@Link from { A5 } to { B5 } arrow { yes } arrowstyle { curvedsolid }
+@Link from { A6 } to { B6 } arrow { yes } arrowstyle { curvedopen }
+@Link from { A7 } to { B7 } arrow { yes } arrowstyle { curvedhalfopen }
+}
+
+@End @Text

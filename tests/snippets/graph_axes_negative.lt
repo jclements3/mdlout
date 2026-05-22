@@ -1,0 +1,33 @@
+###########################################################################
+#  graph_axes_negative - a @Graph with x and y axes that straddle zero
+#  so both axes carry negative labels.  Plots y = x^3 / 20 for
+#  x in [-10, 10] using @Data pairs.  Exercises negative tick labels,
+#  origin-crossing axes, and the "axes" style.
+###########################################################################
+
+@SysInclude { graph }
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+Cubic function with axes crossing at the origin:
+@DP
+@CentredDisplay -2p @Font @Graph
+   style { axes }
+   xorigin { 0 }
+   yorigin { 0 }
+   width { 8c }
+   height { 5c }
+   xticks { -10@ -5@ 0@ 5@ 10@ }
+   yticks { -50@ -25@ 0@ 25@ 50@ }
+   belowcaption { x }
+   leftcaption { y }
+{
+   @Data pairs { solid }
+   {
+      xloop from { -10 } to { 10 } by { 1 } do
+      {
+         x   x * x * x / 20
+      }
+   }
+}
+@End @Text

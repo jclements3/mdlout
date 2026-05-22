@@ -1,0 +1,45 @@
+###########################################################################
+#  sym_greek_full - a denser Greek-letter audit than sym_special.lt.
+#  Pairs each lowercase form with its uppercase form in a two-column
+#  table-of-glyphs layout.  Today every line renders correctly via
+#  the PostScript back-end and as a "subtly wrong glyph" via the SVG
+#  back-end (the Symbol-font glyph table is not yet wired through
+#  z53.c -- tracked by issue #90).  Worth shipping anyway as the
+#  exact regression detector that flips green when #90 lands.
+###########################################################################
+
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+@CentredDisplay { Helvetica Base 11p } @Font {
+@Sym alpha   @Sym Alpha   ||1.5c
+@Sym beta    @Sym Beta    ||1.5c
+@Sym gamma   @Sym Gamma
+//
+@Sym delta   @Sym Delta   ||1.5c
+@Sym epsilon @Sym Epsilon ||1.5c
+@Sym zeta    @Sym Zeta
+//
+@Sym eta     @Sym Eta     ||1.5c
+@Sym theta   @Sym Theta   ||1.5c
+@Sym iota    @Sym Iota
+//
+@Sym kappa   @Sym Kappa   ||1.5c
+@Sym lambda  @Sym Lambda  ||1.5c
+@Sym mu      @Sym Mu
+//
+@Sym nu      @Sym Nu      ||1.5c
+@Sym xi      @Sym Xi      ||1.5c
+@Sym pi      @Sym Pi
+//
+@Sym rho     @Sym Rho     ||1.5c
+@Sym sigma   @Sym Sigma   ||1.5c
+@Sym tau     @Sym Tau
+//
+@Sym phi     @Sym Phi     ||1.5c
+@Sym chi     @Sym Chi     ||1.5c
+@Sym psi     @Sym Psi
+//
+@Sym omega   @Sym Omega
+}
+@End @Text

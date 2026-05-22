@@ -1,0 +1,24 @@
+###########################################################################
+#  eq_continued_fraction - a continued (compound) fraction whose
+#  denominator recursively contains another fraction, three levels deep.
+#  Exercises nested @Eq "over" boxes and rule-thickness computation.
+###########################################################################
+
+@SysInclude { eq }
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+A three-level continued fraction representing the golden ratio's
+truncated expansion:
+@DP
+@CentredDisplay @Eq {
+   phi approx 1 + 1 over { 1 + 1 over { 1 + 1 over { 1 + 1 over 2 } } }
+}
+@DP
+A compound fraction whose numerator and denominator are themselves
+fractions:
+@DP
+@CentredDisplay @Eq {
+   { { a over b } + { c over d } } over { { e over f } - { g over h } }
+}
+@End @Text

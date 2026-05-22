@@ -1,0 +1,35 @@
+###########################################################################
+#  table_spanned_columns - exercises @StartHSpan / @HSpan to merge cells
+#  horizontally and @StartVSpan / @VSpan to merge cells vertically.
+#  This is the canonical "department of mathematics" timetable layout
+#  from the Lout User's Guide (Section "Spanning columns and rows").
+###########################################################################
+
+@SysInclude { tbl }
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+@CentredDisplay @Tbl
+   rule { yes }
+   aformat { @StartHSpan @Cell indent { ctr } @B A | @HSpan | @HSpan }
+   bformat { @StartVSpan @Cell @I A | @Cell B | @Cell C }
+   cformat { @VSpan | @Cell B | @Cell C }
+{
+@Rowa
+   A { Department Catalogue }
+@Rowb
+   A { Mathematics }
+   B { MATH 1001 }
+   C { Differential Calculus }
+@Rowc
+   B { MATH 1002 }
+   C { Linear Algebra }
+@Rowb
+   A { Computer Science }
+   B { COMP 1001 }
+   C { Introductory Programming }
+@Rowc
+   B { COMP 1002 }
+   C { Data Structures }
+}
+@End @Text
