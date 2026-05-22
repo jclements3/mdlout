@@ -11,6 +11,11 @@ lout/lout.li
 __pycache__/
 *.pyc
 
+# Python packaging build artifacts (pyproject.toml-driven)
+dist/
+build/
+*.egg-info/
+
 # Editor
 *.swp
 *~
