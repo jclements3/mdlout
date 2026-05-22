@@ -260,6 +260,13 @@ mdlout/
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — project architecture and
   design overview (audience: users picking mdlout for a real document, and
   prospective contributors).
+- [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) — how to file an issue or
+  submit a pull request, including the ANSI C / tcc constraint on lout-side
+  code and the outer-repo / submodule double-dance.
+- [docs/build_notes.md](docs/build_notes.md) — per-platform install hints
+  for Linux, macOS, and WSL (Windows native is noted as untested).
+- [CHANGELOG.md](CHANGELOG.md) — release history for both this repo and
+  the `lout/` submodule.
 - [CLAUDE.md](CLAUDE.md) — engineering context: source architecture, build
   variables, mdlout phases, frontmatter mapping.
 - [TODO.md](TODO.md) — current roadmap, what works, what's still in flight.
