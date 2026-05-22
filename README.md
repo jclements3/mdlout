@@ -35,19 +35,32 @@ for direct lookup.
 
 ## Status
 
-- HTML/SVG path: **default**. SVG back-end (`lout/z53.c`) plus three
-  passthrough macros (`@Math`, `@ABC`, `@SVG`). Text content, page chrome,
-  simple shapes, and the arrowstyle gallery render correctly. `@Math` via
-  KaTeX, `@ABC` via abcjsharp, and `@SVG` raw passthrough all work. The
-  long tail of complex `@Diag` / `@Fig` / `@Eq` rendering is partial — see
-  [TODO.md](TODO.md).
-- PDF path: working, frozen. PostScript back-end (`z49.c`) untouched.
+Current release: **v0.2.0** (2026-05-21). See [CHANGELOG.md](CHANGELOG.md)
+for the full release notes; the headlines:
 
-49+ regression snippets pass via `bash tests/run_all.sh`; see
-[tests/README.md](tests/README.md).
+- HTML/SVG path: **default**. SVG back-end (`lout/z53.c`, ~5400 LOC)
+  plus five passthrough macros (`@Math`, `@DMath`, `@ABC`, `@SVG`,
+  `@SVGFile`). Text, page chrome, shapes, the arrowstyle gallery,
+  `@Graph` axes/symbols, and `@Eq` typesetting all render in the
+  browser; KaTeX renders math, abcjsharp renders music. URW++ Nimbus
+  base-35 fonts are inlined as `@font-face` for PS-metric parity.
+  WCAG 2.1 AA scaffolding (landmarks, ARIA, skip-link, alt-text
+  manifest) is on by default; opt out with `--no-a11y`.
+- PDF path: working, **frozen**. PostScript back-end (`z49.c`)
+  untouched and bit-identical to the pre-z53.c era.
 
-See [CLAUDE.md](CLAUDE.md) for engineering details and [TODO.md](TODO.md) for
-the current roadmap.
+Regression status (v0.2.0):
+
+- 53-snippet single-feature suite: 0 Fail, 100% Pass-Excellent
+  (`bash tests/run_all.sh`).
+- 327-page User's Guide PS-vs-SVG diff: 0 BAD, 0 MISSING, mean SSIM
+  0.92, 322 / 327 pages at SSIM >= 0.85.
+- Headless-Chrome browser-test runner: 31 / 31 examples PASS on the
+  default 5 checks (`tests/browser_test.sh`); 30 / 30 on
+  `--with-all` (axe-core, print CSS, dark mode).
+
+See [CLAUDE.md](CLAUDE.md) for engineering details and
+[TODO.md](TODO.md) for the current roadmap.
 
 ## Quick start
 
