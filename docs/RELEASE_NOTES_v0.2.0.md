@@ -65,13 +65,14 @@ correct commit.
 
 Current state:
 
-- Local `v0.2.0` annotated tag exists, points at `f86faca` (the
-  commit on top of the workflows + CHANGELOG cut), and contains
-  the message `mdlout v0.2.0 — SVG/HTML as primary output,
-  accessibility, PS-vs-SVG parity`.
-- Local branch `main` is 2 commits ahead of `origin/main`
-  (`dc1be74` workflows + CHANGELOG re-cut, `f86faca` this notes
-  file).
+- Local `v0.2.0` annotated tag exists and points at the tip of
+  local `main` (which contains the workflows + CHANGELOG re-cut
+  and this notes file). Tag message:
+  `mdlout v0.2.0 — SVG/HTML as primary output, accessibility,
+  PS-vs-SVG parity`.
+- Local branch `main` is several commits ahead of `origin/main`,
+  including `dc1be74` (workflows + CHANGELOG re-cut to 2026-05-22)
+  and the commit that introduced this notes file.
 - No release and no `v0.2.0` tag on `origin`. There is no name
   collision; the recreate path is safe.
 - The companion submodule tag `svg-backend-v0.2` was pushed
