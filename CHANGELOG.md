@@ -11,6 +11,132 @@ Submodule-only changes are tagged `[lout]`.
 
 ## [Unreleased]
 
+## [0.2.7] - 2026-05-23
+
+Same-day follow-on to v0.2.6. Lands the **slides p040 font-propagation
+fix** in `z53.c` (`SVG_DefineGraphicNames` now threads the active
+font through into the embedded PS interpreter), grows the regression
+corpus from 70 → **80** snippets, parameterises the
+`tests/lout_doc_renders` harness at 150 DPI, adds a 200-DPI
+sensitivity row to the User's Guide diff (mean SSIM 0.9441 → 0.9510 at
+200 DPI; structural floor confirmed), makes `mdlout --serve` resilient
+to busy ports (probes 20 ports before failing), polishes the
+`presentation.md` and `textbook.md` example sources, and adds three
+more cookbook recipes (38 → **41**). `z49.c` (PostScript) and the
+legacy PDF pipeline remain frozen and bit-identical to v0.2.0.
+
+### Added
+
+- **[lout] `z53.c` `SVG_DefineGraphicNames` font propagation**
+  (submodule commit `c9142c1`, mdlout commit `758a6f2`). The slides
+  `doc/slides/all` page 040 sample drew the section-marker glyph at
+  the default body font instead of the configured slides heading
+  face. Root cause: when `@Graphic` chrome built a PS prologue
+  via `SVG_DefineGraphicNames`, the active font passed into the
+  embedded PS interpreter was the back-end's last-known font, not
+  the galley-local font set by the surrounding `@Heading`. The fix
+  threads the galley font through `DefineGraphicNames` into the
+  interpreter's initial graphic state, so `show` against the
+  prologue paints with the right face. `tests/lout_doc_renders`
+  slides SSIM ticks back up on p040; no movement elsewhere.
+- **`tests/snippets/`: 10 new snippets exercising under-covered
+  features** (commit `5ef1b02`). Corpus 70 → **80**
+  PASS-EXCELLENT / 0 Fail. New: `eq_alignment.lt`,
+  `diag_dashed_lines.lt`, `graph_bar_chart.lt`,
+  `figure_with_caption.lt`, `footnote_multiple.lt`,
+  `include_basic.lt` (+ `include_basic_frag` sibling),
+  `abc_chords.lt`, `table_rotated.lt`,
+  `text_subscript_superscript.lt`, `raw_postscript.lt`. All are
+  under 30 lines and land PASS-EXCELLENT under the 5% AE /
+  graphics 2% / SSIM 0.95 thresholds.
+- **`tests/user_guide_diff`: 200 DPI sensitivity row** (commit
+  `d3fc1ca`). 200 DPI mean SSIM is **0.9510** (vs 0.9441 at 150
+  DPI, +0.0069). The worst-10 slope flattens from +0.0334
+  (100 → 150) to +0.0107 (150 → 200), below the +0.01
+  "more room to chase" threshold — confirming that the AA / hinting
+  floor identified in `chapter3_pagination_drift_investigation.md`
+  is the structural limit, not a measurement artefact. README now
+  shows 100 / 150 / 200 DPI side-by-side; recommendation stays at
+  150 DPI as the default.
+- **`tests/lout_doc_renders` DPI override + 150 DPI SSIM column**
+  (commit `58f7bc9`). Mirrors the DPI parameterisation added to
+  `user_guide_diff.sh` in the v0.2.6 cycle. Both `build.sh` and
+  `diff.sh` now accept `DPI=N` (default 100); `diff.sh` passes it
+  to `pdftoppm` and `rsvg-convert`. `build.sh` gains
+  `SKIP_DOC_BUILD=1` to reuse existing `/tmp/{doc}.{ps,svg}` when
+  re-running diffs at different DPIs.
+- **`mdlout --version`: report lout binary version + submodule revision**
+  (PR #194). The `--version` flag now prints a two-line banner: `mdlout
+  0.2.7` on line 1, `lout 3.43 (svg-backend @ <short-sha>)` on line 2.
+  Each component is best-effort and degrades gracefully on a partial
+  checkout (no submodule, lout not yet built, not a git working tree)
+  so `--version` never crashes. Closes the "which lout am I really
+  running?" question that came up on PyPI installs (where the bundled
+  lout SHA is otherwise opaque).
+- **`docs/cookbook.md`: 3 new recipes (39-41)** (commit `037f921`).
+  Recipe count 38 → **41**:
+  - **39. Dual-language documents (English + Spanish, French,
+    German)** — `@Use` per-language hyphenation, switching
+    languages mid-paragraph via `@Spanish { … }`, and the gotchas
+    around quote-character substitution.
+  - **40. Per-section font switching** — using `{ Helvetica
+    Base 10p } @Font @Section` to render one section in a different
+    family from the document body.
+  - **41. Embedding YouTube / video links in HTML output** — a
+    fenced ``` ```lout ``` block that emits a `<foreignObject>`
+    with an `<iframe src="youtube.com/embed/…">`, plus a PS-mode
+    fallback to a link-with-thumbnail rectangle.
+
+### Changed
+
+- **`mdlout --serve`: probe up to 20 ports if default is busy**
+  (commit `443c895`). Previously `--serve` died with `EADDRINUSE`
+  when the requested port was taken. Now it tries
+  `PORT..PORT+19` and binds the first free one, logs the chosen
+  port to stderr (`serving at http://127.0.0.1:8081/ (port 8080
+  was busy)`), and exits 2 only if all 20 are taken. Improves the
+  edit-loop experience when an earlier `--serve` session is
+  still cooling down on the default port. The injected SSE
+  reloader picks up the chosen port automatically because it
+  reads `window.location` rather than hard-coding 8080.
+- **`examples/presentation.md` + `examples/textbook.md` polish**
+  (commit `b90bd3b`). `presentation.md` gains Part I / II
+  section-divider slides, a "Thank You / Questions?" closer, an
+  inline SVG pipeline diagram, and a numbered ordered list
+  (10pp → 14pp PDF, 12 → 16 SVG pages). `textbook.md` gains a
+  worked end-of-chapter exercise set, two `@Diag` figures
+  (one bar chart + one tree diagram), and a per-chapter
+  bibliography example using `@Cite`.
+
+### Docs
+
+- **`docs/chapter3_pagination_drift_investigation.md`: 150-DPI
+  follow-up** (commit `fdd0fc0`). Issue #180 re-investigated the
+  chapter-3 worst pages (86, 90, 56) at 150 DPI to test whether
+  #109's "antialiasing-only" conclusion held at the finer
+  measurement. New section appended to the original investigation:
+  worst-10 SSIM mean improves from 0.7964 (100 DPI) to 0.8298
+  (150 DPI), but the per-page glyph-overlay diffs are bit-identical
+  in shape — confirming the residual is rasteriser-AA, not
+  layout drift. The "shared rasteriser" mid-term roadmap item
+  remains the right next step; the 150 DPI baseline is sufficient
+  for v0.2.x release-gate purposes.
+
+### Notes
+
+- PostScript output bit-identical to v0.2.6 for `doc/user/all`.
+  The `--format=pdf` pipeline (ps2pdf on the frozen `z49.c`
+  PostScript) remains bit-identical to v0.2.0.
+- The 80-snippet corpus stays at 100% PASS-EXCELLENT under the
+  post-v0.2 tightened thresholds (5% AE for text, 2% AE / SSIM
+  0.95 for graphics-heavy). The 200-DPI sensitivity number
+  (0.9510) is informational; release-gate is still the 150-DPI
+  baseline.
+- The 41-recipe cookbook total is the count after the v0.2.7
+  cycle (38 at v0.2.6 + 3 in this release). Recipe count is
+  expected to plateau here for the v0.3 line; further idioms
+  will land in `docs/best-practices.md` rather than the cookbook.
+
 ## [0.2.6] - 2026-05-23
 
 Same-day follow-on to v0.2.5. Lands the **smcp/onum consumer side** in

@@ -45,6 +45,58 @@ perf round 4 (was ~26-29 s in v0.2.2 round 2, ~32 s in v0.2.1,
 ~7 min mid-v0.2 cycle; the original v0.4 < 30 s stretch target
 is now cleared by ~7 s).
 
+## Shipped in v0.2.7
+
+Same-day follow-on to v0.2.6. Lands the slides p040 font-propagation
+fix in `z53.c`, grows the snippet corpus 70 → 80, parameterises
+`tests/lout_doc_renders` at 150 DPI, adds a 200 DPI sensitivity row
+confirming the AA / hinting structural floor, hardens `--serve`
+against busy ports, polishes the presentation + textbook examples,
+and brings the cookbook to **41** recipes.
+
+- **`z53.c` `SVG_DefineGraphicNames` font propagation** (slides
+  p040 fix; submodule commit `c9142c1`). `@Graphic` prologue PS
+  ops (e.g. the slides section-marker glyph) were drawing in the
+  back-end's last-known font instead of the galley-local font set
+  by the surrounding `@Heading`. The fix threads the galley font
+  through into the embedded PS interpreter's initial graphic
+  state.
+- **200 DPI sensitivity baseline confirms the structural floor**
+  (commit `d3fc1ca`). Mean SSIM at 200 DPI is **0.9510**
+  (vs 0.9441 at 150 DPI, +0.0069); worst-10 slope flattens from
+  +0.0334 (100 → 150) to +0.0107 (150 → 200), below the
+  "more room to chase" threshold. The 150 DPI baseline is the
+  release-gate; the "shared rasteriser" mid-term item is the only
+  way to close the remaining gap.
+- **Regression corpus 70 → 80** (commit `5ef1b02`). 10 new
+  snippets all PASS-EXCELLENT: equation column alignment,
+  dashed `@Diag` lines, bar-chart `@Graph`, captioned figures,
+  multi-footnote pages, `@Include` of a sibling fragment, ABC
+  chord tables, rotated `@Tab` headers, sub/superscript chains,
+  raw PostScript via `@Graphic`.
+- **`tests/lout_doc_renders` DPI override + 150 DPI column**
+  (commit `58f7bc9`). Mirrors `user_guide_diff.sh`'s
+  parameterisation; `SKIP_DOC_BUILD=1` reuses `/tmp/` artefacts
+  for fast re-diffing.
+- **`mdlout --serve` probes 20 ports if default is busy** (commit
+  `443c895`). Tries `PORT..PORT+19`, logs the chosen port,
+  exits 2 only if all 20 are taken.
+- **`mdlout --version` reports lout binary version + submodule
+  revision** (PR #194). Two-line banner; graceful degradation on
+  partial checkouts.
+- **Cookbook recipes 39-41** (commit `037f921`; recipe count
+  38 → **41**): dual-language documents, per-section font
+  switching, embedding YouTube / video in HTML output.
+- **`presentation.md` / `textbook.md` polish** (commit `b90bd3b`).
+  Section-divider slides + closer for presentation; worked
+  exercise set, two `@Diag` figures, and `@Cite` bibliography
+  for textbook.
+- **`chapter3_pagination_drift_investigation.md`: 150-DPI
+  follow-up** (commit `fdd0fc0`). #109's "antialiasing-only"
+  conclusion holds at 150 DPI — worst-10 mean lifts 0.7964 →
+  0.8298, glyph-overlay shape is bit-identical, so the residual
+  is rasteriser AA, not layout.
+
 ## Shipped in v0.2.6
 
 Same-day follow-on to v0.2.5. Closes the smcp/onum consumer-side
@@ -341,6 +393,6 @@ project-redefining choice, not an incremental release.
 
 ---
 
-Last updated: 2026-05-23 (v0.2.6). See [CHANGELOG.md](CHANGELOG.md) for
+Last updated: 2026-05-23 (v0.2.7). See [CHANGELOG.md](CHANGELOG.md) for
 the release history this roadmap projects from, and
 [TODO.md](TODO.md) for the working-engineer task list.

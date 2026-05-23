@@ -32,7 +32,7 @@ from enum import Enum, auto
 from pathlib import Path
 
 
-VERSION = "0.2.6"
+VERSION = "0.2.7"
 
 
 # ---------------------------------------------------------------------------
@@ -4114,14 +4114,100 @@ def _run_init(target: str) -> int:
 # CLI
 # ---------------------------------------------------------------------------
 
+def _format_version() -> str:
+    """Return the multi-line --version banner.
+
+    Line 1 is always 'mdlout VERSION'. Line 2 reports the bundled lout
+    binary's version plus the lout/ submodule's branch + short SHA. Each
+    component is best-effort — failures degrade to a graceful placeholder
+    so --version never crashes on a partial checkout (no submodule, lout
+    not yet built, not a git working tree, etc.).
+    """
+    lines = [f'mdlout {VERSION}']
+
+    # lout binary version: parse the first line of `lout -V`.
+    lout_ver = 'unknown'
+    try:
+        lout_bin = _find_lout_bin(None)
+        out = subprocess.run(
+            [lout_bin, '-V'],
+            capture_output=True, text=True, timeout=5,
+        )
+        # lout writes its banner to stderr on some builds, stdout on
+        # others — merge and take the first non-empty line.
+        blob = (out.stdout or '') + (out.stderr or '')
+        first = next((ln for ln in blob.splitlines() if ln.strip()), '')
+        m = re.search(r'Version\s+(\S+)', first)
+        if m:
+            lout_ver = m.group(1)
+    except (OSError, subprocess.SubprocessError):
+        pass
+
+    # Submodule branch + short SHA from the lout/ checkout.
+    script_dir = Path(__file__).resolve().parent
+    lout_dir = script_dir / 'lout'
+    branch = None
+    sha = None
+    try:
+        r = subprocess.run(
+            ['git', '-C', str(lout_dir), 'rev-parse', '--short', 'HEAD'],
+            capture_output=True, text=True, timeout=5,
+        )
+        if r.returncode == 0:
+            sha = r.stdout.strip() or None
+    except (OSError, subprocess.SubprocessError):
+        pass
+    try:
+        r = subprocess.run(
+            ['git', '-C', str(lout_dir), 'rev-parse', '--abbrev-ref', 'HEAD'],
+            capture_output=True, text=True, timeout=5,
+        )
+        if r.returncode == 0:
+            b = r.stdout.strip()
+            if b and b != 'HEAD':
+                branch = b
+    except (OSError, subprocess.SubprocessError):
+        pass
+
+    if branch and sha:
+        suffix = f' ({branch} @ {sha})'
+    elif sha:
+        suffix = f' (@ {sha})'
+    elif branch:
+        suffix = f' ({branch})'
+    else:
+        suffix = ''
+    lines.append(f'lout {lout_ver}{suffix}')
+    return '\n'.join(lines)
+
+
+class _VersionAction(argparse.Action):
+    """Like argparse's built-in version action but preserves newlines.
+
+    The stock action runs its string through HelpFormatter, which
+    collapses runs of whitespace and would join the two lines of the
+    --version banner. We bypass the formatter and write straight to
+    stdout instead.
+    """
+
+    def __init__(self, option_strings, dest=argparse.SUPPRESS,
+                 default=argparse.SUPPRESS, help='show version info and exit'):
+        super().__init__(
+            option_strings=option_strings, dest=dest, default=default,
+            nargs=0, help=help,
+        )
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        sys.stdout.write(_format_version() + '\n')
+        parser.exit()
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         prog='mdlout',
         description='Convert Markdown → Lout → HTML (default) or PDF.',
     )
-    parser.add_argument(
-        '--version', action='version', version=f'mdlout {VERSION}',
-    )
+    parser.add_argument('--version', action=_VersionAction)
     parser.add_argument(
         '--check', action='store_true',
         help='Parse-only: run the md -> Lout pipeline without invoking '
