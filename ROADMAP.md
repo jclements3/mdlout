@@ -20,47 +20,83 @@ files (`lout/z53_glyph.c`); five passthrough macros (`@Math`,
 fallbacks; a WCAG 2.1 AA accessibility scaffold in the HTML wrapper
 (landmarks, ARIA, skip-link, alt-text manifest, image-alt sidecar);
 URW++ Nimbus base-35 fonts inlined as `@font-face` data URLs so
-browser rendering matches Ghostscript's font substitution; a
+browser rendering matches Ghostscript's font substitution -- with
+opt-in `--subset-fonts` (v0.2.2) trimming each face to the
+codepoints actually referenced (~50% HTML size reduction); a
 headless-Chrome regression runner that verifies KaTeX, abcjsharp,
-anchors, and highlight.js execute client-side; and a PEP 621
-`pyproject.toml` that builds a clean sdist + wheel. The 327-page
+mermaid, anchors, and highlight.js execute client-side; opt-in
+dark-mode CSS (`--dark` / `theme: dark`, v0.2.2); a PEP 621
+`pyproject.toml` that builds a clean sdist + wheel; and end-to-end
+SVG renders of all four documents that ship with the Lout source
+tree (`design`, `expert`, `slides`, `user`, v0.2.2). The 327-page
 User's Guide PS-vs-SVG diff sits at mean SSIM 0.9234 (38 OK / 289
-DIFF / 0 BAD / 0 MISSING); the 63-snippet single-feature suite is
+DIFF / 0 BAD / 0 MISSING); the 65-snippet single-feature suite is
 100% Pass-Excellent under the post-v0.2 tightened thresholds (5% AE
 for text, 2% AE / SSIM 0.95 for graphics-heavy). Build size: ~848 KB
 lout binary, 150 KB single-file mdlout.py. User's Guide SVG build:
-~32 s wall time on the reference host (down from ~7 min mid-cycle).
+~26-29 s wall time on the reference host (v0.2.2 perf round 2,
+beats the original v0.4 < 30 s target; was ~32 s in v0.2.1 and
+~7 min mid-v0.2 cycle).
+
+## Shipped in v0.2.2
+
+These items were originally projected for v0.3 / v0.4; they landed
+during the v0.2.2 cycle and are no longer roadmap candidates.
+
+- **TrueType outline support in `z53_glyph.c`** (was v0.4). `.ttf`
+  files via sfnt magic detection, head / maxp / cmap / loca / glyf
+  walk, quadratic-to-cubic Bezier conversion, composite-glyph
+  expansion with 2x2 affine transforms. DejaVu / Liberation / Noto
+  and similar system fonts now render real glyph outlines through
+  `charpath` instead of falling back to the bbox rectangle.
+- **User's Guide SVG build < 30 s** (was v0.4). Hashed glyph-name
+  lookup + per-font face-flag cache + `SVG_PrintWord` stdio
+  consolidation in `z53.c`. Single-pass wall ~26-29 s, user ~20 s.
+- **`@Place` / `@MargPut` operand-stack drift in SVG mode** (was
+  v0.3, named in v0.2.1's `SVG_INCLUDES_AUDIT.md`). `LoutPageDict`
+  / `LoutPageSet` / `LoutMargSet` / `LoutMargShift` hashed in
+  `svg_op_seed[]`. The `translate(x, y)` for `LoutMargShift` is
+  still missing -- margin notes still render at the origin --
+  tracked as a v0.3 follow-on.
+- **AFM kerning in SVG text** -- shipped in v0.2.1 (not v0.3 as
+  originally projected). `svg_emit_word_text` consumes
+  `FontKernLength` between successive characters and emits the
+  kern delta as a `<tspan dx>` inside the `<text>` element.
 
 ## Near-term (v0.3 target)
 
-Things in flight on parallel agent branches, plus one packaging
-item the user has to drive interactively.
+Items surfaced by the v0.2.2 all-Lout-docs render
+(`tests/lout_doc_renders/`) plus the still-pending packaging item.
 
-- **Mermaid passthrough.** Treat ` ```mermaid ` fences the same way
-  `@Math` / `@ABC` are treated today: wrap in a `<foreignObject>`
-  with `<div class="mermaid">…</div>` and load Mermaid.js (inlined
-  if `/usr/lib/node_modules/mermaid/` is found, otherwise CDN, with
-  `--external-assets` to force CDN). PostScript-mode fallback emits
-  the source as a literal text block, matching the `@ABC`
-  precedent. Likely already landed via parallel #117.
-- **CFF / OTF outline parsing for OpenType fonts.** `z53_glyph.c`
-  today only knows Type 1 (`.pfb`). Adding the CFF parser inside
-  `OTF/OTC` containers lets `charpath` work for the system's
-  OpenType faces (most modern URW++ shipments are OTF, not Type 1).
-  Likely already landed via parallel #118.
-- **AFM kerning in SVG text.** Lout's existing AFM metrics include
-  kerning pairs; the PS back end consumes them via the prologue,
-  but `z53.c`'s text emission today walks character-by-character
-  without applying the kern delta. Wiring AFM kerns into
-  `svg_emit_text` removes a class of subtle word-spacing artefacts
-  visible on the User's Guide running heads. Likely already landed
-  via parallel #119.
-- **Five more cookbook recipes in `docs/cookbook.md`.** Lifting the
-  count from 11 to 16: thesis chapter with bibliography, business
-  letter (block / modified-block / semi-block), invoice, slide
-  deck with two-column layouts, and bilingual document with
-  per-block language switching. Likely landed via parallel #122.
-- **PyPI publish.** The `pyproject.toml` from this cycle builds a
+- **SVG `@Case` branches in `lout/include/`.** The all-Lout-docs
+  render flagged a small set of `@BackEnd @Case` blocks under
+  `lout/include/*` that still lack an explicit SVG arm (today they
+  fall through to PostScript or to a generic else). The audit at
+  `lout/SVG_INCLUDES_AUDIT.md` enumerates them; the v0.2.2 cycle
+  cleared the `bsf` `LoutPageDict` family but the remaining
+  arms (mostly diagram-helper packages used by `doc/design`) are
+  still pending.
+- **More `@Graphic` ops in `z53.c`.** The all-Lout-docs render
+  surfaced three under-implemented ops the User's Guide had not
+  exercised at the same density: `lightgrey` (used as a fill
+  shorthand by several `@Diag` callers), `lfig` (the
+  let-fig label-placement helper in `figf.lpg`), and the bare
+  `solid` keyword (vs the parameterised `solid 1` already
+  implemented). All three are currently rate-limited XML comments
+  in the SVG; each is a 5-15 LOC `svg_op_seed[]` entry.
+- **Font subsetting default-ON.** v0.2.2 shipped `--subset-fonts`
+  as opt-in; the measured savings (~50% HTML size, ~81% font
+  payload) and the absence of regressions across the example
+  corpus make the default flip a v0.3 candidate. Gate: confirm the
+  subset pass survives a full `tests/lout_doc_renders/` build
+  (`design` / `expert` / `slides` / `user`) with no glyph
+  drop-outs.
+- **`LoutMargShift` translate(x, y).** The v0.2.2 hashed-op work
+  cleared the operand-stack drift but did not yet implement the
+  margin-note shift itself, so SVG-mode `@MargNote` / `@OuterNote`
+  still render at the page origin. Tracked as a v0.3 follow-on in
+  the `z53.c` op-dispatch table.
+- **PyPI publish.** The `pyproject.toml` from v0.2.1 builds a
   clean wheel, but the user has not yet pushed it to PyPI. Action
   is manual:
   ```
@@ -75,32 +111,27 @@ item the user has to drive interactively.
 
 Harder, longer-tail items that haven't started yet.
 
-- **TrueType outline support in `z53_glyph.c`.** TrueType `.ttf` /
-  `.ttc` containers use the `glyf` table with a different
-  instruction set than Type 1 charstrings; quadratic B-splines
-  instead of cubic Beziers; a different sbix / variable-fonts
-  story. This is a separate parser, not an extension of the
-  existing one. Pays off mostly for users who have replaced their
-  URW++ fonts with system fonts (DejaVu, Liberation, modern
-  Noto).
-- **Font subsetting in HTML output.** Today the full URW++ Nimbus
-  base-35 set is inlined per page as `@font-face` data URLs. For
-  a 327-page User's Guide that costs ~1-2 MB per HTML file even
-  after gzip. Subset-by-codepoint (collect every codepoint
-  emitted by `z53.c`, then have a Python step downstream prune
-  the inlined font data to that subset) would drop the
-  per-document overhead by an order of magnitude. The
-  `--no-font-embedding` flag already supports the "fall back to
-  CDN / system" path for users who don't care about pixel
-  parity.
-- **Performance: User's Guide SVG build < 30 s.** Currently 32 s.
-  Profile says the remaining cost is dominated by `svg_ps_exec_op`
-  dispatch + AFM lookup; the hashed dispatch landed in v0.2
-  (~58% improvement, 76 -> 32 s) opened the door to more
-  targeted wins. Candidates: cache `@Graphic` token streams at
-  the lexer level (already partially landed); intern AFM
-  metric lookups; lift the gstate-stack `memcpy` out of
-  `gsave`. Internal stretch target.
+- **Text shaping: ligatures and combining marks.** Today
+  `svg_emit_word_text` walks character-by-character with optional
+  AFM kern deltas (v0.2.1). It does not consult the font's GSUB
+  table for ligature substitution (`fi`, `fl`, `ffi`) or apply
+  combining-mark positioning (combining acute / grave / cedilla
+  on Latin Extended-A). Both are visible on the multilingual.md
+  example and on math-heavy User's Guide pages. Pulling in a
+  minimal harfbuzz-shape-style stage (or a hand-rolled GSUB-lookup
+  + GPOS-anchor walker against the existing AFM / OT tables)
+  closes the gap.
+- **Shared rasteriser for true pixel parity.** The current ~5%
+  antialiasing floor on the User's Guide diff is rsvg vs
+  Ghostscript painting the same glyph outlines with different
+  AA / hinting choices (confirmed by the chapter-3 pagination
+  drift investigation,
+  `docs/chapter3_pagination_drift_investigation.md`). Running
+  both back ends through a single rasteriser (either by
+  generating PostScript from SVG via a shared inverse, or by
+  comparing SVG-rendered output to a Chrome `--print-to-pdf`
+  baseline instead of Ghostscript) would eliminate the floor.
+  Cost: another rendering pipeline to maintain.
 - **More aggressive `@Graphic` raw-PS to SVG translation.** The
   embedded PS interpreter in `z53.c` handles the prologue idioms
   emitted by Lout's own `diagf.lpg` / `graphf.lpg` / `tabf.lpg`
@@ -137,16 +168,11 @@ the documentation to back it.
     `z49.c` / `z53.c` duplication around galley dispatch.
   - **Permanent freeze**: leave `z49.c` alone forever. The
     cost is the duplication; the benefit is a stable PDF.
-- **Shared rasteriser for true pixel parity.** The current
-  ~5% antialiasing floor on the User's Guide diff is rsvg vs
-  Ghostscript painting the same glyph outlines with different
-  AA / hinting choices (confirmed by the chapter-3 pagination
-  drift investigation, `docs/chapter3_pagination_drift_investigation.md`).
-  Running both back ends through a single rasteriser (either by
-  generating PostScript from SVG via a shared inverse, or by
-  comparing SVG-rendered output to a Chrome `--print-to-pdf`
-  baseline instead of Ghostscript) would eliminate the floor.
-  Cost: another rendering pipeline to maintain.
+- **Shared rasteriser for true pixel parity (v1.0 carry-over).**
+  See "Mid-term" -- moved earlier in this roadmap because the
+  motivation reads the same at v0.4 and v1.0; the v1.0 entry below
+  remains as a placeholder for the longer-term feature-surface
+  guarantees.
 
 ## Won't do
 
@@ -174,6 +200,6 @@ project-redefining choice, not an incremental release.
 
 ---
 
-Last updated: 2026-05-22. See [CHANGELOG.md](CHANGELOG.md) for
+Last updated: 2026-05-23. See [CHANGELOG.md](CHANGELOG.md) for
 the release history this roadmap projects from, and
 [TODO.md](TODO.md) for the working-engineer task list.

@@ -11,6 +11,230 @@ Submodule-only changes are tagged `[lout]`.
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-05-23
+
+Sub-30 s User's Guide build, real TrueType (`.ttf`) outlines for
+`charpath`, dark-mode CSS opt-in for the HTML wrapper, and end-to-end
+SVG renders of all four documents that ship with the Lout source tree
+(`design`, `expert`, `slides`, `user`). The perf round 2 beats the
+v0.4 ROADMAP target: User's Guide single-pass wall drops ~32 s ->
+~26-29 s (~31%). TrueType lifts `charpath` coverage off URW++ /
+gsfonts onto DejaVu / Liberation / Noto and other system fonts.
+Three deferred SVG-includes items from v0.2.1
+(`LoutPageDict` / `LoutPageSet` / `LoutMargSet` / `LoutMargShift`
+hashed; `@ABC` + `@Mermaid` body HTML-escaped) ship. Five new
+examples and eight new cookbook recipes (lifting the count to 23).
+
+### Added
+
+- **mdlout: opt-in dark mode** via `--dark[=force|auto]` CLI flag and
+  the `dark-mode` / `theme: dark` YAML frontmatter keys. Emits a CSS
+  block that paints the page chrome dark and inverts each
+  `.lout-page` via `filter: invert(1) hue-rotate(180deg)`. Embedded
+  raster `<image>`s invert too (photos render with reversed
+  luminance); a proper CSS-variable scheme will land once `z53.c`
+  emits `fill=currentColor` for SVG text. Default off; PostScript
+  output unchanged (0d3ba23).
+- **mdlout: `--subset-fonts` CLI + `subset-fonts: true` frontmatter
+  key.** New optional pass that subsets each of the 12 inlined URW++
+  Nimbus base-35 faces down to just the codepoints the SVG actually
+  references. Scans `<text>` / `<tspan>` elements for font-family
+  and inner text, builds a per-family codepoint set (with a
+  printable-ASCII baseline for KaTeX / abcjs runtime glyph needs),
+  then runs each face through `fontTools.subset.Subsetter` before
+  the existing base64 embed. fontTools is an optional dependency;
+  import is lazy and warns once to stderr when missing.
+  Representative example sizes: scientific_paper.md
+  2,328,726 -> 1,178,063 bytes (49.4%); 06_report.md
+  2,069,366 -> 877,110 bytes (57.6%); magazine_layout.md
+  2,255,289 -> 1,063,053 bytes (52.9%). Font payload itself shrinks
+  ~81% in each case. Default off until verified across the example
+  corpus (e42b157).
+- **mdlout + lout: HTML-escape `@ABC` and `@Mermaid` body text.**
+  Pre-HTML-escapes both block bodies before the existing
+  `_lout_string_encode` pass so a literal `&`, `<`, `>`, or `"` in
+  the source no longer corrupts the surrounding `data-abc="..."`
+  attribute or the `<div class="mermaid">…</div>` text node.
+  abcjs / mermaid DOM-decode the attribute / textContent at render
+  time, so HTML-encoded entities round-trip back to the originals
+  intact. Companion `docs/best_practices.md` subsection
+  "Hand-authoring @Math / @ABC / @Mermaid in raw Lout: gotchas"
+  documents the three failure modes raw-`.lt` authors hit
+  (HTML-active chars in @Body, Lout-active chars in @Body, literal
+  LFs inside Lout `"…"` literals) (lout a9bc073 -> mdlout e2b3d26).
+- **Five new examples**: `book_with_epigraphs.md` (short story with
+  leading epigraphs per section + multiple footnotes),
+  `math_with_diagrams.md` (math proofs interspersed with mermaid
+  sequence diagrams), plus three more landing during this cycle:
+  `marginalia.md`, `multilingual.md`, `mermaid.md` (all build clean
+  in both `--format=html` and `--format=pdf`; outputs under
+  `examples/out/`) (f98827b, 6414738).
+- **Eight new cookbook recipes** in `docs/cookbook.md`, lifting the
+  count from 15 to 23. Recipes 16-20 (Mermaid flowchart, marginalia
+  / sidenotes via `@RightNote` / `@OuterNote`, multilingual via
+  `@Char` / `@Sym` / `@Language`, footnoted poetry with
+  `@LeftDisplay` vlists, `@PageOf` / `@NumberOf` / `@TitleOf` plus
+  `[TOC]`) and recipes 21-23 (book chapter with epigraph +
+  footnotes, two-sided letter with date / signature / postscript,
+  inline diagrams via `@Mermaid` in a math-heavy doc) (f98827b).
+- **`examples/PUBLISHING.md`** walkthrough for publishing
+  mdlout-generated HTML to GitHub Pages: single-file output,
+  `/docs`-on-main vs `gh-pages` layouts, CI-driven publish via
+  `publish.yml`, custom-domain DNS cheat-sheet, accessibility
+  checklist, recommended `src/` + `docs/` layout for downstream
+  users (d5888a5).
+- **`examples/CONTRIBUTING.md`**: per-example contribution guide
+  alongside the docs-tree `CONTRIBUTING.md`; documents the example
+  corpus conventions (frontmatter, builds-in-both-modes
+  requirement, gallery regeneration step).
+- **`.github/workflows/publish.yml`**: GH Pages deploy workflow.
+  Builds `examples/` to HTML and pushes the rendered tree to the
+  `gh-pages` branch. Requires the `workflow` OAuth scope to push
+  (`gh auth refresh -s workflow`); local validation passes
+  `yaml.safe_load` (4c39182).
+- **`tests/lout_doc_renders/`**: end-to-end PS + PDF and SVG + HTML
+  renders of all four documents shipping with the Lout source tree
+  (`doc/design`, `doc/expert`, `doc/slides`, `doc/user`).
+  `build.sh` + `diff.sh` + `aggregate.py` drives a 7-pass
+  cross-reference loop per back-end, wraps each SVG in a minimal
+  HTML scaffold (CDN KaTeX, mdlout-style print stylesheet), and
+  emits per-doc 10-sample PS-vs-SVG galleries with scikit-image
+  SSIM + ImageMagick AE %. Surfaces three z53.c-adjacent issues
+  tracked separately: missing `@Case` SVG branches in
+  `lout/include/`, untranslated raw PostScript in `@Graphic` blocks
+  (design's algorithm-flow diagrams), per-pass output alternation
+  (dc7c1fd).
+- **`tests/browser_test.py --with-mermaid-strict`** structural
+  check. Default-OFF flag. When enabled, each
+  `<div class="mermaid">` is verified to contain a child `<svg>`
+  whose `aria-roledescription` is a recognised mermaid diagram type
+  (or whose class list contains a structural class like `.node`,
+  `.edgePath`, `.actor`, `.classGroup`, `.flowchart`, `.cluster`).
+  Parse-error markers (`aria-roledescription="error"`, "Syntax
+  error" text) and missing-SVG cases fail the page. Default
+  flag-set output unchanged (7721915).
+- **`tests/browser_test.py` mermaid render check + tightened katex
+  check.** Reports `mermaid=ok(N/M)` alongside `katex` and `abcjs`:
+  counts `<div class="mermaid">` openers, counts those that contain
+  a child `<svg>` (mermaid.js replaces inner source text once
+  rendered), passes when at least 50% rendered. Virtual-time-budget
+  bumped 20 s -> 22 s for mermaid's per-diagram render cost
+  (2508ed8).
+- **[lout] TrueType (`.ttf`) outline parsing via `glyf` table** in
+  `z53_glyph.c`. Third format leg behind `svg_glyph_emit_outline`
+  alongside Type 1 (`.pfb`) and CFF / OTF. Detection branches on
+  the sfnt magic `0x00010000` (also `true`, `typ1`); the OT table
+  directory walker is reused. Loader parses `head` (UnitsPerEm +
+  loca format), `maxp` (numGlyphs), `cmap` (format 4 BMP +
+  optional format 12 with Unicode-platform > Windows-Unicode
+  tiebreak), `loca`, and `glyf`. Outline emit decodes simple
+  glyphs (flag-stream repeat expansion, signed-short / signed-byte
+  x/y deltas, implicit on-curve midpoints between two consecutive
+  off-curves) and converts quadratic Beziers to cubics via
+  `P0 + 2/3(Q-P0), P2 + 2/3(Q-P2)`. Composite glyphs recurse with a
+  2x2 affine (scale / xy-scale / two-by-two-2.14-fixed),
+  `ARGS_ARE_XY_VALUES` translation, depth cap 8. Aliases for
+  DejaVu / Liberation / Noto live in `svg_glyph_ttf_map`;
+  `LOUT_TTF_FONT_DIR` (and `LOUT_T1_FONT_DIR` as a shared
+  shortcut) prepend a search directory.
+  `/usr/share/fonts/truetype/` and `/usr/share/fonts/TTF/` are
+  walked one level deep. Verification: "Hello" at DejaVu Sans 36 pt
+  emits 32 cubic-Bezier segments + 23 line segments across 7
+  contours; "Quagmire" at 48 pt emits 110 curves + 46 lines (vs
+  the bbox-rectangle fallback). Type 1 PFB and CFF / OTF charpath
+  paths unchanged (lout 50ebec5 -> mdlout bb146fe).
+- **[lout] `z53.c` hashes `LoutPageDict` / `LoutPageSet` /
+  `LoutMargSet` / `LoutMargShift`** so `bsf.lpg` / `dsf`'s
+  `@Place` / `@MargPut` SVG branches no longer take the
+  unknown-PostScript-operator fallthrough. Five entries added to
+  `svg_op_seed[]` + `svg_ps_exec_op()`: `LoutPageDict` pushes a
+  userdict stand-in (same strategy as the SYSDICT alias group) so
+  `begin` / `end` balance; `LoutPageSet` is a no-op with traceability
+  XML comment; `LoutMargSet` and `LoutMargShift` pop their
+  parity / margin-type arguments; `matr` aliases the `matrix` op so
+  `matr setmatrix` lands on a fresh identity CTM. The
+  `LoutMargShift` translate(x, y) is still missing, so margin notes
+  still render at the origin in SVG mode, but the stack no longer
+  drifts. Companion `svgmacros` header-comment update names the
+  hand-author gotchas (lout a9bc073 -> mdlout e2b3d26).
+- **[lout] CFF / TrueType follow-ups in `z53_glyph.c`**: Type 2
+  escape op 26 (sqrt) now performs a 16-step Newton-Raphson in
+  place of the prior silent stack-clear (no libm dependency); op 33
+  (setcurrentpoint) re-documented as a Type 1 leftover under the
+  default branch; composite-glyph flag handling clarified
+  (`WE_HAVE_INSTRUCTIONS` naturally skipped via early return on
+  last component; `OVERLAP_COMPOUND` is a fill-rule hint that
+  SVG's non-zero default honours); empty TTF glyph cases (zero-
+  length `glyf` entry and 10-byte header with `numberOfContours ==
+  0`) explicitly documented; CFF predefined charsets 1 (Expert) and
+  2 (ExpertSubset) tracked as a known gap in `NEXT_OPTIMIZATIONS.md`
+  (lout 6373ebb -> mdlout 2d563d9).
+
+### Changed
+
+- **[lout] Perf round 2 -- User's Guide single-pass wall ~32 s ->
+  ~26-29 s (~31%, beats the v0.4 ROADMAP < 30 s target).** Three
+  layered optimisations in `z53.c`:
+  (1) `svg_glyph_to_unicode` replaces the linear scan over the
+  ~380-entry `svg_glyph_table` with the same FNV-1a +
+  open-addressed-linear-probing hash used by `svg_dict_lookup` and
+  `svg_op_lookup`, lazily built on first call -- this was the
+  largest remaining hot spot (~250 k chars on the User's Guide,
+  folded into `svg_emit_word_text`'s significant share of CPU).
+  Lookup drops O(N) -> ~1.2 probes/avg.
+  (2) Per-font face-flag cache (`svg_face_cache`, 64-entry
+  open-addressed) keyed by `FONT_NUM`: `SVG_PrintWord` fires once
+  per word (~99 k times on the User's Guide); each call previously
+  ran four `strstr` probes against the FontFace string to decide
+  font-weight / font-style. Cache pre-renders the family attribute
+  fragment.
+  (3) `SVG_PrintWord` stdio consolidation: five separate
+  `fprintf` / `fputs` / `fputc` calls combined into one `fprintf`
+  with conditional format specifiers. Attribute order preserved so
+  the SVG is byte-for-byte identical to baseline (modulo the
+  embedded `@CurrentTimeAndDate` timestamp). User-time drops
+  ~22 s -> ~20 s. Regression suite unchanged
+  (lout f1fdd77 -> mdlout 5810261).
+- **CI workflows pushed.** `.github/workflows/ci.yml` and
+  `user-guide-diff.yml` (committed in v0.2.1) are now joined by
+  `publish.yml` for GH Pages deploy. All three pinned to current
+  action majors (e65fb09, 4c39182).
+
+### Fixed
+
+- **[lout] `@Place` / `@MargPut` operand-stack drift in SVG mode.**
+  Without explicit ops for `LoutPageDict` / `LoutPageSet` /
+  `LoutMargSet` / `LoutMargShift`, the names took the unknown-PS-op
+  fallthrough, leaving the operand stack imbalanced and the
+  surrounding `gsave` / `grestore` ineffective; `@Place`'d boxes
+  landed at the page origin instead of (x, y). Fixed by the hashed
+  op-dispatch above (lout a9bc073 -> mdlout e2b3d26).
+- **mdlout + lout: HTML-active characters in `@ABC` / `@Mermaid`
+  bodies** corrupting the surrounding `<foreignObject>` markup
+  before the JS engines could read it. Both bodies are now
+  pre-HTML-escaped (lout a9bc073 -> mdlout e2b3d26).
+
+### Tests
+
+- **All four Lout docs rendered through z53.c**
+  (`tests/lout_doc_renders/`): `design`, `expert`, `slides`, and
+  `user` now have PS + PDF + SVG + HTML outputs and per-doc
+  10-sample PS-vs-SVG galleries (dc7c1fd).
+- **Mermaid render check + structural `--with-mermaid-strict`**
+  added to `tests/browser_test.py` (7721915, 2508ed8).
+- Regression suite stays at 65 Pass-Excellent / 0 Fail through
+  every commit in the cycle.
+
+### Docs
+
+- `examples/PUBLISHING.md`: GH Pages deploy guide (d5888a5).
+- `examples/CONTRIBUTING.md`: per-example contribution guide.
+- `docs/best_practices.md`: new "Hand-authoring @Math / @ABC /
+  @Mermaid in raw Lout: gotchas" subsection (e2b3d26).
+- `docs/cookbook.md`: recipes 16-23 (f98827b).
+- `[lout] z53_glyph.c` audit comments + `NEXT_OPTIMIZATIONS.md`
+  CFF Expert / ExpertSubset known-gap note (lout 6373ebb).
+
 ## [0.2.1] - 2026-05-22
 
 Post-v0.2.0 maintenance: real font outlines (Type 1 charpath, plus
@@ -547,7 +771,8 @@ submodule:
 - 2024-01-26: lout 3.43 (the version vendored at the time of initial
   commit).
 
-[Unreleased]: https://github.com/jclements3/mdlout/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/jclements3/mdlout/compare/v0.2.2...HEAD
+[0.2.2]: https://github.com/jclements3/mdlout/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/jclements3/mdlout/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/jclements3/mdlout/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/jclements3/mdlout/releases/tag/v0.1.0
