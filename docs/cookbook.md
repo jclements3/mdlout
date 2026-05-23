@@ -2035,6 +2035,215 @@ columns the same rule applies -- `columns: 3` works in `report`
 and `book` but is single-page in `doc`. Working example:
 [`examples/field_survey.md`](../examples/field_survey.md).
 
+## 36. Small-caps and old-style figures via `font-features`
+
+Small-capitals (`smcp`) and old-style figures (`onum`) are OpenType
+GSUB substitutions baked into many text fonts -- they replace
+lowercase glyphs with miniature caps, and lining digits with
+proportional, descender-bearing forms that sit better inside
+running prose. The `font-features` frontmatter key (landed in
+#167, shipped in the v0.2.6 era) wires both into the SVG back-end
+via the `LOUT_SVG_FONT_FEATURES` environment knob, which `z53.c`
+consumes at `SVG_PrintInitialize` time and pipes through the GSUB
+substitution table.
+
+```yaml
+---
+type: doc
+title: Curriculum Vitae
+author: jane doe
+font: Times Base 11p
+page: A4
+para-indent: 0f
+para-gap: 1.0v
+page-headers: None
+font-features: smcp,onum
+---
+
+# experience
+
+acme corp, 2019-2024 -- staff engineer.
+delivered 12 releases of the build pipeline, cut
+median ci time from 14m to 3m.
+
+# education
+
+university of sydney, ph.d. computer science, 2018.
+thesis: lout type 3 font handling and the case for
+gsub-aware back-ends.
+```
+
+Rendered: every lowercase letter renders as a small capital,
+sized to the x-height of the body font; every digit (`2019`,
+`12`, `14`, `3`, `2018`) renders in old-style with `0/1/2`
+sitting on the baseline and `3/4/5/7/9` dropping below. Section
+headings inherit the same features, so `# experience` reads as
+small-caps `EXPERIENCE` rather than uppercased copy. The visual
+weight is identical to the body -- no synthetic bolding.
+
+**Gotcha:** `font-features` is **HTML-only**. PDF mode goes
+through `z49.c`, which has no GSUB consumer, so the same source
+renders with normal lowercase and lining digits when built with
+`--format=pdf`. The features depend on the font having the right
+GSUB tables -- `Times Base`, `Helvetica Base`, and `Palatino`
+ship with `smcp` and `onum`; many monospace fonts (`Courier`)
+have neither, in which case the request silently no-ops. Use a
+YAML list (`font-features: [smcp, onum, kern]`) or comma string
+(`smcp,onum`); both are accepted. To target only headings or a
+specific span, the macro route in raw Lout is
+`@Font { features { smcp onum } } { ... }` -- `font-features`
+is the *document-wide* knob, not a per-span one. The lining
+digits in headings can collide with section numbering in
+`type: report` (e.g. `3 Methodology` becomes a descender-bearing
+`3`); drop `onum` from the feature list, or override section
+numbers with `section-numbers: No`. Working example:
+[`examples/cv.md`](../examples/cv.md).
+
+## 37. Polished title pages for `type: report` and `type: book`
+
+A `type: report` document with `cover: Yes`, a `title`, `author`,
+`date`, and `abstract` in frontmatter automatically gets a Lout
+cover sheet on page 1: title in display size, author and date
+below, abstract in a justified block lower down. The same keys
+work for `type: book`, except the title page is part of the
+front matter and the abstract typically lives on a separate
+preface. mdlout wires the YAML keys to Lout's `@Title`,
+`@Author`, `@Institution`, `@Abstract`, and `@DateLine` slots
+in the `@Report` / `@Book` entry; the underlying typesetting
+comes from Lout's `report`/`book` packages with no extra raw
+Lout required.
+
+```yaml
+---
+type: report
+title: Convergence of Newton-Cotes Quadrature
+            on Singular Integrands
+author: J. L. Clements
+institution: University of Sydney, School of Computer Science
+date: 2026-05-21
+cover: Yes
+abstract: |
+  We analyse the rate at which the trapezoidal and Simpson
+  rules converge when applied to integrands with endpoint
+  singularities of the form |x|^p. Empirical results agree
+  with the theoretical bounds to within 0.5% over four orders
+  of magnitude in step size.
+
+  A companion implementation in Python (250 lines, NumPy
+  only) reproduces every figure in the report.
+font: Times Base 11p
+page: A4
+para-indent: 0f
+para-gap: 1.0v
+section-numbers: Yes
+contents: Yes
+---
+
+# Introduction
+
+The body of the report starts on page 2; the cover sheet
+holds the title, author, institution, date, and abstract.
+
+# Method
+
+(...)
+```
+
+Rendered: page 1 is a centred cover with the title in a large
+display font (typically 24pt), the author and institution below
+in 12pt, the date in 11pt, and the abstract in a justified block
+with `@AbstractTitle` ("Abstract") set as a small heading. Page
+2 starts the table of contents (because `contents: Yes`); page 3
+begins `# Introduction` as `@Section 1`.
+
+**Gotcha:** without `cover: Yes` the report builds with a
+*minimal* title block at the top of page 1 (title + author only)
+and the body starts immediately below -- no separate cover sheet,
+no abstract block. To get a polished cover, `cover: Yes` is
+required. The `abstract` field is a YAML literal block (`|` plus
+indentation) when it contains paragraph breaks; a single-line
+`abstract: One sentence here.` works without the `|` but loses
+all internal formatting. mdlout splits the abstract on blank
+lines and joins paragraphs with `@PP`, so two-paragraph
+abstracts render correctly. Inline markdown (`*italic*`,
+`**bold**`, `` `code` ``) inside `abstract` *is* honoured via
+`convert_inline`. The `date` field accepts any string -- Lout
+does not parse it, so `2026-05-21`, `May 2026`, or `Q2 2026`
+all render verbatim. For `type: book`, there is no `cover:`
+key; the title page is unconditional, and `title-font` /
+`chapter-font` configure its typography. To suppress the
+auto-generated title page in `type: report`, set
+`cover: No` and write the cover yourself in a ` ```lout `
+fence at the top of the body. Working example:
+[`examples/scientific_paper.md`](../examples/scientific_paper.md).
+
+## 38. Glossary of frontmatter keys
+
+A single-page reference. Every key mdlout recognises, what it
+controls, and the recipe (or example) that demonstrates it. For
+the underlying Lout option name (e.g. `@PageType`, `@ColumnGap`),
+see the `_BASIC_SETUP_MAP` / `_DOC_SETUP_MAP` / `_REPORT_SETUP_MAP`
+tables in `mdlout.py`; this table is the *user-facing* index.
+
+| Key | Description | See |
+| --- | --- | --- |
+| `type` | Document class: `doc` (default, single-page), `report`, `book`, `slides` | #3, #11, #35 |
+| `title` | Document title (cover sheet + running heads) | #1, #37 |
+| `author` | Author name (cover + running heads) | #3, #37 |
+| `institution` | Affiliation, shown under author on cover | #37 |
+| `date` | Date string shown on cover; not parsed by Lout | #37 |
+| `abstract` | Abstract block on cover sheet; YAML `|` literal for multi-paragraph | #37 |
+| `cover` | `Yes`/`No`; enable polished cover sheet for `type: report` | #37 |
+| `abstract-title` | Override "Abstract" heading (report-only) | #37 |
+| `section-numbers` | `Yes`/`No`; auto-number `@Section` in report/book | #3, #35 |
+| `chapter-numbers` | `Yes`/`No`/Roman style for `@Chapter` (book-only) | #3 |
+| `chapter-start` | `Any`, `Odd`, `Even`; force chapter page parity (book-only) | #3 |
+| `font` | Body font, e.g. `Times Base 11p` (family + face + size) | #1, #2 |
+| `heading-font` | Override font for headings | #3 |
+| `fixed-font` | Override font for `` `code` `` and code blocks | #28, #32 |
+| `title-font` | Cover title font (book-only) | #3 |
+| `chapter-font` | Chapter heading font (book-only) | #3 |
+| `font-features` | OpenType GSUB features (`smcp`, `onum`, `kern`, ...) -- **HTML only** | #36 |
+| `colour` | Default text colour, e.g. `black`, `rgb 0.2 0.2 0.5` | -- |
+| `language` | Hyphenation locale, e.g. `English`, `French` | #19 |
+| `page` | Page size: `A4`, `A3`, `Letter`, ... | #1, #2 |
+| `page-width`, `page-height` | Custom page dimensions (overrides `page`) | -- |
+| `orientation` | `Portrait` (default) or `Landscape` | #1 |
+| `top-margin`, `foot-margin` | Top / bottom margins (Lout units) | #1 |
+| `left-margin`, `right-margin` | Inner / outer margins (Lout units) | #1 |
+| `columns` | Column count (1-3 typical) | #1, #11, #35 |
+| `column-gap` | Inter-column gutter (Lout units) | #1, #32 |
+| `page-headers` | `None`, `Simple`, `Titles` | #1 |
+| `page-numbers` | Page-number style | -- |
+| `para-indent` | First-line indent of paragraphs (`0f` = no indent) | #1, #2 |
+| `para-gap` | Inter-paragraph vertical gap | #1, #2 |
+| `display-gap` | Vertical gap around `@Display` blocks | -- |
+| `display-indent` | Horizontal indent of displays | -- |
+| `list-gap`, `list-indent` | Spacing for bullet/numbered lists | -- |
+| `contents` | `Yes`/`No`; auto-generate table of contents | #37 |
+| `index` | `Yes`/`No`; auto-generate index | -- |
+| `optimize-pages` | `Yes`/`No`; enable Lout's page-breaking optimizer | -- |
+| `dark-mode` | `true`/`false`/`force`/`auto`; HTML dark theme | -- |
+| `theme` | `dark`/`light`; shorthand for `dark-mode` | -- |
+| `subset-fonts` | `true`/`false`; subset embedded fonts in HTML output | -- |
+| `inline-raster` | `true`/`false`; base64-embed `.png`/`.jpg` in HTML | #33 |
+| `lecture-font`, `overhead-font` | Slide-specific heading fonts | -- |
+
+**Gotcha:** keys with hyphens accept underscore variants too --
+mdlout normalises both (`font-features` and `font_features` both
+work). Unknown keys are *silently ignored*, so a typo
+(`section_number` instead of `section-numbers`) produces a
+report with no numbered sections and no error; double-check the
+key spelling against this table when a setting seems to have no
+effect. Several keys are mode-specific: `font-features` is
+HTML-only (see #36); `cover`, `abstract`, `institution`,
+`abstract-title` are `report`/`book` only; `chapter-*`,
+`title-font`, `chapter-start` are `book`-only; `lecture-font`,
+`overhead-font` are `slides`-only. Setting a `book`-only key on a
+`type: doc` document is silently dropped. For Lout option names
+or to add a new key, edit the maps near the top of
+[`mdlout.py`](../mdlout.py) (search for `_BASIC_SETUP_MAP`).
+
 ## Where to look next
 
 - [`docs/best_practices.md`](best_practices.md) -- idiom guide:
