@@ -2784,15 +2784,14 @@ def _build_html_scaffold(
     )
 
     # ---- Dark mode (opt-in) ------------------------------------------------
-    # The SVG pages emitted by Lout's z53.c back-end paint text as
-    # fill="rgb(0,0,0)" on a white page background -- they encode the PS
-    # colour model, not the viewer's theme. Until z53.c learns to emit
-    # `fill="currentColor"`, the cheapest way to deliver a dark theme in
-    # the browser is to invert the rendered page wholesale via a CSS
-    # filter. This also inverts embedded raster <image>s (photos render
-    # with reversed luminance and shifted hues) -- documented as a
-    # known caveat. A future round will replace this with a proper
-    # CSS-variable scheme once the SVG back-end carries semantic colour.
+    # Lout's z53.c back-end now emits text and rules with
+    # fill="currentColor" / stroke="currentColor" whenever the active PS
+    # colour is the default black. That lets us deliver a dark theme by
+    # simply re-tinting the SVG with CSS `color:` instead of inverting the
+    # rendered page (which would also flip embedded raster <image>s and
+    # corrupt photo luminance / hue). Non-default colours still emit an
+    # explicit rgb(...), so authored colour choices keep their values
+    # unchanged in dark mode -- only the implicit "ink black" is themed.
     #
     # `dark_mode` values:
     #   'off'   -- no dark CSS emitted (default; rendering unchanged).
@@ -2801,13 +2800,14 @@ def _build_html_scaffold(
     #              `prefers-color-scheme: dark`.
     if dark_mode in ('force', 'auto'):
         dark_rules = (
-            'html,body{background:#1a1a1a!important}'
-            'body.mdlout-dark .lout-page,'
-            'body.mdlout-dark svg.lout-page{'
-            'filter:invert(1) hue-rotate(180deg);'
-            'background:#1a1a1a}'
-            'body.mdlout-dark{color:#e8e8e8}'
+            'body.mdlout-dark{background:#1a1a1a;color:#e8e8e8}'
+            'body.mdlout-dark .lout-page{background:#1a1a1a}'
+            # The cascade target: every `fill="currentColor"` / `stroke=
+            # "currentColor"` inside the SVG resolves to this colour.
+            'body.mdlout-dark .lout-page svg{color:#e8e8e8}'
             'body.mdlout-dark a{color:#88c0ff}'
+            'body.mdlout-dark code,body.mdlout-dark pre{'
+            'background:#222;color:#ccc}'
             'body.mdlout-dark .mdlout-code{'
             'background:#222;border-color:#444;color:#e8e8e8}'
             'body.mdlout-dark nav.toc,body.mdlout-dark aside.footnotes,'
@@ -4155,12 +4155,12 @@ def main() -> None:
              'when --dark is given with no argument) or "auto". '
              '"force" applies the dark theme unconditionally; "auto" wraps '
              'the rules in @media (prefers-color-scheme: dark) so the OS '
-             'theme decides. The dark theme inverts each .lout-page via a '
-             'CSS filter -- text reads white-on-dark, but embedded raster '
-             'images are also inverted (a known caveat that future work '
-             'on z53.c will fix by emitting fill="currentColor"). Also '
-             'settable via `dark-mode: true|auto|force` or `theme: dark` '
-             'in YAML frontmatter.',
+             'theme decides. The dark theme re-tints the SVG via a CSS '
+             'color: cascade (z53.c emits fill="currentColor" for default '
+             'black ink), so text reads light-on-dark while embedded raster '
+             'images and authored colours stay unmodified. Also settable '
+             'via `dark-mode: true|auto|force` or `theme: dark` in YAML '
+             'frontmatter.',
     )
     parser.add_argument(
         '--inline-raster', action='store_true',
