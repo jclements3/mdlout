@@ -4,10 +4,15 @@
 # in tests/user_guide_diff/" entrypoint.
 #
 # Wall time is ~15-20 minutes on a recent laptop: dominated by the
-# 7-pass SVG build (~6 min) and the per-page ImageMagick compare
+# 8-pass SVG build (~7 min) and the per-page ImageMagick compare
 # (~4 min). All intermediate files land in /tmp/userguide_compare/;
 # only the committed manifests + worst-NN images get rewritten under
 # tests/user_guide_diff/.
+#
+# PASSES (default 8) controls the cross-reference convergence loop.
+# Bumped from 7 to 8 in #165: ligature width shifts in the User's
+# Guide push convergence past 7 passes, leaving the final pass's
+# byte counts unstable. Override via `PASSES=N tests/user_guide_diff.sh`.
 #
 # Requirements (must already be on $PATH):
 #   lout (built; the script uses the binary at lout/lout)
@@ -24,6 +29,7 @@ LOUT=$REPO/lout
 USER_DIR=$LOUT/doc/user
 OUT_DIR=$REPO/tests/user_guide_diff
 WORK=/tmp/userguide_compare
+PASSES=${PASSES:-8}
 
 if [[ ! -x "$LOUT/lout" ]]; then
     echo "error: $LOUT/lout not built. Run: (cd $LOUT && make all)" >&2
@@ -32,24 +38,32 @@ fi
 
 mkdir -p "$WORK"/{ps,svg,diff,svg_split}
 
-# --- Stage 1: build PostScript (7 passes) ------------------------------------
-echo "==> building PostScript (7 passes)"
+# --- Stage 1: build PostScript (up to $PASSES passes, stop on convergence) ---
+echo "==> building PostScript (up to $PASSES passes; early-stop on byte-count convergence)"
 ( cd "$USER_DIR" && rm -f ./*.li
-  for i in 1 2 3 4 5 6 7; do
+  prev_size=-1
+  for ((i=1; i<=PASSES; i++)); do
       ../../lout -I ../../include -I . all > /tmp/user.ps 2>/tmp/user.ps.err || true
+      cur_size=$(stat -c%s /tmp/user.ps 2>/dev/null || echo 0)
+      if [[ "$cur_size" == "$prev_size" && "$i" -ge 2 ]]; then
+          echo "    PS converged after pass $i (byte count $cur_size unchanged)"
+          break
+      fi
+      prev_size=$cur_size
   done )
 echo "    PS bytes: $(stat -c%s /tmp/user.ps)"
 
-# --- Stage 2: build SVG (7 passes, accept the largest converged output) ------
-echo "==> building SVG (7 passes; alternation between full/partial is expected)"
+# --- Stage 2: build SVG (up to $PASSES passes, accept the largest output) ----
+echo "==> building SVG (up to $PASSES passes; alternation between full/partial is expected)"
+rm -f /tmp/user.svg.[0-9]* /tmp/user.svg.err.[0-9]*
 ( cd "$USER_DIR" && rm -f ./*.li
-  for i in 1 2 3 4 5 6 7; do
+  for ((i=1; i<=PASSES; i++)); do
       "$LOUT/lout" -I "$LOUT/include" -I . -G all > "/tmp/user.svg.$i" 2>"/tmp/user.svg.err.$i" || true
   done )
 # pick the largest .svg.N as the canonical output
-biggest=$(ls -S /tmp/user.svg.[1-7] | head -1)
+biggest=$(ls -S /tmp/user.svg.[0-9]* | head -1)
 cp "$biggest" /tmp/user.svg
-rm -f /tmp/user.svg.[1-7] /tmp/user.svg.err.[1-7]
+rm -f /tmp/user.svg.[0-9]* /tmp/user.svg.err.[0-9]*
 echo "    SVG bytes: $(stat -c%s /tmp/user.svg)  (from $biggest)"
 
 # --- Stage 3: rasterise PS pages at 100 dpi ----------------------------------
