@@ -2493,6 +2493,236 @@ reload script is the *only* JS in the parent page, so a custom
 listener has to be injected via a separate ` ```svg ` block
 holding a `<script>` element.
 
+## 42. Responsive embedded YouTube via `<iframe>` + aspect-ratio CSS
+
+Recipe 41 hard-codes the embed at 500x300 user units, which looks
+fine in print-sized SVG pages but breaks on wide-screen monitors
+and never reflows on a phone. The CSS "aspect-ratio box" trick --
+a wrapper at `width: 100%` and `aspect-ratio: 16 / 9` -- lets the
+iframe stretch with the viewport while preserving cinematic
+proportions, and it composes cleanly with the `@SVG` passthrough
+because `<foreignObject>` can host any HTML, including a styled
+`<div>`. Add the `sandbox` attribute to keep third-party JS from
+reaching back into the parent page.
+
+```yaml
+---
+type: doc
+title: A Page with a Responsive Demo Video
+font: Times Base 11p
+page: A4
+page-headers: None
+---
+
+# Demo: a fully responsive YouTube embed
+
+```svg
+<foreignObject x="0" y="0" width="100%" height="400">
+  <div xmlns="http://www.w3.org/1999/xhtml"
+       style="position:relative; width:100%; aspect-ratio:16/9;
+              max-width:800px; margin:0 auto;">
+    <iframe style="position:absolute; top:0; left:0;
+                   width:100%; height:100%; border:0;"
+            src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+            title="mdlout demo (responsive)"
+            sandbox="allow-scripts allow-same-origin
+                     allow-presentation"
+            allow="encrypted-media; picture-in-picture; fullscreen"
+            allowfullscreen
+            loading="lazy"
+            referrerpolicy="strict-origin-when-cross-origin"></iframe>
+  </div>
+</foreignObject>
+```
+
+PDF fallback: [https://youtu.be/dQw4w9WgXcQ](https://youtu.be/dQw4w9WgXcQ).
+```
+
+Rendered (HTML): the iframe fills the column on a desktop monitor,
+caps at 800px max-width, and shrinks proportionally on a phone --
+the 16:9 ratio is preserved at every size. `loading="lazy"` defers
+the YouTube handshake until the user scrolls the player into view,
+shaving a couple of seconds off first paint. The `sandbox`
+attribute removes ambient authority: even if YouTube's embed
+script is compromised, it cannot touch the parent document's
+cookies or DOM. Rendered (PDF): the SVG passthrough is dropped and
+the trailing markdown link becomes the citation.
+
+**Gotcha:** `width="100%"` on `<foreignObject>` is honoured by
+browsers but *not* by the SVG spec strictly -- some older renderers
+(librsvg < 2.50, Inkscape pre-1.0) treat it as `0` and clip the
+embed. For maximal compatibility specify a numeric `width` in user
+units that matches your page width (e.g. `width="500"`) and let
+the inner `<div>` do the responsive work. `aspect-ratio` is a
+2021-era CSS property -- Safari got it in 15.0, Firefox 89, Chrome
+88; older browsers ignore it and the box collapses to height 0, so
+combine with `min-height: 200px` for graceful degradation.
+`sandbox="allow-scripts"` without `allow-same-origin` is the
+*strictest* useful policy for YouTube embeds; dropping
+`allow-scripts` disables the player entirely. The
+`referrerpolicy` attribute is what stops YouTube's analytics from
+seeing your reader's local filesystem path -- always set it when
+distributing offline HTML. For Vimeo swap the `src` to
+`https://player.vimeo.com/video/<id>` and the `allow` list to
+`autoplay; fullscreen; picture-in-picture`.
+
+## 43. Footer page numbers + running headers
+
+`page-headers: Titles` in the frontmatter is the one-line way to
+get the standard publisher's chrome: chapter number and title on
+the running head, folio in the corner. mdlout wires this into the
+`@Use { @ReportSetup }` / `@Use { @BookSetup }` clause, and Lout's
+header machinery then carries the most recent `@Section` /
+`@Chapter` title through every page until the next heading
+rewrites it. When you need a *different* layout on a specific
+chapter -- a part-title page with no header, a chapter-opening
+page with only the folio, an appendix that drops the chapter name
+for a section name -- drop down to raw Lout `@PageMark` (records a
+new label into the cross-reference database) plus `@RunningTitle`
+(reads it back on every subsequent page).
+
+```yaml
+---
+type: report
+title: Telemetry Pipeline -- Operations Manual
+author: J. L. Clements
+font: Times Base 11p
+page: A4
+page-headers: Titles
+section-numbers: Arabic
+---
+
+# Ingest tier
+
+Standard chapter -- the running head reads "1 INGEST TIER" on the
+recto and "TELEMETRY PIPELINE -- OPERATIONS MANUAL" on the verso.
+
+# Transport tier
+
+```lout
+@PageMark { running }
+@RunningTitle { @I { Transport } @DotSep cf. 2024-Q3 SLO }
+```
+
+The header is overridden from this page onward; subsequent
+sections inherit the override until the next chapter resets it.
+
+# Appendix A: incident log
+
+```lout
+@PageMark { running }
+@RunningTitle { Appendix A @DotSep Incident Log }
+```
+
+Appendix-style header that drops the volume title entirely.
+```
+
+Rendered (PDF and SVG identical): the first chapter gets the
+out-of-the-box `Titles` chrome; chapter 2 picks up the custom
+override on page two onward (Lout sets the header for the *next*
+page, not the current one, so the chapter's opening page still
+shows the auto-generated header); the appendix replaces the
+header outright. The folio is positioned independently by
+`@OddFoot` / `@EvenFoot` and is unaffected.
+
+**Gotcha:** `@RunningTitle` must sit *inside* the chapter body,
+not in the preamble -- if you set it once at the top of the
+document it sticks for the whole book regardless of later
+`@Chapter` directives, defeating the whole point. The header
+change takes effect on the *following* page; the chapter-opening
+page always carries the auto-generated header from
+`page-headers: Titles` because `@Chapter` resets the running
+title slot before your `@RunningTitle` directive is parsed. For
+a *footer* instead of a header set `page-headers: NoTitleNoHeader`
+and define `@OddFoot` / `@EvenFoot` in `mydefs` (see recipe #26).
+In HTML/SVG mode the running header is rendered as a regular
+`<text>` element in the SVG `<g>` for page chrome -- z53.c
+emits the same string the PostScript back-end would; if the
+header is missing in SVG, check that `@PageMark` actually
+resolves (the cross-reference pass needs two lout runs; mdlout
+runs three by default).
+
+## 44. PDF-only enhancements via pdfmark
+
+PDF readers honour metadata that simply does not exist in HTML:
+the Outline (bookmarks) pane in Acrobat / SumatraPDF / Preview,
+the document-properties dialog (`/Title`, `/Author`, `/Subject`,
+`/Keywords`), and named-destination link annotations that survive
+zoom and search. Lout exposes these via the `pdfmark` PostScript
+operator -- a side channel that `ps2pdf` (which is just Ghostscript
+in disguise) translates into real PDF objects. mdlout's PDF path
+already wires up basic `/Title` and `/Author` from the frontmatter,
+but anything richer requires raw PostScript inside a ` ```lout `
+fence. In HTML/SVG mode these blocks are silently dropped because
+`z53.c` discards PostScript-flavoured `@Graphic` bodies.
+
+```yaml
+---
+type: report
+title: Telemetry Pipeline -- Operations Manual
+author: J. L. Clements
+font: Times Base 11p
+page: A4
+page-headers: Titles
+---
+
+```lout
+@Graphic {
+[ /Title (Telemetry Pipeline -- Operations Manual)
+  /Author (J. L. Clements)
+  /Subject (On-call runbook for the ingest fleet)
+  /Keywords (telemetry, runbook, ingest, SRE)
+  /Creator (mdlout 0.2.7) /DOCINFO pdfmark
+[ /Title (Ingest tier) /Page 1 /View [/XYZ null null null]
+  /OUT pdfmark
+[ /Title (Transport tier) /Page 5 /View [/XYZ null null null]
+  /OUT pdfmark
+[ /Title (Appendix A) /Page 11 /View [/XYZ null null null]
+  /OUT pdfmark
+}
+```
+
+# Ingest tier
+
+Body content begins here ...
+```
+
+Rendered (PDF): Acrobat's Outline pane lists "Ingest tier",
+"Transport tier", "Appendix A" with click-to-jump targets;
+"Document Properties -> Description" shows the metadata from the
+`/DOCINFO` pdfmark; reader applications use `/Title` for the
+window title and the OS task-switcher tooltip. The `/View [/XYZ
+null null null]` directive means "jump to the target page at the
+current zoom and scroll position" -- which is what readers expect
+from a bookmark. Rendered (SVG/HTML): the entire `@Graphic { ... }`
+block is dropped on the floor with no warning; the surrounding
+chapters render normally.
+
+**Gotcha:** the page numbers in `/Page <n>` are *absolute*,
+counted from the first PostScript showpage -- not Lout's
+`@Section` numbers and not the running folio. Title pages, blank
+versos, and `chapter-start: Any` insertions all shift the count,
+so the only reliable workflow is to build the PDF once, open it,
+read the actual page numbers, then edit the pdfmark block and
+rebuild. For *named destinations* that survive page renumbering
+use `/Dest /chapter-2-ingest /View [/XYZ null null null] /OUT
+pdfmark` and put `[/Dest /chapter-2-ingest /DEST pdfmark]` at the
+target -- but this requires Lout to emit the destination at the
+right point, which mdlout does not currently support without raw
+PostScript fragments interleaved through the body (use `@PDFLink`
+from the `pdf` package if you have it, otherwise stick to absolute
+page numbers). `pdfmark` is a Ghostscript extension; if you swap
+`ps2pdf` for Adobe Distiller the syntax is identical, but for
+mupdf-tools `mutool convert` the pdfmark stream is ignored
+entirely. The `/Creator` field is the only one a typical reader
+ever sees in the file-info dialog; `/Producer` is overwritten by
+ps2pdf regardless of what you set. Nested bookmarks (parent/child
+hierarchy in the Outline pane) require the `/Count <n>` key on the
+parent entry, where `n` is the *negative* count of direct
+children -- e.g. `/Count -3` for a chapter with three sections
+below it; this is the single most-skipped detail in pdfmark
+tutorials and the reason nested outlines so often render flat.
+
 ## Where to look next
 
 - [`docs/best_practices.md`](best_practices.md) -- idiom guide:
