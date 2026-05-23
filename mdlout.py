@@ -2666,6 +2666,7 @@ def _build_html_scaffold(
     a11y: bool = True,
     page_size: str = 'Letter',
     orientation: str = 'Portrait',
+    dark_mode: str = 'off',
 ) -> tuple[str, dict[str, str | None]]:
     """Wrap raw SVG output from lout -G in a self-contained HTML5 document.
 
@@ -2781,6 +2782,55 @@ def _build_html_scaffold(
         'main,article{margin:0!important;padding:0!important;display:block}'
         '</style>'
     )
+
+    # ---- Dark mode (opt-in) ------------------------------------------------
+    # The SVG pages emitted by Lout's z53.c back-end paint text as
+    # fill="rgb(0,0,0)" on a white page background -- they encode the PS
+    # colour model, not the viewer's theme. Until z53.c learns to emit
+    # `fill="currentColor"`, the cheapest way to deliver a dark theme in
+    # the browser is to invert the rendered page wholesale via a CSS
+    # filter. This also inverts embedded raster <image>s (photos render
+    # with reversed luminance and shifted hues) -- documented as a
+    # known caveat. A future round will replace this with a proper
+    # CSS-variable scheme once the SVG back-end carries semantic colour.
+    #
+    # `dark_mode` values:
+    #   'off'   -- no dark CSS emitted (default; rendering unchanged).
+    #   'force' -- apply the dark theme unconditionally.
+    #   'auto'  -- apply only when the user agent reports
+    #              `prefers-color-scheme: dark`.
+    if dark_mode in ('force', 'auto'):
+        dark_rules = (
+            'html,body{background:#1a1a1a!important}'
+            'body.mdlout-dark .lout-page,'
+            'body.mdlout-dark svg.lout-page{'
+            'filter:invert(1) hue-rotate(180deg);'
+            'background:#1a1a1a}'
+            'body.mdlout-dark{color:#e8e8e8}'
+            'body.mdlout-dark a{color:#88c0ff}'
+            'body.mdlout-dark .mdlout-code{'
+            'background:#222;border-color:#444;color:#e8e8e8}'
+            'body.mdlout-dark nav.toc,body.mdlout-dark aside.footnotes,'
+            'body.mdlout-dark header[role="banner"]{color:#e8e8e8}'
+        )
+        if dark_mode == 'force':
+            # Emit the rules unconditionally, plus an `@media
+            # (prefers-color-scheme: dark)` echo so browser auditors that
+            # look for the media query still see it. The @media block is
+            # a no-op visually when `force` already applied the rules at
+            # the top level.
+            head_parts.append(
+                f'<style>{dark_rules}'
+                '@media (prefers-color-scheme: dark){'
+                f'{dark_rules}'
+                '}</style>'
+            )
+        else:
+            head_parts.append(
+                '<style>@media (prefers-color-scheme: dark){'
+                f'{dark_rules}'
+                '}</style>'
+            )
 
     # ---- KaTeX CSS + JS -----------------------------------------------------
     if math_engine:
@@ -3109,10 +3159,19 @@ def _build_html_scaffold(
         body_parts.append(footnotes_html)
     body_inner = '\n'.join(body_parts)
 
+    # Body class drives the dark-mode CSS selectors. For `force`, the
+    # class is always present. For `auto`, the class is always present
+    # too -- the @media (prefers-color-scheme: dark) wrapper is what
+    # gates whether the rules apply -- so the browser does the right
+    # thing regardless of the user's current OS theme.
+    body_attrs = ''
+    if dark_mode in ('force', 'auto'):
+        body_attrs = ' class="mdlout-dark"'
+
     return (
         '<!DOCTYPE html>\n'
         f'<html lang="{_html_escape(a11y_lang)}">\n<head>\n{head}\n</head>\n'
-        f'<body>\n{body_inner}\n'
+        f'<body{body_attrs}>\n{body_inner}\n'
         f'<script>{init_js}</script>\n'
         '</body>\n</html>\n'
     ), info
@@ -3444,6 +3503,27 @@ def _build_once(args) -> str | None:
                 or str(frontmatter.get('subset_fonts', '')).strip().lower()
                 in ('true', 'yes', '1', 'on')
             )
+            # Resolve dark-mode preference. CLI `--dark[=MODE]` wins
+            # over frontmatter. Frontmatter accepts either
+            # `dark-mode: true|false|force|auto` or `theme: dark|light`.
+            # The string ends up as 'off' / 'force' / 'auto', matching
+            # the _build_html_scaffold parameter contract.
+            _dark_mode_flag = 'off'
+            if getattr(args, 'dark', None):
+                _dark_mode_flag = args.dark  # 'force' or 'auto'
+            else:
+                fm_dark = str(
+                    frontmatter.get('dark-mode')
+                    or frontmatter.get('dark_mode')
+                    or ''
+                ).strip().lower()
+                fm_theme = str(frontmatter.get('theme') or '').strip().lower()
+                if fm_dark in ('true', 'yes', '1', 'on', 'force'):
+                    _dark_mode_flag = 'force'
+                elif fm_dark == 'auto':
+                    _dark_mode_flag = 'auto'
+                elif fm_theme == 'dark':
+                    _dark_mode_flag = 'force'
             html, asset_info = _build_html_scaffold(
                 svg,
                 title,
@@ -3458,6 +3538,7 @@ def _build_once(args) -> str | None:
                 a11y=not getattr(args, 'no_a11y', False),
                 page_size=str(frontmatter.get('page') or 'Letter'),
                 orientation=str(frontmatter.get('orientation') or 'Portrait'),
+                dark_mode=_dark_mode_flag,
             )
             # Inject the live-reload <script> just before </body> so the
             # browser opens an EventSource to /events. Only active in
@@ -4066,6 +4147,20 @@ def main() -> None:
              'image-alt manifest, focus-ring styles) from the HTML output. '
              'Produces marginally smaller HTML but fails WCAG 2.1 AA on '
              'multiple criteria; only use for diff/regression tooling.',
+    )
+    parser.add_argument(
+        '--dark', nargs='?', const='force', default=None,
+        choices=('force', 'auto'), metavar='MODE',
+        help='Emit an opt-in dark-mode CSS block. MODE is "force" (default '
+             'when --dark is given with no argument) or "auto". '
+             '"force" applies the dark theme unconditionally; "auto" wraps '
+             'the rules in @media (prefers-color-scheme: dark) so the OS '
+             'theme decides. The dark theme inverts each .lout-page via a '
+             'CSS filter -- text reads white-on-dark, but embedded raster '
+             'images are also inverted (a known caveat that future work '
+             'on z53.c will fix by emitting fill="currentColor"). Also '
+             'settable via `dark-mode: true|auto|force` or `theme: dark` '
+             'in YAML frontmatter.',
     )
     parser.add_argument(
         '--inline-raster', action='store_true',
