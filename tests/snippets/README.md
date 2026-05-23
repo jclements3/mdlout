@@ -86,6 +86,7 @@ fixture rather than a slice of the User's Guide.
 | `footnote_wired.lt`           | --                          | mdlout's pandoc-style `@FootNote` wiring               | strict    |       |
 | `graph_axes_negative.lt`      | Graphs                      | `@Graph` with origin-crossing axes and negative tick labels (`y = x^3 / 20`) | strict    |       |
 | `graph_bar_chart.lt`          | Graphs                      | `@Graph` with `filledyhisto` pairs (bar chart variant) | strict    |       |
+| `graph_default_color.lt`      | Graphs                      | `@Graph` with default-coloured axes/strokes; locks in z53.c's "fold default black to currentColor" rule on the raw-PS path | strict    | currentColor resolves to black under rsvg's default cascade, matching the PS reference pixel-for-pixel. |
 | `graph_log_scale.lt`          | Graphs                      | `@Graph` with `ylog { 10 }` exponential plot           | strict    |       |
 | `graphic_circle.lt`           | Graphics                    | Filled circle via raw PostScript                       | graphics  |       |
 | `graphic_line.lt`             | Graphics                    | Horizontal line via raw PostScript                     | graphics  |       |
@@ -112,9 +113,13 @@ fixture rather than a slice of the User's Guide.
 | `table_simple.lt`             | Tables                      | `@Tab` with three columns                              | strict    |       |
 | `table_spanned_columns.lt`    | Tables: spanning            | `@StartHSpan` / `@HSpan` + `@StartVSpan` / `@VSpan`    | strict    |       |
 | `text_basic.lt`               | Galley layout               | Plain paragraph, simple line breaking                  | strict    |       |
+| `text_currentcolor_default.lt`| --                          | Default-black text exercising z53.c's "fold default black to currentColor" rule for the `<text fill>` and underline-rule paths | strict    | Companion to `graph_default_color`; pixel-identical to PS because rsvg resolves currentColor to black absent a CSS cascade. |
+| `text_ligatures_kerned.lt`    | Fonts                       | Kerning pairs (`AV`, `Wa`, `To`) interleaved with `fi`/`fl`/`ffi` ligatures in one Times-Roman paragraph | strict    | Tests interaction of the per-font kern-pair matrix with the ligature allowlist (`svg_font_has_ligatures`). |
 | `text_sizes.lt`               | Fonts                       | Six sizes from 8 p to 24 p                             | strict    |       |
+| `text_smcp_synthesis_off.lt`  | --                          | Locks in the "feature off" path: with `LOUT_SVG_FONT_FEATURES` unset, the smcp/onum synthesis routines bail at their getenv check and emit plain `<text>` | strict    | Pairs with `text_smcp_active`; together they pin both branches of the synthesis gate. |
 | `text_styles.lt`              | Fonts                       | `@B` / `@I` / `@II` runs                               | strict    |       |
 | `text_subscript_superscript.lt` | --                        | Chained plain-text `@Sub` / `@Sup` (chemistry, ordinals, indexed bounds) | strict    |       |
+| `text_verbatim_whitespace.lt` | --                          | `@Verbatim` block with multi-space column alignment; exercises z53.c's `xml:space="preserve"` heuristic | strict    | Without preserve, SVG renderers collapse the runs; with it, columns line up byte-for-byte with the PS fixed-width render. |
 | `toc_auto.lt`                 | --                          | mdlout's `[TOC]` placeholder round-trip                | strict    |       |
 | `transform_rotate.lt`         | Graphics                    | `@Rotate { 30d }` text                                 | graphics  |       |
 | `tree_4level.lt`              | Diagrams: trees             | Four-level `@Tree` with mixed leaf decorations         | strict    |       |

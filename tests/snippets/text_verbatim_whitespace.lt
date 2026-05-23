@@ -1,0 +1,24 @@
+###########################################################################
+#  text_verbatim_whitespace - exercises z53.c's xml:space="preserve"      #
+#  heuristic on a @Verbatim block whose source contains runs of internal  #
+#  whitespace and leading indentation.  Without preserve, SVG renderers   #
+#  collapse the runs to single spaces and visibly drop characters,        #
+#  diverging from the PostScript reference.  With the heuristic active,   #
+#  the SVG <text> element carries xml:space="preserve" so rsvg-convert   #
+#  keeps the columns aligned, matching the fixed-width PS render.        #
+###########################################################################
+
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+A verbatim block exercising preserved whitespace and aligned columns:
+@LP
+@IndentedDisplay @F @Verbatim @Begin
+key      value      note
+foo      1          first
+bar      22         second
+baz      333        third
+@End @Verbatim
+@PP
+Text resumes normally after the verbatim block.
+@End @Text

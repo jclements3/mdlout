@@ -1,0 +1,17 @@
+###########################################################################
+#  text_ligatures_kerned - exercises the interaction between AFM kerning   #
+#  pairs (e.g. "AV", "Wa", "To") and OpenType ligature substitutions       #
+#  (fi, fl, ffi, ffl) in a single Times-Roman paragraph.  Both back ends   #
+#  read the same AFM kern table and the same ligature allowlist            #
+#  (svg_font_has_ligatures), so the kerned-then-ligatured run should land  #
+#  on identical pixel positions in PS and SVG.                             #
+###########################################################################
+
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+AVA WaVe ToTal -- kerning pairs followed by the four standard
+fi fl ffi ffl ligatures in Times-Roman.  The sentence "AVAILABLE
+final affinity" combines both: an "AV" kern pair, an "fi" ligature
+in "final", and an "ffi" ligature in "affinity".
+@End @Text

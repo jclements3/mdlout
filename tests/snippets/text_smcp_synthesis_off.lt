@@ -1,0 +1,21 @@
+###########################################################################
+#  text_smcp_synthesis_off - the smcp/onum consumer path is gated on the   #
+#  LOUT_SVG_FONT_FEATURES env var.  When the env var is *not* set (as is   #
+#  the case here -- run_compare.sh only sets it for text_smcp_active),    #
+#  the synthesis routines in z53_glyph.c bail out at their getenv check   #
+#  and z53.c emits plain <text> with the original codepoints, identical    #
+#  to the PS reference.  This snippet locks in that "feature off" path    #
+#  so a future bug that activates synthesis unconditionally would flip    #
+#  the verdict to FAIL.                                                    #
+###########################################################################
+
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+Mixed lower- and upper-case letters with embedded digits: abc DEF
+ghi 0123 jkl MNO 4567.  Both back ends render this verbatim because
+the LOUT_SVG_FONT_FEATURES environment variable is not set; the
+synthesis path in z53_glyph.c (svg_glyph_font_smcp_substitute and
+svg_glyph_font_onum_substitute) returns zero on its getenv check and
+no GSUB rewrite happens.
+@End @Text

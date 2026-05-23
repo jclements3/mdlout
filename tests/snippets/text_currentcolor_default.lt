@@ -1,0 +1,24 @@
+###########################################################################
+#  text_currentcolor_default - exercises z53.c's "fold default black to    #
+#  currentColor" rule.  The SVG back end emits fill="currentColor" for     #
+#  text and stroke="currentColor" for default-black underline rules so     #
+#  that a CSS `color:` declaration on the wrapping HTML can re-tint the    #
+#  whole document (light/dark mode).  rsvg-convert resolves currentColor   #
+#  to black when no inherited color is set, matching the PS reference      #
+#  pixel-for-pixel, so the snippet is also a regression check that the     #
+#  default-resolution stays black.                                         #
+###########################################################################
+
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+This paragraph contains only default-coloured text.  The SVG back end
+emits each word with fill="currentColor"; the PostScript back end
+emits the equivalent setgray 0 (pure black).  Because the SVG default
+for currentColor with no CSS cascade is black, the two raster outputs
+should be pixel-identical.
+@PP
+A second paragraph confirms the same currentColor fold applies across
+paragraph breaks and that the @PP-driven baseline advance is identical
+between the two back ends.
+@End @Text

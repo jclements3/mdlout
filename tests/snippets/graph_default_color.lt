@@ -1,0 +1,39 @@
+###########################################################################
+#  graph_default_color - a minimal @Graph that uses default (black)        #
+#  axis lines, tick labels and plot strokes.  Exercises z53.c's "fold     #
+#  default black to currentColor" rule on the raw-PostScript path that    #
+#  @Graph rides through: every uncoloured stroke/fill emitted by the      #
+#  graph package should reach the SVG output as currentColor rather than #
+#  rgb(0,0,0).  rsvg-convert resolves currentColor to black when no CSS   #
+#  cascade is set, so the raster output must still match the PS          #
+#  reference pixel-for-pixel.                                             #
+###########################################################################
+
+@SysInclude { graph }
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+A simple line graph with default-coloured axes and strokes:
+@DP
+@CentredDisplay -2p @Font @Graph
+   style { axes }
+   xorigin { 0 }
+   yorigin { 0 }
+   width { 7c }
+   height { 4c }
+   xticks { 0@ 1@ 2@ 3@ 4@ 5@ }
+   yticks { 0@ 5@ 10@ 15@ 20@ 25@ }
+   belowcaption { x }
+   leftcaption { y }
+{
+   @Data pairs { solid }
+   {
+      0   0
+      1   1
+      2   4
+      3   9
+      4   16
+      5   25
+   }
+}
+@End @Text
