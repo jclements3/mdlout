@@ -4,6 +4,35 @@
 doc walks through cutting a release to **TestPyPI** first, then **PyPI
 proper**, plus how to wire up CI to do it for you.
 
+## Status
+
+**v0.2.5: pending user action.** Artifacts built in `dist/`
+(`mdlout-0.2.5-py3-none-any.whl`, `mdlout-0.2.5.tar.gz`) but `~/.pypirc`
+does not exist on this machine, so the automated publish step was
+skipped. To finish the release, the user must:
+
+1. Create `~/.pypirc` per section 3 below with TestPyPI and PyPI tokens,
+   then `chmod 600 ~/.pypirc`.
+2. From the repo root, run:
+   ```bash
+   python3 -m twine check dist/mdlout-0.2.5*
+   python3 -m twine upload --repository testpypi dist/mdlout-0.2.5*
+   python3 -m venv /tmp/mdlout-testpypi && . /tmp/mdlout-testpypi/bin/activate
+   pip install --index-url https://test.pypi.org/simple/ --no-deps mdlout==0.2.5
+   mdlout --version
+   deactivate && rm -rf /tmp/mdlout-testpypi
+   ```
+3. If TestPyPI looks good:
+   ```bash
+   python3 -m twine upload dist/mdlout-0.2.5*
+   python3 -m venv /tmp/mdlout-pypi && . /tmp/mdlout-pypi/bin/activate
+   pip install mdlout==0.2.5
+   mdlout --version
+   deactivate && rm -rf /tmp/mdlout-pypi
+   ```
+4. Then update this Status block with the publish date and URL
+   (https://pypi.org/project/mdlout/0.2.5/).
+
 ## 1. PyPI account setup
 
 1. Register two accounts (they're separate user databases):
