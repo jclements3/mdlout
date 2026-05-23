@@ -1,0 +1,31 @@
+###########################################################################
+#  text_textpath_curveto_chain - text following a chained, multi-segment   #
+#  cubic Bezier path.  Companion to text_on_path.lt, which uses a single   #
+#  curveto before `show`; this snippet stitches three curveto segments    #
+#  together so z53.c's textPath emitter has to consume the whole          #
+#  newpath..show window as one <path id="textpath-N"> def rather than     #
+#  collapsing to a static <text> at the last current point.               #
+###########################################################################
+
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+A line of text rendered along a three-segment cubic path:
+@DP
+@CentredDisplay {
+   "/Times-Roman findfont 11 pt scalefont setfont"
+   "newpath"
+   "0 ysize 2 div moveto"
+   "xsize 6 div ysize"
+   "  xsize 3 div ysize"
+   "  xsize 2 div ysize 2 div curveto"
+   "xsize 3 mul 5 div 0"
+   "  xsize 4 mul 5 div 0"
+   "  xsize 4 mul 5 div ysize 2 div curveto"
+   "xsize 9 mul 10 div ysize"
+   "  xsize ysize"
+   "  xsize ysize 2 div curveto"
+   "0 ysize 2 div moveto"
+   "(Text along a chained cubic curve) show"
+} @Graphic { 9c @Wide 3c @High }
+@End @Text

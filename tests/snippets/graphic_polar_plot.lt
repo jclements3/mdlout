@@ -1,0 +1,31 @@
+###########################################################################
+#  graphic_polar_plot - a polar rose r = cos(3*theta) traced inside a     #
+#  raw @Graphic by emitting moveto/lineto over a parametric sweep.  The   #
+#  @Graph package is cartesian-only (no native pie/polar mode), so this   #
+#  exercises the embedded PS interpreter's `for`, `sin`, `cos`, `mul`,    #
+#  `div`, `add` and CTM-translate path in z53.c on a curve that closes   #
+#  on itself multiple times.                                              #
+###########################################################################
+
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+A polar rose r = cos(3 theta), traced as a piecewise-linear sweep:
+@DP
+@CentredDisplay {
+   "gsave"
+   "  xsize 2 div ysize 2 div translate"
+   "  /scale ysize 2 div 4 sub def"
+   "  0.2 0.4 0.8 setrgbcolor 0.8 setlinewidth"
+   "  newpath"
+   "  0 1 360 {"
+   "     /theta exch def"
+   "     /r theta 3 mul cos def"
+   "     /x theta cos r mul scale mul def"
+   "     /y theta sin r mul scale mul def"
+   "     theta 0 eq { x y moveto } { x y lineto } ifelse"
+   "  } for"
+   "  stroke"
+   "grestore"
+} @Graphic { 5c @Wide 5c @High }
+@End @Text

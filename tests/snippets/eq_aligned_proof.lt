@@ -1,0 +1,21 @@
+###########################################################################
+#  eq_aligned_proof - a four-line algebraic derivation typeset as a       #
+#  left-aligned vertical pile via `labove`.  Companion to eq_alignment,  #
+#  which uses a `matrix row rcol/ccol/lcol` to align two equations on   #
+#  the equals sign; this snippet uses the simpler `labove` chain to     #
+#  stack a chain of justified-by-reason derivation steps.               #
+###########################################################################
+
+@SysInclude { eq }
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+A short algebraic derivation, each line left-aligned under the previous:
+@DP
+@CentredDisplay @Eq {
+   { ( x + 1 ) sup 2 }
+   labove { = ( x + 1 ) ( x + 1 ) }
+   labove { = x sup 2 + x + x + 1 }
+   labove { = x sup 2 + 2 x + 1 }
+}
+@End @Text

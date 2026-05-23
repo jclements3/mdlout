@@ -1,0 +1,26 @@
+###########################################################################
+#  table_color_alternating - a @Tbl with alternating row background       #
+#  colours via the per-cell `paint { ... }` option.  Existing table       #
+#  snippets only cover rules, alignment and spans; this is the first to   #
+#  exercise the `paint` (cell-fill) option, which goes through the same   #
+#  raw-PS rectangle-fill path that box_simple uses.                       #
+###########################################################################
+
+@SysInclude { tbl }
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+A two-column ledger with alternating row stripes:
+@DP
+@CentredDisplay @Tbl
+   rule { yes }
+   aformat { @Cell paint { lightgrey } A | @Cell paint { lightgrey } B }
+   bformat { @Cell A | @Cell B }
+{
+@Rowa A { @B { Item } } B { @B { Amount } }
+@Rowb A { Coffee } B { 3.50 }
+@Rowa A { Bagel } B { 2.75 }
+@Rowb A { Juice } B { 4.00 }
+@Rowa A { Total } B { 10.25 }
+}
+@End @Text

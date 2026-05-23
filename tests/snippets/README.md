@@ -68,8 +68,10 @@ fixture rather than a slice of the User's Guide.
 | `diag_multi_link.lt`          | Diagrams                    | K3 node graph                                          | strict    |       |
 | `diag_multicol.lt`            | Diagrams                    | `@Diag` inside a multi-column galley                   | strict    |       |
 | `diag_syntax.lt`              | Diagrams: syntax diagrams   | `@SyntaxDiag` `@Loop`                                  | strict    |       |
+| `diag_text_outline.lt`        | Graphics                    | Raw `@Graphic` with `charpath` + `stroke` to paint glyph outlines | strict    | Exercises z53.c's charpath callback chain (`svg_charpath_cb_move` / `_line` / `_curve` / `_close`) that feeds glyph outlines back into the active path. |
 | `diag_tree_simple.lt`         | Diagrams: trees             | `@Tree`, three children                                | strict    |       |
 | `display_overhead.lt`         | Displays                    | `@Overhead` (slides) with nested `@Display`            | strict    |       |
+| `eq_aligned_proof.lt`         | Equations                   | Four-line algebraic derivation typeset as a left-aligned vertical pile via `labove` | strict    | Companion to `eq_alignment` (which uses `matrix row rcol/ccol/lcol`); this pins the simpler `labove` chain on a multi-line derivation. |
 | `eq_alignment.lt`             | Equations: matrices         | Multi-line equation system aligned on `=` via `matrix` + `rcol`/`ccol`/`lcol` | strict    |       |
 | `eq_basic.lt`                 | Equations                   | `sup` / `sub` baseline cases                           | strict    |       |
 | `eq_braced_systems.lt`        | Equations: large fences     | Piecewise function with `left "{"`, column vector with `left [ ... right ]` | strict    |       |
@@ -90,6 +92,7 @@ fixture rather than a slice of the User's Guide.
 | `graph_log_scale.lt`          | Graphs                      | `@Graph` with `ylog { 10 }` exponential plot           | strict    |       |
 | `graphic_circle.lt`           | Graphics                    | Filled circle via raw PostScript                       | graphics  |       |
 | `graphic_line.lt`             | Graphics                    | Horizontal line via raw PostScript                     | graphics  |       |
+| `graphic_polar_plot.lt`       | Graphics                    | Polar rose r = cos(3 theta) traced via PS `for` loop with `sin` / `cos`; `@Graph` is cartesian-only so this fills the polar/pie gap | strict    | Exercises the embedded PS interpreter's `for`, `sin`, `cos`, `mul`, `div`, `add` ops on a self-closing curve. |
 | `graphic_stress.lt`           | Graphics                    | CTM + curves + fills + strokes                         | graphics  |       |
 | `graphic_trig.lt`             | Graphics                    | Sin/cos/atan inside raw `@Graphic`                     | strict    |       |
 | `headings.lt`                 | Displays                    | Three sizes of centred display headings                | strict    |       |
@@ -107,6 +110,7 @@ fixture rather than a slice of the User's Guide.
 | `sym_special.lt`              | Symbols                     | `@Sym` Greek + maths + arrow                           | strict    | Same caveat as `sym_greek_full.lt`. |
 | `syntax_diag_repeat.lt`       | Diagrams: syntax diagrams   | `@SyntaxDiag` `@Repeat`                                | graphics  |       |
 | `table_align.lt`              | Tables                      | `@Cell A indent { left | ctr | right }`                | strict    |       |
+| `table_color_alternating.lt`  | Tables                      | `@Tbl` rows with alternating `paint { lightgrey }` cell-fill formats | strict    | First snippet to exercise the per-cell `paint` option; goes through the same raw-PS rectangle-fill path as `box_simple`. |
 | `table_longtable.lt`          | Tables                      | Multi-page `@Tbl` via `@NP`                            | strict    |       |
 | `table_multi_row.lt`          | Tables                      | Inter-row rules + simulated header band                | strict    |       |
 | `table_rotated.lt`            | Tables                      | `@Tab` with `@Rotate { 60d }` header cells             | strict    |       |
@@ -119,6 +123,7 @@ fixture rather than a slice of the User's Guide.
 | `text_smcp_synthesis_off.lt`  | --                          | Locks in the "feature off" path: with `LOUT_SVG_FONT_FEATURES` unset, the smcp/onum synthesis routines bail at their getenv check and emit plain `<text>` | strict    | Pairs with `text_smcp_active`; together they pin both branches of the synthesis gate. |
 | `text_styles.lt`              | Fonts                       | `@B` / `@I` / `@II` runs                               | strict    |       |
 | `text_subscript_superscript.lt` | --                        | Chained plain-text `@Sub` / `@Sup` (chemistry, ordinals, indexed bounds) | strict    |       |
+| `text_textpath_curveto_chain.lt` | Graphics                  | Raw `@Graphic` with a three-segment cubic `curveto` chain before `show`, exercising z53.c's `<textPath>` emission on a multi-segment path | strict    | Companion to `text_on_path` (single-segment curveto); pins the whole `newpath..show` window emitted as one `<path id="textpath-N">` def. |
 | `text_verbatim_whitespace.lt` | --                          | `@Verbatim` block with multi-space column alignment; exercises z53.c's `xml:space="preserve"` heuristic | strict    | Without preserve, SVG renderers collapse the runs; with it, columns line up byte-for-byte with the PS fixed-width render. |
 | `toc_auto.lt`                 | --                          | mdlout's `[TOC]` placeholder round-trip                | strict    |       |
 | `transform_rotate.lt`         | Graphics                    | `@Rotate { 30d }` text                                 | graphics  |       |

@@ -1,0 +1,25 @@
+###########################################################################
+#  diag_text_outline - raw @Graphic that uses `charpath` to convert a    #
+#  string into a vector outline, then `stroke`s the outline rather than  #
+#  filling glyphs.  Exercises z53.c's charpath callback chain            #
+#  (svg_charpath_cb_move / _line / _curve / _close) which feeds          #
+#  the outline back into the active path so a subsequent `stroke` paints #
+#  the glyph edges in SVG mode.                                          #
+###########################################################################
+
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+Outlined glyphs via @F { charpath } + @F { stroke }:
+@DP
+@CentredDisplay {
+   "gsave"
+   "  /Times-Bold findfont 36 pt scalefont setfont"
+   "  10 10 moveto"
+   "  (OUTLINE) false charpath"
+   "  0.4 setlinewidth"
+   "  0.2 0.2 0.7 setrgbcolor"
+   "  stroke"
+   "grestore"
+} @Graphic { 7c @Wide 2c @High }
+@End @Text
