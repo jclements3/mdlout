@@ -3118,6 +3118,210 @@ build with real equations, swap `@Math { \alpha }` for
 syntaxes do not compose, so pick one per build target or
 maintain parallel tables behind an `@Use` switch.
 
+## 51. Embedding raster photos in self-contained HTML
+
+The default HTML build references PNG/JPG/GIF/WebP assets via
+`<image href="photo.jpg">` inside the SVG: the file lives next
+to the `.html`, and the browser fetches it as a sibling. That's
+fine for a static site, but it falls over the moment someone
+emails the report, uploads it as an LMS submission, or opens it
+from a `file://` URL on a different machine where the asset
+directory didn't come along. The fix is `--inline-raster` (or
+the frontmatter equivalent `inline-raster: true`): mdlout walks
+the generated SVG, base64-encodes every referenced raster, and
+rewrites the `href` to a `data:image/...;base64,...` URL. The
+result is a single self-contained `.html` file that travels by
+itself -- no companion asset directory, no broken images in
+sandboxed viewers.
+
+```markdown
+---
+title: Field report -- bridge inspection
+author: J. Clements
+inline-raster: true
+---
+
+# Span 3, upstream face
+
+The corrosion pattern is visible mid-span. The photo below
+was taken at 18:24 local time, three hours before the rain
+front arrived.
+
+![Span 3 upstream face, 18:24 local](photos/span3-upstream.jpg)
+
+The detail crop shows the rust-jacking pattern around the
+post-tension anchor:
+
+![Detail: anchor head with rust-jacking](photos/anchor-detail.png)
+
+The temperature trace from the wireless gauges is in the
+appendix; see also the [thermal imagery](thermal.html).
+```
+
+Build with `./mdlout.py inspection.md` (frontmatter handles
+inlining) or, equivalently, `./mdlout.py inspection.md
+--inline-raster` (CLI flag wins over frontmatter if both are
+set). The resulting `inspection.html` is one file -- typically
+2-10x the size of the photo bytes alone, since base64 inflates
+binary payloads ~33% and the surrounding HTML/SVG scaffolding
+adds a few hundred KB. Open it offline, mail it as an
+attachment, or stash it on a USB stick: every photo renders.
+
+**Gotcha:** `--inline-raster` only inlines what the *SVG*
+references -- i.e., images that ended up in the Lout-rendered
+document. If your Markdown uses an `<img>` tag in a raw HTML
+passthrough block, that bypasses Lout entirely and the photo
+won't be inlined. Wrap such cases in a normal `![alt](path)`
+instead. Second, SVG assets are *not* inlined by this flag:
+they go through `@SVGFile` and are inserted as nested
+`<image>` references; if you want them inlined as well, use
+the `--text-as-paths` companion flag (which forces an
+`<image>`-to-`<svg>` substitution at build time). Third, the
+inlined data URLs defeat HTTP caching -- if the same photo
+appears on twenty pages of a static site, each page pays the
+full encoded cost. Use `--inline-raster` for self-contained
+distribution, not for served sites; cross-reference
+[recipe 45](#45-bulk-rendering-a-folder-of-examples-via-shell-loop)
+for the multi-file pattern.
+
+## 52. A test-suite-driven authoring workflow
+
+The `tests/` directory is mdlout's regression infrastructure,
+but it doubles as a build-verification harness for authors:
+when you're writing a long document and want to know *which*
+of your blocks just broke after a Lout submodule bump or an
+mdlout upgrade, you can drop the offending fragment into the
+snippet corpus and let the existing pipeline do the diffing
+for you. Two scripts cover the two axes: `tests/run_all.sh`
+runs every snippet through both back-ends (PS reference vs.
+SVG candidate) and produces a side-by-side pixel-diff
+gallery; `tests/browser_test.sh` headlessly drives Chromium
+through the example `.html` files and asserts that KaTeX,
+abcjs, mermaid, anchors, and highlight.js all initialised.
+
+```bash
+# 1. Author iteration: drop your problem fragment into snippets/.
+cat > tests/snippets/my_weird_table.lt <<'EOF'
+@SysInclude { doc }
+@SysInclude { tbl }
+@Doc @Text @Begin
+@Tbl
+  aformat { @Cell A | @Cell B }
+{
+  @Rowa A { foo } B { bar }
+  @Rowa A { @Eq { a sup 2 } } B { quux }
+}
+@End @Text
+EOF
+
+# 2. Run the full corpus through both back-ends.
+bash tests/run_all.sh
+
+# 3. Open the gallery -- your snippet appears alphabetically.
+xdg-open tests/report.html
+
+# 4. If you have a built HTML example, headless-Chromium check it.
+./mdlout.py my_document.md -o examples/out/my_document.html
+bash tests/browser_test.sh --only my_document.html --with-all
+```
+
+The `run_all.sh` report (`tests/report.html`) shows three
+columns per snippet: PostScript render, SVG render, and an
+ImageMagick `AE`-metric diff image. A snippet is `PASS` if
+the pixel ratio stays under the per-category threshold (5%
+text, 20% graphics); `FAIL` rows surface to the top of the
+report. `browser_test.sh` writes a JSON manifest
+(`browser_test_manifest.json`) with per-page pass/fail rows
+for each registered check; exit code 0 = all pass, 1 = any
+failure, 77 = no Chromium available (the autotools "skipped"
+convention, so CI doesn't redbar on headless boxes).
+
+**Gotcha:** snippets go in `tests/snippets/*.lt` (raw Lout, not
+Markdown) -- if you only have a Markdown fragment, run
+`./mdlout.py fragment.md --lout-only > tests/snippets/fragment.lt`
+first to materialise the Lout source. Examples that should be
+covered by `browser_test.sh` go in `examples/*.md` *and* must
+be built into `examples/out/*.html` (the manifest harvests
+that directory). A snippet that builds but renders blank is a
+silent pass against the threshold -- the AE metric only
+catches *differences*, not *absences* -- so always eyeball the
+SVG column of `tests/report.html` after adding a snippet, not
+just the diff column. Finally, the snippet corpus is part of
+the repo: don't `git clean -f` it without a backup, and don't
+add private content (the corpus is shared with every
+contributor).
+
+## 53. mdlout CLI flag reference
+
+A consolidated table of every command-line flag mdlout
+accepts. The argparse parser definition lives at the bottom
+of `mdlout.py` (the `main()` function around line 4246); the
+flags here mirror `./mdlout.py --help` but add a one-line
+intent and a pointer to the cookbook recipe that demonstrates
+each flag in context. Use this as a lookup when scripting
+build pipelines or debugging an unexpected option interaction.
+
+| Flag | What it does | See also |
+| --- | --- | --- |
+| `--format=html\|pdf` | Choose output pipeline; `html` (default) uses `lout -G` SVG, `pdf` uses PostScript + `ps2pdf` | recipes 1, 44 |
+| `-o`, `--output PATH` | Override output path; default is `INPUT.html` or `INPUT.pdf` next to input | recipe 1 |
+| `--lout-only` | Stop after emitting Lout source; print to stdout or `-o` file | recipes 21, 47 |
+| `--ps` | Stop at PostScript (implies `--format=pdf`); useful for distiller debugging | recipe 44 |
+| `--pdf` | Legacy alias for `--format=pdf` | recipe 1 |
+| `--lout-bin PATH` | Override lout binary discovery (defaults to PATH lookup, then submodule) | recipe 45 |
+| `--mydefs PATH` | Path to a Lout `mydefs` file; default looks adjacent to input | recipe 48 |
+| `--lout-args ARGS` | Extra arguments forwarded verbatim to the lout invocation | recipe 47 |
+| `--watch` | Rebuild on every save of the input `.md` (Ctrl-C exits) | recipe 4 |
+| `--serve [PORT]` | Serve at `http://127.0.0.1:PORT/` with SSE live-reload (default 8080, implies `--watch` + html) | recipe 4 |
+| `--external-assets` | Reference KaTeX/abcjs from CDN instead of inlining (smaller HTML, needs network) | recipes 7, 8 |
+| `--no-math-engine` | Omit KaTeX; ```` ```math ```` blocks fall back to a placeholder | recipe 7 |
+| `--no-music-engine` | Omit abcjs; ```` ```abc ```` blocks fall back to a literal | recipe 8 |
+| `--no-mermaid-engine` | Omit mermaid.js; ```` ```mermaid ```` blocks won't render | recipe 22 |
+| `--no-font-embedding` | Don't inline URW Nimbus web fonts (smaller HTML, browser-substituted text) | recipe 40 |
+| `--subset-fonts` | (No-op since v0.3; subsetting is on by default) Reduce embedded fonts to used codepoints | recipe 40 |
+| `--no-subset-fonts` | Disable font subsetting; inline full URW Nimbus outlines (~1 MB extra) | recipe 40 |
+| `--no-highlight` | Disable highlight.js; code blocks render as plain `<pre><code>` | recipe 46 |
+| `--no-a11y` | Strip accessibility scaffolding (semantic landmarks, skip link, alt manifest, focus rings) | best_practices.md |
+| `--dark [MODE]` | Emit dark-mode CSS; MODE = `force` (default) or `auto` (`prefers-color-scheme`) | recipe 19 |
+| `--inline-raster` | Base64-inline PNG/JPG/GIF/WebP into the HTML for self-contained distribution | **recipe 51** |
+| `--text-as-paths` | Replace SVG `<text>` with `<path>` outlines from URW Nimbus (PS/HTML pixel parity) | recipe 28 |
+| `--check` | Parse-only (skip lout binary); exits 0 on success, 2 on parse failure -- CI/pre-commit | **recipe 52** |
+| `--init [DIR]` | Scaffold a new mdlout project (`index.md`, `mydefs`, `.gitignore`, `README.md`) | recipe 2 |
+| `--version` | Print mdlout version and exit | -- |
+
+The skeleton for a shell wrapper that combines several flags
+into a project-local build command:
+
+```bash
+#!/usr/bin/env bash
+# build.sh -- one-button rebuild for this project.
+set -euo pipefail
+SRC="${1:-index.md}"
+./mdlout.py "${SRC}" \
+    --format=html \
+    --inline-raster \
+    --dark auto \
+    --no-mermaid-engine \
+    -o "out/${SRC%.md}.html"
+```
+
+**Gotcha:** several flag pairs are mutually exclusive or
+order-sensitive at the argparse level. `--lout-only`, `--ps`,
+and `--pdf` are in a mutually-exclusive group -- passing two
+will fail with an argparse error rather than a silent
+override. `--serve` *implies* `--watch` and *forces*
+`--format=html` (with a warning to stderr if you asked for
+pdf). `--check` and `--init` short-circuit before any build
+machinery runs, so combining them with `--format=pdf` is
+legal but the format flag is ignored. The `--subset-fonts`
+flag is retained for backwards compatibility but has been a
+no-op since v0.3; use `--no-subset-fonts` to opt *out* of the
+default subsetting. Frontmatter can also set most of these
+(`inline-raster:`, `dark-mode:`, `subset-fonts:`); the CLI
+flag wins when both are present, so a project-default
+frontmatter can be overridden per build without editing the
+source.
+
 ## Where to look next
 
 - [`docs/best_practices.md`](best_practices.md) -- idiom guide:
