@@ -15,6 +15,7 @@
 #   tests/browser_test.sh --with-print               # add print-CSS audit
 #   tests/browser_test.sh --with-dark                # add dark-mode audit
 #   tests/browser_test.sh --with-all                 # all three optional audits
+#   tests/browser_test.sh --with-mermaid-strict      # stricter mermaid render check
 #
 # Environment:
 #   MDLOUT_CHROME=/path/to/chrome           # override auto-detection

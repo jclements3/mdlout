@@ -39,10 +39,14 @@ and feed Chrome a `file:///C:/temp/...` URL. The Linux Chromium path needs
 no such shuttling.
 
 Optional check categories (all default OFF):
-  --with-a11y   axe-core (or pa11y if in PATH) or structural fallback
-  --with-print  re-render with @media print emulation and verify pages survive
-  --with-dark   re-render with prefers-color-scheme:dark and verify contrast
-  --with-all    enable all three
+  --with-a11y             axe-core (or pa11y if in PATH) or structural fallback
+  --with-print            re-render with @media print emulation and verify pages survive
+  --with-dark             re-render with prefers-color-scheme:dark and verify contrast
+  --with-mermaid-strict   stricter mermaid smoke: per-diagram structural check
+                          (recognized aria-roledescription or mermaid CSS class)
+                          plus parse-error detection
+  --with-all              enable a11y + print + dark (mermaid-strict stays opt-in
+                          to keep the default flag set's signal shape stable)
 
 The optional checks work by writing an *instrumented copy* of each HTML into
 the staging directory: the copy carries an injected <script> tag that runs
@@ -561,6 +565,119 @@ def count_mermaid_with_svg(dom_html: str) -> tuple[int, int]:
     return div_count, rendered
 
 
+# Recognised mermaid SVG aria-roledescription values: every successful
+# render carries one of these on the <svg> root. The "error" value is
+# mermaid's own marker for an internal render failure and we treat it as
+# a hard failure signal.
+MERMAID_ROLE_OK = frozenset({
+    "flowchart-v2", "flowchart", "sequence", "classDiagram", "stateDiagram",
+    "stateDiagram-v2", "er", "entityRelationshipDiagram", "gantt", "pie",
+    "journey", "mindmap", "timeline", "quadrantChart", "sankey", "xychart",
+    "requirement", "requirementDiagram", "c4", "c4Diagram", "gitGraph",
+    "block", "blockDiagram", "architecture", "packet", "kanban", "radar",
+})
+MERMAID_ROLE_BAD = frozenset({"error"})
+
+# Mermaid emits these CSS class names on structural elements of a
+# successful render. We only need *one* match inside the rendered SVG to
+# call the diagram structurally meaningful; the variety here lets a
+# single regex serve every diagram type. Matched as whole words inside
+# class="..." attribute values.
+RE_MERMAID_STRUCT_CLASS = re.compile(
+    r'class\s*=\s*"[^"]*\b('
+    r'node|edgePath|edgePaths|edgeLabel|edgeLabels|flowchart|'
+    r'flowchart-label|flowchart-link|sequenceDiagram|actor|'
+    r'actor-top|actor-bottom|messageLine0|messageLine1|messageText|'
+    r'classGroup|classDiagram|classTitle|stateGroup|state|cluster|'
+    r'er|entityBox|relationshipLine|task|taskText|section|'
+    r'pieCircle|pieTitleText|slice|root|nodes|clusters'
+    r')\b[^"]*"', re.I)
+
+# Mermaid's parse-error renderer emits a recognisable <text> body. Match
+# common substrings without anchoring to exact phrasing (the wording has
+# shifted across mermaid versions).
+RE_MERMAID_ERROR_TEXT = re.compile(
+    r'<text\b[^>]*>[^<]*(Syntax error|Parse error|mermaid version)',
+    re.I)
+
+
+def _extract_div_mermaid_bodies(dom_html: str) -> list[str]:
+    """Return the slice of `dom_html` between each <div class="mermaid">
+    opener and the next mermaid opener (or end-of-document). This is the
+    same window heuristic used by `count_mermaid_with_svg`.
+    """
+    starts = [m.end() for m in re.finditer(
+        r'<div[^>]*\bclass\s*=\s*"[^"]*\bmermaid\b[^"]*"[^>]*>',
+        dom_html, flags=re.I)]
+    if not starts:
+        return []
+    bounds = starts + [len(dom_html)]
+    return [dom_html[bounds[i]:bounds[i + 1]] for i in range(len(starts))]
+
+
+def _isolate_svg(body: str) -> Optional[str]:
+    """Return the substring of `body` starting at the first <svg> tag, or
+    None if no <svg> opener is present. We deliberately do *not* try to
+    find a balanced </svg>: the window heuristic already bounds the slice
+    to a single mermaid div, and CSS/script content that lives *outside*
+    the SVG (e.g. mermaid-injected <style>) is what we want to avoid
+    when checking for error markers."""
+    m = RE_SVG.search(body)
+    if not m:
+        return None
+    return body[m.start():]
+
+
+def mermaid_strict_check(dom_html: str) -> tuple[int, int, int, list[str]]:
+    """Strict per-diagram mermaid render check.
+
+    Returns `(div_count, strict_ok, errors, details)`:
+      - div_count : number of <div class="mermaid"> elements
+      - strict_ok : count of those with a child <svg> *and* either a
+                    recognised aria-roledescription or a mermaid-structural
+                    CSS class inside the SVG.
+      - errors    : count of diagrams that look like a parse/render error
+                    (aria-roledescription="error" or "Syntax error" text).
+                    Counted *separately* from strict_ok: a diagram can be
+                    an error and not strict_ok at the same time.
+      - details   : up to 5 short per-failure descriptions for diagnostics.
+
+    A diagram that lacks any <svg> is reported under details as `no-svg`
+    and contributes 0 to strict_ok (and 0 to errors -- mermaid never ran
+    on it).
+    """
+    bodies = _extract_div_mermaid_bodies(dom_html)
+    div_count = len(bodies)
+    strict_ok = 0
+    errors = 0
+    details: list[str] = []
+    for i, body in enumerate(bodies, start=1):
+        svg = _isolate_svg(body)
+        if svg is None:
+            if len(details) < 5:
+                details.append(f"#{i}:no-svg")
+            continue
+        ard = re.search(r'aria-roledescription\s*=\s*"([^"]+)"', svg, re.I)
+        role = ard.group(1) if ard else ""
+        has_role_ok = role in MERMAID_ROLE_OK
+        is_role_err = role in MERMAID_ROLE_BAD
+        has_struct = RE_MERMAID_STRUCT_CLASS.search(svg) is not None
+        has_err_text = RE_MERMAID_ERROR_TEXT.search(svg) is not None
+        if is_role_err or has_err_text:
+            errors += 1
+            if len(details) < 5:
+                tag = "role=error" if is_role_err else "error-text"
+                details.append(f"#{i}:{tag}")
+            continue
+        if has_role_ok or has_struct:
+            strict_ok += 1
+        else:
+            if len(details) < 5:
+                role_blurb = f"role={role!r}" if role else "no-role"
+                details.append(f"#{i}:no-struct({role_blurb})")
+    return div_count, strict_ok, errors, details
+
+
 # Languages that highlight.js ships in its default "common" bundle (the one
 # mdlout pulls in via the bundled hljs payload). Code blocks tagged with
 # languages outside this set won't tokenise, so penalising them here would
@@ -690,7 +807,8 @@ def run_chrome(chrome: str, html_path: Path, work_dir: Path,
 
 def evaluate_example(html_path: Path, chrome: str, work_dir: Path,
                      audit_modes: Optional[list] = None,
-                     axe_url: str = DEFAULT_AXE_URL) -> ExampleResult:
+                     axe_url: str = DEFAULT_AXE_URL,
+                     mermaid_strict: bool = False) -> ExampleResult:
     name = html_path.name
     audit_modes = audit_modes or []
     try:
@@ -759,6 +877,28 @@ def evaluate_example(html_path: Path, chrome: str, work_dir: Path,
     result.checks.append(CheckResult(
         name="mermaid", ok=merm_ok, expected=merm_divs, found=merm_svgs,
         detail=merm_detail))
+
+    # --- check 3c (opt-in): strict mermaid structural check ---
+    # Verifies each rendered SVG is structurally meaningful (recognised
+    # aria-roledescription or mermaid CSS class) and surfaces parse-error
+    # markers. Pages without any mermaid divs report (0/0) and pass; the
+    # check is treated as N/A there, mirroring the lax mermaid check.
+    if mermaid_strict:
+        ms_divs, ms_ok, ms_err, ms_details = mermaid_strict_check(dom)
+        if ms_divs == 0:
+            ms_pass = True
+            ms_detail = ""
+        else:
+            ms_pass = (ms_ok == ms_divs) and ms_err == 0
+            parts = [f"{ms_ok}/{ms_divs} strict pass"]
+            if ms_err:
+                parts.append(f"{ms_err} errors")
+            if ms_details and not ms_pass:
+                parts.append("issues=" + ",".join(ms_details))
+            ms_detail = "; ".join(parts) if not ms_pass else ""
+        result.checks.append(CheckResult(
+            name="mermaid_strict", ok=ms_pass,
+            expected=ms_divs, found=ms_ok, detail=ms_detail))
 
     # --- check 4: every #anchor href resolves to an id in the DOM ---
     # Strip <script> bodies (which may carry escaped href strings inside
@@ -962,6 +1102,11 @@ def main(argv: list[str]) -> int:
                     help="run dark-mode resilience audit")
     ap.add_argument("--with-all", action="store_true",
                     help="enable --with-a11y --with-print --with-dark")
+    ap.add_argument("--with-mermaid-strict", action="store_true",
+                    dest="with_mermaid_strict",
+                    help="stricter mermaid render check: verify each rendered "
+                         "SVG has a recognised mermaid role/structure and no "
+                         "parse-error markers (opt-in; default OFF)")
     args = ap.parse_args(argv)
 
     audit_modes: list[str] = []
@@ -1008,18 +1153,37 @@ def main(argv: list[str]) -> int:
     print(f"==> testing {len(htmls)} file(s) from {html_dir}")
     if audit_modes:
         print(f"==> audits enabled: {','.join(audit_modes)}")
+    if args.with_mermaid_strict:
+        print("==> mermaid-strict enabled")
 
     results: list[ExampleResult] = []
     with tempfile.TemporaryDirectory(prefix="mdlout_browser_") as td:
         work = Path(td)
         for html in htmls:
             r = evaluate_example(html, chrome, work,
-                                 audit_modes=audit_modes, axe_url=axe_url)
+                                 audit_modes=audit_modes, axe_url=axe_url,
+                                 mermaid_strict=args.with_mermaid_strict)
             results.append(r)
             tag = "PASS" if r.ok else "FAIL"
-            checks = " ".join(
-                f"{c.name}={'ok' if c.ok else 'X'}({c.found}/{c.expected})"
-                for c in r.checks)
+
+            def _fmt_check(c: CheckResult) -> str:
+                # The strict-mermaid signal carries extra context inline so
+                # the per-page console line shows pass count *and* parse
+                # errors even when the check passes (matches the spec
+                # `mermaid_strict=ok(N/M strict pass; K errors)`).
+                state = "ok" if c.ok else "X"
+                if c.name == "mermaid_strict":
+                    if c.expected == 0:
+                        return f"{c.name}={state}(N/A)"
+                    err = c.detail if c.detail else ""
+                    if err and "errors" in err:
+                        # err already has the count; surface it verbatim
+                        return f"{c.name}={state}({err})"
+                    body = f"{c.found}/{c.expected} strict pass"
+                    return f"{c.name}={state}({body})"
+                return f"{c.name}={state}({c.found}/{c.expected})"
+
+            checks = " ".join(_fmt_check(c) for c in r.checks)
             print(f"  {tag:4s}  {r.name:32s}  {checks}")
             if r.error:
                 print(f"        error: {r.error}")
@@ -1056,6 +1220,8 @@ def main(argv: list[str]) -> int:
     if audit_modes:
         manifest["audits_enabled"] = audit_modes
         manifest["axe_url"] = axe_url
+    if args.with_mermaid_strict:
+        manifest["mermaid_strict"] = True
     Path(args.out).write_text(json.dumps(manifest, indent=2))
     print(f"==> manifest: {args.out}")
     print(f"==> pass {manifest['pass']} / fail {manifest['fail']} / total {manifest['total']}")
