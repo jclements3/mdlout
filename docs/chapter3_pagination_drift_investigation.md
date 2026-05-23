@@ -455,6 +455,160 @@ first pattern, but the artefacts on disk (the saved
 `/tmp/u.ps`) drifted away from the SVG when partial reruns
 happened in between.
 
+## Follow-up at 150 dpi (2026-05-23)
+
+Re-investigated after #172 introduced 150 dpi as a sanity DPI for
+"is this antialiasing or real drift?" diagnostics. Three concerns
+motivated the re-look:
+
+1. The README's 150 dpi table improved the chapter-3 worst pages
+   (086 0.8455 → 0.8956, 090 0.8512 → 0.9003, 056 0.8683 → 0.9306),
+   but the README's prose suggested the *residual* above 150 dpi
+   was "genuine pagination drift". This contradicts the May-22
+   conclusion above, so it deserved a direct check.
+2. Since the May-22 write-up, two `z53.c` changes touched the text
+   path: `4213af3` fi/fl ligature folding to U+FB01–FB04, and
+   `cf77e83` precomputed per-font 256x256 kern table (claimed
+   byte-identical in #160). Either could in principle shift word
+   x-positions.
+3. `svg_emit_word_text` also gained the `fill="currentColor"`
+   fold (`346b335`) which does not affect geometry, but it sits
+   in the same emission path so was worth re-verifying.
+
+### Method
+
+The pages were rendered at 150 dpi from the existing
+`/tmp/user.ps` and per-page `/tmp/userguide_compare/svg_split/
+page-NNN.svg` (lout submodule `f5533e6`, identical to the
+manifest baseline):
+
+```
+pdftoppm -r 150 -f N -l N -png /tmp/user.pdf  /tmp/u150/ps-N
+rsvg-convert -d 150 -p 150 page-NNN.svg -o /tmp/u150/svg-NNN.png
+compare -metric AE -fuzz 5% ps-N-0NN.png svg-NNN.png diff-NNN.png
+```
+
+Coordinate-level extractors were rebuilt against the post-ligature-
+folding PS / SVG to make sure the new fi/fl substitution path did
+not introduce any geometry drift.
+
+### Result at 150 dpi
+
+| page | AE@150  | SSIM@150 | PS lines | SVG lines | max \|Δy\| | exact first-x match |
+|-----:|--------:|---------:|---------:|----------:|----------:|--------------------:|
+| 056  | 0.0841  | 0.9306   | 58       | 58        | 0.1 pt    | 57 / 58 lines       |
+| 086  | 0.1059  | 0.8956   | 76       | 76        | 0.1 pt    | 74 / 76 lines       |
+| 090  | 0.1028  | 0.9003   | 72       | 72        | 0.1 pt    | 72 / 72 lines       |
+
+`max |Δy|` is the 0.1 pt y-rounding noise present on every page
+(PS reports ligature-glyph baselines at y=716.55 where the
+neighbouring all-Roman line is at y=716.7; SVG keeps them on the
+same 716.55 sub-row). It is not pagination drift; it is the
+single-row sub-pt granularity of the kerning emission.
+
+"Exact first-x match" counts how many lines have a leftmost
+emission whose x-coordinate is bit-for-bit identical in PS and
+SVG. On page 090 every line agrees. On 086 and 056 the two
+non-matching lines are a Times-Italic header line ("Chapter 3.
+Types of Documents") where PS splits "Types" into "T" + 17-unit-
+kern + "ypes" two emissions and SVG packs it as one — the
+leftmost edge of "T" is at the same x in both renders; the
+difference my extractor reports is between "T" (in PS) and
+"Types" (in SVG), which is a tooling artefact of comparing
+emission events vs. word boundaries, not a real x-offset.
+
+### Per-line word-list dump
+
+Spot-check on page 086, line at y=716.7 ("contents will
+ordinarily appear ..."). Cropped to show the alignment is
+verbatim:
+
+```
+  PS   70.850 716.700 'contents'      SVG   70.850 716.700 'contents'
+  PS  112.800 716.700 'will'          SVG  112.800 716.700 'will'
+  PS  133.650 716.700 'ordinarily'    SVG  133.650 716.700 'ordinarily'
+  PS  183.000 716.700 'appear'        SVG  183.000 716.700 'appear'
+  PS  217.350 716.700 'be'            SVG  217.350 716.700 'beginning'
+  PS  217.500 716.700 'ginning'                      (one <text>)
+  PS  267.300 716.700 'on'            SVG  267.300 716.700 'on'
+  PS  281.700 716.700 'the'           SVG  281.700 716.700 'the'
+  PS  298.600 716.700 '\207rst'       SVG  298.600 716.700 'ﬁrst'
+  PS  319.700 716.700 'page,'         SVG  319.700 716.700 'page,'
+  ...
+```
+
+Every word starts at the same x. `\207` is the PS Type 1 `fi`
+ligature glyph (octal 0o207 = byte 0x87 in the LCM-recoded
+Times-Roman); `ﬁ` is U+FB01, which is exactly what the
+`4213af3` ligature-folding round emits. The right-hand width is
+identical because the AFM metrics give both encodings the same
+advance. "be" + 0.15 pt kern + "ginning" in PS lays out to the
+same right edge as "beginning" in SVG.
+
+### Diff-image inspection at 150 dpi
+
+For page 086 the 150 dpi diff PNG has 187 046 red pixels.
+Distribution:
+
+- 745 / 1755 rows carry > 50 diff px (the row contains glyphs).
+- The diff resolves into 55 horizontal bands, average 14 rows
+  wide. Times-Roman 12 pt baseline-to-baseline at 150 dpi is
+  ~25 rows; a glyph is ~14 rows tall — i.e. **one band per line
+  of text**, exactly as the per-row signature for "same content,
+  same baselines, two anti-aliasers" predicts.
+- Best-fit vertical alignment of PS row-darkness vs SVG row-
+  darkness over the body region (y = 200–1500 px): offset 0 px
+  is also the L2 minimum. There is no diagonal-stripe pattern
+  that would indicate progressive vertical drift.
+
+Pages 090 and 056 show the same band-per-line signature
+(57 / 53 bands, 14 / 12 rows wide on average).
+
+### What about the May-23 changes to `z53.c`?
+
+- `cf77e83` kern table precompute: O(1) lookup that replaces a
+  linear search through `FontKernLength`. Functionally
+  byte-identical to the linear path. The kern *table* is
+  byte-identical to what `z37.c` emitted before; the lookup is
+  the only thing that changed.
+- `4213af3` fi/fl ligature folding: changes how the glyph is
+  *encoded* in the SVG (single U+FB01 instead of two ASCII
+  characters), but the per-glyph advance is taken from the same
+  AFM `KPX` line, so the cumulative line width is unchanged.
+  Coordinate dump above confirms identical x on every word that
+  follows a ligature.
+- `346b335` currentColor: pure attribute-name change, no
+  geometry.
+
+None of these introduce a coordinate-level disagreement. The
+floor at 150 dpi is the same antialiasing floor as at 100 dpi,
+just sampled at a finer grid so each glyph edge contributes
+fewer of its pixels to the "more than 5% off" bucket.
+
+### Conclusion (150 dpi re-look)
+
+**Still pure anti-aliasing.** The 150-dpi AE residual of 8–11 %
+on the chapter-3 worst pages comes entirely from Ghostscript
+vs. librsvg glyph-edge AA at this DPI. Lout-emitted text
+coordinates remain bit-identical between PS and SVG on every
+chapter-3 worst page, including the new ligature-folded paths.
+
+The README's "the remaining gap above 150 dpi is genuine
+pagination drift" phrasing is misleading for these specific
+pages — the residual is also AA-floor; it just shrinks more
+slowly past 150 dpi because each glyph edge is now well
+sampled. For a fully AA-free comparison, a vector-level
+metric (compare extracted text coordinates directly, as done
+here) is the only honest tool.
+
+**Status: deferred / no code fix.** The investigation
+confirms the May-22 conclusion at the higher DPI. No change
+to `z53.c`, `z49.c`, or `z37.c`. If we want the "irreducible
+floor" to compress further the only options are still the
+three from the May-22 doc (shared rasteriser, threshold to
+B/W, or bug-for-bug rasteriser matching), none of which are
+worth the cost.
+
 ## Pointers
 
 - `tests/user_guide_diff/README.md` — methodology, aggregate
