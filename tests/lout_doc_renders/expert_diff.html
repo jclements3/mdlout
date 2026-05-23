@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<title>Lout doc/expert — PostScript vs z53.c SVG sample diff</title>
+<style>
+body{font:14px/1.4 system-ui,sans-serif;background:#f4f4f4;color:#222;
+     margin:0;padding:1.5em}
+h1{margin:0 0 .3em}
+nav a{margin-right:.8em;color:#0066cc;text-decoration:none}
+nav a:hover{text-decoration:underline}
+table.summary{border-collapse:collapse;margin:1em 0;font-size:13px}
+table.summary th,table.summary td{
+  border:1px solid #ccc;padding:.3em .6em;text-align:right}
+table.summary th{background:#eaeaea}
+table.summary td:first-child{text-align:left;font-family:monospace}
+.sample{background:#fff;border:1px solid #ddd;border-radius:4px;
+  padding:.8em;margin:.8em 0;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.sample h3{margin:0 0 .4em;font-size:14px}
+.sample img{display:block;max-width:100%;height:auto;border:1px solid #eee}
+.verdict-OK{color:#0a0;font-weight:bold}
+.verdict-DIFF{color:#c80;font-weight:bold}
+.verdict-BAD{color:#c00;font-weight:bold}
+.verdict-MISSING{color:#888;font-style:italic}
+</style>
+</head><body>
+<nav>
+  <a href="./README.md">README</a>
+  <a href="./design_diff.html">design</a>
+  <a href="./expert_diff.html">expert</a>
+  <a href="./slides_diff.html">slides</a>
+  <a href="./user_diff.html">user</a>
+  <span>|</span>
+  <a href="./design.html">design HTML</a>
+  <a href="./expert.html">expert HTML</a>
+  <a href="./slides.html">slides HTML</a>
+  <a href="./user.html">user HTML</a>
+</nav>
+<h1>Lout doc/expert — PostScript vs z53.c SVG sample diff</h1>
+<p>Sampled pages, rendered via both the PostScript pipeline (<code>lout</code> + ps2pdf + pdftoppm) and the SVG pipeline (<code>lout&nbsp;-G</code> via z53.c + rsvg-convert). AE = ImageMagick absolute-error pixel count at 5% fuzz; SSIM is scikit-image structural_similarity on luminance (1.0 = identical).</p><table class="summary"><thead><tr><th>Page</th><th>W</th><th>H</th><th>Diff px</th><th>Diff %</th><th>SSIM</th><th>Verdict</th></tr></thead><tbody><tr><td><a href="#p007">007</a></td><td>827</td><td>1170</td><td>38791</td><td>4.01</td><td>0.9708</td><td class="verdict-OK">OK</td></tr><tr><td><a href="#p019">019</a></td><td>827</td><td>1170</td><td>52881</td><td>5.47</td><td>0.9438</td><td class="verdict-DIFF">DIFF</td></tr><tr><td><a href="#p031">031</a></td><td>827</td><td>1170</td><td>85489</td><td>8.84</td><td>0.9341</td><td class="verdict-DIFF">DIFF</td></tr><tr><td><a href="#p043">043</a></td><td>827</td><td>1170</td><td>57141</td><td>5.91</td><td>0.9439</td><td class="verdict-DIFF">DIFF</td></tr><tr><td><a href="#p055">055</a></td><td>827</td><td>1170</td><td>88566</td><td>9.15</td><td>0.9109</td><td class="verdict-DIFF">DIFF</td></tr><tr><td><a href="#p067">067</a></td><td>827</td><td>1170</td><td>74744</td><td>7.72</td><td>0.9157</td><td class="verdict-DIFF">DIFF</td></tr><tr><td><a href="#p079">079</a></td><td>827</td><td>1170</td><td>65908</td><td>6.81</td><td>0.9276</td><td class="verdict-DIFF">DIFF</td></tr><tr><td><a href="#p091">091</a></td><td>827</td><td>1170</td><td>65109</td><td>6.73</td><td>0.9175</td><td class="verdict-DIFF">DIFF</td></tr><tr><td><a href="#p103">103</a></td><td>827</td><td>1170</td><td>62520</td><td>6.46</td><td>0.8941</td><td class="verdict-DIFF">DIFF</td></tr><tr><td><a href="#p115">115</a></td><td>827</td><td>1170</td><td>57952</td><td>5.99</td><td>0.8432</td><td class="verdict-DIFF">DIFF</td></tr></tbody></table><section class="sample" id="p007"><h3>Page 007 — verdict <span class="verdict-OK">OK</span> (diff 4.01%, SSIM 0.9708)</h3><img src="expert_samples/sample-007.png" alt="PS vs SVG vs DIFF for page 007"></section><section class="sample" id="p019"><h3>Page 019 — verdict <span class="verdict-DIFF">DIFF</span> (diff 5.47%, SSIM 0.9438)</h3><img src="expert_samples/sample-019.png" alt="PS vs SVG vs DIFF for page 019"></section><section class="sample" id="p031"><h3>Page 031 — verdict <span class="verdict-DIFF">DIFF</span> (diff 8.84%, SSIM 0.9341)</h3><img src="expert_samples/sample-031.png" alt="PS vs SVG vs DIFF for page 031"></section><section class="sample" id="p043"><h3>Page 043 — verdict <span class="verdict-DIFF">DIFF</span> (diff 5.91%, SSIM 0.9439)</h3><img src="expert_samples/sample-043.png" alt="PS vs SVG vs DIFF for page 043"></section><section class="sample" id="p055"><h3>Page 055 — verdict <span class="verdict-DIFF">DIFF</span> (diff 9.15%, SSIM 0.9109)</h3><img src="expert_samples/sample-055.png" alt="PS vs SVG vs DIFF for page 055"></section><section class="sample" id="p067"><h3>Page 067 — verdict <span class="verdict-DIFF">DIFF</span> (diff 7.72%, SSIM 0.9157)</h3><img src="expert_samples/sample-067.png" alt="PS vs SVG vs DIFF for page 067"></section><section class="sample" id="p079"><h3>Page 079 — verdict <span class="verdict-DIFF">DIFF</span> (diff 6.81%, SSIM 0.9276)</h3><img src="expert_samples/sample-079.png" alt="PS vs SVG vs DIFF for page 079"></section><section class="sample" id="p091"><h3>Page 091 — verdict <span class="verdict-DIFF">DIFF</span> (diff 6.73%, SSIM 0.9175)</h3><img src="expert_samples/sample-091.png" alt="PS vs SVG vs DIFF for page 091"></section><section class="sample" id="p103"><h3>Page 103 — verdict <span class="verdict-DIFF">DIFF</span> (diff 6.46%, SSIM 0.8941)</h3><img src="expert_samples/sample-103.png" alt="PS vs SVG vs DIFF for page 103"></section><section class="sample" id="p115"><h3>Page 115 — verdict <span class="verdict-DIFF">DIFF</span> (diff 5.99%, SSIM 0.8432)</h3><img src="expert_samples/sample-115.png" alt="PS vs SVG vs DIFF for page 115"></section></body></html>

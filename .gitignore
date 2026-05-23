@@ -60,6 +60,19 @@ tests/visual_diff.html
 !tests/user_guide_diff/chromium/
 !tests/user_guide_diff/chromium/worst-*.png
 
+# tests/lout_doc_renders/ holds the committed PS+PDF and SVG+HTML renders
+# of all four Lout source documents (design, expert, slides, user). The
+# *.pdf/*.html/*.png deliverables and the side-by-side sample galleries
+# need to be tracked; transient PS and SVG files live in /tmp/loutdocs.
+!tests/lout_doc_renders/
+!tests/lout_doc_renders/README.md
+!tests/lout_doc_renders/*.html
+!tests/lout_doc_renders/*.pdf
+!tests/lout_doc_renders/*.sh
+!tests/lout_doc_renders/*.py
+!tests/lout_doc_renders/*_samples/
+!tests/lout_doc_renders/*_samples/*.png
+
 # examples/out/ holds committed reference renderings.
 # Ignore everything by default, then explicitly track curated HTML/PDF
 # snapshots so transient/intermediate builds don't pollute the index.
