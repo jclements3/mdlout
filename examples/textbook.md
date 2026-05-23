@@ -42,6 +42,7 @@ number, the value is
 
 $$
 x = (-1)^s \cdot 2^{e - 1023} \cdot \left( 1 + \frac{f}{2^{52}} \right),
+\tag{1.1}
 $$
 
 where $s$ is the sign, $e$ is the unsigned exponent, and $f$ is the
@@ -127,6 +128,7 @@ where $f(x^\ast) = 0$, *Newton's method* updates the guess by
 
 $$
 x_{n+1} = x_n - \frac{f(x_n)}{f'(x_n)}.
+\tag{2.1}
 $$
 
 Geometrically each step replaces $f$ with its tangent line at
@@ -142,6 +144,7 @@ the linear term gives
 
 $$
 f(x^\ast) \approx f(x_n) + f'(x_n) (x^\ast - x_n).
+\tag{2.2}
 $$
 
 Setting the left side to zero (since $x^\ast$ is a root) and
@@ -152,6 +155,7 @@ local error satisfies
 
 $$
 x_{n+1} - x^\ast = -\frac{f''(\xi_n)}{2 f'(x_n)} (x_n - x^\ast)^2,
+\tag{2.3}
 $$
 
 which is the quadratic convergence claim made informally above.
@@ -162,12 +166,25 @@ The standard convergence theorem for Newton's method appears in
 every introductory text [@stoer2002, @kincaid2002]:
 
 ```lout
+@LP
 @Theorem { Let @F { f : R right R } be twice continuously
   differentiable in a neighbourhood @F { U } of a root
   @F { x sup * } where @F { f' (x sup *) != 0 }.  Then there
   exists @F { delta > 0 } such that for any initial guess
   @F { x sub 0 } with @F { | x sub 0 - x sup * | < delta },
   Newton's iterates converge quadratically to @F { x sup * }. }
+@LP
+@Proof { The Taylor expansion of @F { f } about @F { x sub n }
+  was derived above; substituting the exact root @F { x sup * }
+  and rearranging gives the recurrence in equation (2.3).  Choose
+  @F { delta } small enough that on the closed ball of radius
+  @F { delta } about @F { x sup * } the quantity
+  @F { | f'' / 2 f' | } is bounded by some constant @F { M };
+  then equation (2.3) gives
+  @F { | x sub { n + 1 } - x sup * | <= M | x sub n - x sup * | sup 2 },
+  and induction on @F { n } shows the iterates remain in the
+  ball and the error contracts quadratically. }
+@LP
 ```
 
 The pitfalls of Newton's method are well-documented:
@@ -265,6 +282,7 @@ of $f$:
 
 $$
 T_n(f) = \frac{h}{2} \left[ f(x_0) + 2 \sum_{i=1}^{n-1} f(x_i) + f(x_n) \right].
+\tag{3.1}
 $$
 
 The error analysis is by Taylor expansion about each midpoint:
@@ -273,6 +291,7 @@ for $f \in C^2[a, b]$,
 $$
 \int_a^b f(x)\, dx - T_n(f) = -\frac{(b - a) h^2}{12} f''(\xi),
 \qquad \xi \in (a, b).
+\tag{3.2}
 $$
 
 The rule is therefore *second-order accurate*: halving $h$ quarters

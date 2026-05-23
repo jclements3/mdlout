@@ -7,17 +7,23 @@
 # high-level shortcuts @B / @I / @LP are not yet defined here.  Use
 # the underlying primitives directly.
 
+# @Theorem / @Lemma:  bold "Theorem." or "Lemma." label, then the
+# statement set in italic (slope) so it stands apart from the
+# surrounding roman body.  A non-breaking space (~) gives a small
+# gap between the label and the statement.
 def @Theorem right body
 {
-  { Bold @Font Theorem. } { Slope @Font body }
+  { Bold @Font { Theorem.~ } } { Slope @Font body }
 }
 
 def @Lemma right body
 {
-  { Bold @Font Lemma. } { Slope @Font body }
+  { Bold @Font { Lemma.~ } } { Slope @Font body }
 }
 
+# @Proof:  italic "Proof." label, then the body in the surrounding
+# roman font, with a trailing small open-box as the qed marker.
 def @Proof right body
 {
-  { Slope @Font Proof. } body
+  { Slope @Font { Proof.~ } } body ~ {Bold @Font "[]"}
 }
