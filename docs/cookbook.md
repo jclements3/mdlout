@@ -1247,6 +1247,233 @@ widen the page (`page: A4`, `columns: 1`), or split the diagram into
 two consecutive fences. Working example:
 [`examples/math_with_diagrams.md`](../examples/math_with_diagrams.md).
 
+## 24. Hand-rolled `@Graphic` SVG diagram
+
+mdlout's `@Diag` package and the `@Mermaid` passthrough are both
+*layout engines* -- you describe the topology and they pick the
+geometry. When the diagram needs hand-tuned coordinates,
+gradients, text-on-path, or a shape neither engine ships
+(spirals, hex grids, custom logos, phase portraits), drop into a
+` ```svg ` fenced code block. The body is routed through the
+`@SVG` macro and inlined verbatim inside the page SVG.
+
+```yaml
+---
+type: doc
+title: Hand-rolled SVG figures
+font: Times Base 11p
+page: A4
+para-indent: 0f
+page-headers: None
+---
+
+# Traffic-light state machine
+
+```svg
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="110" viewBox="0 0 360 110">
+  <defs>
+    <marker id="arrowL" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#333"/>
+    </marker>
+  </defs>
+  <circle cx="60"  cy="55" r="32" fill="#e63946" stroke="#222"/>
+  <circle cx="180" cy="55" r="32" fill="#f4d35e" stroke="#222"/>
+  <circle cx="300" cy="55" r="32" fill="#2a9d8f" stroke="#222"/>
+  <text x="60"  y="60" text-anchor="middle" font-family="serif">RED</text>
+  <text x="180" y="60" text-anchor="middle" font-family="serif">AMBER</text>
+  <text x="300" y="60" text-anchor="middle" font-family="serif" fill="#fff">GREEN</text>
+  <path d="M 92 55 L 148 55" stroke="#333" marker-end="url(#arrowL)"/>
+  <path d="M 212 55 L 268 55" stroke="#333" marker-end="url(#arrowL)"/>
+  <path d="M 300 87 C 300 105, 60 105, 60 87"
+        stroke="#333" fill="none" marker-end="url(#arrowL)"/>
+</svg>
+```
+```
+
+Rendered: in HTML mode the SVG inlines as a vector figure between
+the surrounding paragraphs. Gradients, patterns, dash arrays,
+arrowhead markers, and arbitrary `<path d="...">` strings all
+pass through unchanged; the engraver is the browser's own SVG
+renderer.
+
+**Gotcha:** the PDF route is a stub. `@SVG { ... }` in PostScript
+mode emits a placeholder note ("SVG block omitted in non-SVG
+back-end") and the figure disappears, even though the surrounding
+prose still typesets correctly. For an archival PDF, pre-render
+the SVG once -- save the file alongside the source -- and
+reference it as `![alt text](figure.svg)`; the SVG back-end
+inlines via `<image href>` and the PostScript back-end ships it
+through ImageMagick. A second pitfall: `<defs>` IDs (`<marker
+id="arrowL">`) live in a *shared* SVG namespace when multiple
+fences land on the same page -- if two figures both declare
+`id="arrowL"`, the second figure picks up the first's marker.
+Prefix the ID with the figure name (`id="trafficlight-arrow"`)
+to be safe. Working example:
+[`examples/svg_diagram.md`](../examples/svg_diagram.md).
+
+## 25. Embedded ABC sheet music with chord names
+
+Recipe #8 covers the single-line case. Real chord charts want
+*multiple* lines of music with chord symbols sitting above each
+bar, sometimes with two voices on a single staff. ABC handles all
+three -- chord symbols are double-quoted strings before the
+note, multiple staves come from `V:` voice tags, and multi-line
+layout is the engraver's default once you give it enough bars.
+
+```yaml
+---
+type: doc
+title: Chord chart with multi-line scores
+font: Times Base 11p
+page: Letter
+para-indent: 0f
+page-headers: None
+---
+
+# Twelve-bar blues with chord changes
+```
+
+```abc
+X:1
+T:Twelve-Bar Blues in G
+M:4/4
+L:1/4
+K:G
+"G7" G B d f | "G7" G B d f | "G7" G B d f | "G7" G B d f |
+"C7" c e g b | "C7" c e g b | "G7" G B d f | "G7" G B d f |
+"D7" A c e g | "C7" c e g b | "G7" G B d f | "D7" A c e g |]
+```
+
+A two-voice arrangement on one staff -- melody up, bass down --
+uses `V:1` and `V:2` voice headers; abcjsharp engraves both on a
+shared five-line staff and separates them by stem direction.
+
+```abc
+X:2
+T:Two-Voice Sketch
+M:4/4
+L:1/4
+K:C
+V:1
+"C" e g e c | "F" f a f c | "G" d g d B | "C" c e g c |
+V:2
+"C" C, E, G, C, | "F" F,, A, C, F,, | "G" G,, D, G, B,, | "C" C, E, G, C, |
+```
+
+Rendered: each block engraves as a multi-line score in HTML mode,
+with `"G7"` / `"C7"` / etc. sitting above the downbeat of each
+bar at a fixed offset (abcjsharp's `chordfont` parameter). Bar
+wrapping is automatic; abcjsharp packs as many bars per line as
+the column width allows.
+
+**Gotcha:** Chord symbols must be the *first token after the bar
+line* and *before* the note pitches -- `| "G7" G B d f` works,
+`| G "G7" B d f` puts the chord above the second beat. Quoted
+strings that do not parse as chords (e.g. `"see coda"`) render
+as literal text above the bar -- handy for rehearsal marks but
+ugly when you meant a real chord. Multi-voice arrangements need
+`%%score (V1 V2)` only when you want the staves *visually
+coupled* (a brace at the left, as in the harp grand-staff
+recipe); within a single staff, just declare two `V:`
+voices. PDF mode renders every ABC fence as `[ABC music
+notation: ...]`; pre-render with `abcm2ps` or `abcjs render-cli`
+and reference the resulting `.svg` for archival builds. Working
+example: [`examples/chord_chart.md`](../examples/chord_chart.md).
+
+## 26. Reusable `mydefs` macros across many documents
+
+Recipe #9 covers the single-document case: drop a `mydefs` file
+next to the `.md` and mdlout auto-copies it into the build
+directory. For a *project* with several documents (a book series,
+a journal's submissions, a manual's chapters) the auto-copy is
+the wrong granularity -- you want one canonical `mydefs` shared
+by every input.
+
+Three viable patterns:
+
+**(a) Per-project shared file via `--mydefs`.** Keep one
+authoritative `mydefs` at the project root (or in a `lout/`
+subdirectory) and pass `--mydefs path/to/mydefs` on every
+invocation:
+
+```shell
+./mdlout.py chapters/01_intro.md   --mydefs lout/mydefs
+./mdlout.py chapters/02_methods.md --mydefs lout/mydefs
+./mdlout.py chapters/03_results.md --mydefs lout/mydefs
+```
+
+The single file is included verbatim into every build directory;
+edits to it propagate to all chapters on the next build.
+
+**(b) Symlink farm.** If you cannot change the build invocation
+(CI, a Makefile, a recipe you do not own), symlink the shared
+`mydefs` into each document's directory:
+
+```shell
+ln -s ../lout/mydefs chapters/01_intro/mydefs
+ln -s ../lout/mydefs chapters/02_methods/mydefs
+ln -s ../lout/mydefs chapters/03_results/mydefs
+```
+
+The auto-copy follows the symlink at build time. This is the
+pattern the upstream Lout User's Guide uses for its multi-chapter
+build.
+
+**(c) `@SysInclude` from the Lout side.** For macros that should
+be available *globally* -- across every mdlout document on the
+machine -- drop them into `$LOUT_HOME/lib/mymacros` and add
+`@SysInclude { mymacros }` to a wrapper `mydefs`. The
+`$LOUT_HOME/lib` directory is on Lout's library search path; the
+wrapper is what mdlout's auto-copy picks up.
+
+Example shared `mydefs`:
+
+```lout
+# Per-project macro library. Keep one copy at lout/mydefs and
+# include with `./mdlout.py … --mydefs lout/mydefs`.
+
+def @ProjectTitle right name
+{
+  @CentredDisplay @Font { +18p } @B { name }
+}
+
+def @SectionEpigraph right name
+{
+  @IndentedDisplay @I { name }
+}
+
+def @VersionStamp { @Right @I {
+  Build @CurrentTime, mdlout regression suite } }
+```
+
+Then any document can write:
+
+```lout
+@ProjectTitle { Chapter 3 -- Methods }
+@SectionEpigraph {
+  "Premature optimization is the root of all evil." -- Donald Knuth
+}
+```
+
+Rendered: every document picks up the same macros; `@ProjectTitle`
+renders the heading at +18 pt centred, `@SectionEpigraph` an
+italic indented quote, `@VersionStamp` a right-aligned build
+stamp.
+
+**Gotcha:** the `mydefs` file is *literal Lout source*, not
+markdown -- every `def` must follow Lout's left-name / right-name
+parameter conventions, and missing braces surface as "lout syntax
+error in symbol ..." on stderr (with no line number more
+specific than the `def` head). Use `def @Foo right name { ... }`
+for one positional argument, `def @Foo left a right b { ... }`
+for two; named parameters with defaults use the `named` keyword
+(`def @Foo named c { "default" } right name { ... }`). The
+`--mydefs` path is resolved at build start, *not* watched -- if
+you `--watch` a document and edit the shared `mydefs`, the
+watcher will not notice. Touch the input `.md` (or pass
+`--no-cache`) to force a rebuild.
+
 ## Where to look next
 
 - [`docs/best_practices.md`](best_practices.md) -- idiom guide:
