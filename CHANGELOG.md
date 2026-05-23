@@ -11,11 +11,19 @@ Submodule-only changes are tagged `[lout]`.
 
 ## [Unreleased]
 
-Post-v0.2.0 maintenance: CI, packaging, perf instrumentation, more
-examples, and a follow-on round of SVG back-end fixes. User's Guide
-diff aggregate ticked from mean SSIM 0.9230 to 0.9234 (36 -> 38 pages
-in the OK bucket); snippet corpus expanded to 63 with strictly tighter
-graphics-heavy thresholds (now 2% AE / SSIM 0.95, was 20% / 0.75).
+## [0.2.1] - 2026-05-22
+
+Post-v0.2.0 maintenance: real font outlines (Type 1 charpath, plus
+CFF/OTF Type 2 charstrings), AFM kerning in SVG text, a fourth
+client-side passthrough (`@Mermaid`), 10 new cookbook recipes
+(11-20), three new examples (`exam.md`, `marginalia.md`,
+`multilingual.md`), an `include/` audit (`SVG_INCLUDES_AUDIT.md`),
+CI, packaging, perf instrumentation, and a follow-on round of
+SVG back-end fixes. User's Guide diff aggregate ticked from mean
+SSIM 0.9230 to 0.9234 (36 -> 38 pages in the OK bucket); snippet
+corpus expanded to 63 (then 65 with the two new Mermaid snippets)
+with strictly tighter graphics-heavy thresholds (now 2% AE /
+SSIM 0.95, was 20% / 0.75).
 
 ### Added
 
@@ -24,8 +32,11 @@ graphics-heavy thresholds (now 2% AE / SSIM 0.95, was 20% / 0.75).
   `.github/workflows/user-guide-diff.yml` runs the 327-page PS-vs-SVG
   diff weekly (Mondays 06:00 UTC) and uploads the per-page manifest +
   worst-NN PNGs as artefacts. Actions pinned to current majors
-  (checkout@v4, setup-python@v5, cache@v4, upload-artifact@v4)
-  (1aabc68, 213d112, 53164c7, dc1be74).
+  (checkout@v4, setup-python@v5, cache@v4, upload-artifact@v4).
+  Workflows are committed but have not yet been pushed to `origin`;
+  pushing requires the `workflow` OAuth scope
+  (`gh auth refresh -s workflow`), tracked in `docs/CI.md`
+  (1aabc68, 213d112, 53164c7, dc1be74, 1bf055c).
 - **`docs/CI.md`**: covers what each workflow does, the
   `gh auth refresh -s workflow` OAuth-scope dance required to push
   workflow files, local reproduction (act, plain bash), and the
@@ -33,7 +44,9 @@ graphics-heavy thresholds (now 2% AE / SSIM 0.95, was 20% / 0.75).
 - **Packaging: `pyproject.toml`** (PEP 621, setuptools backend, single-
   module layout) exposing `mdlout` as a console_script entry point.
   Builds a clean sdist + wheel via `python -m build`; pip install
-  registers the `mdlout` command and resolves `--version` to `0.2.0`.
+  registers the `mdlout` command. The packaged `version` string is
+  still `0.2.0` for this cycle and `mdlout.VERSION` is unchanged;
+  bumping both to `0.2.1` is deferred to a follow-on commit.
   `.gitignore` picks up `dist/`, `build/`, `*.egg-info/` artefacts
   (1c63a39, 06bff7e).
 - **`tests/bench.py` microbenchmark suite.** Per-snippet timing of
@@ -61,13 +74,46 @@ graphics-heavy thresholds (now 2% AE / SSIM 0.95, was 20% / 0.75).
   Answer Key section. Builds clean to PDF (3 pages) and HTML
   (6 pages); uses prose math throughout so both back-ends stay in
   sync (38b66f8).
-- **Five new cookbook recipes in `docs/cookbook.md`**: CV, conference
-  handout, exam paper, scientific report with bibliography, and
-  recipe page. Each carries motivation, source skeleton, rendered-
-  result note, and a real-build gotcha (38b66f8, 3c50271).
+- **`examples/marginalia.md`**: exercises `@RightNote` and
+  `@OuterNote` against a widened right margin (1faa99f).
+- **`examples/multilingual.md`**: exercises the post-ec987be Adobe
+  Symbol glyph table plus the `@Char "eacute"` route for accented
+  Latin and the `@Language { Russian }` route for Cyrillic (1faa99f).
+- **Ten new cookbook recipes in `docs/cookbook.md`** (lifting the
+  count from 10 to 20). First batch (11-15): CV, conference handout,
+  exam paper, scientific report with bibliography, recipe page
+  (38b66f8, 3c50271). Second batch (16-20): Mermaid flowcharts,
+  marginalia / sidenotes via `@RightNote`/`@OuterNote`, multilingual
+  documents (Latin via `@Char` / Greek via `@Sym` / Russian via
+  `@Language`), footnoted poetry with `@LeftDisplay` vlists, and the
+  `@PageOf`/`@NumberOf`/`@TitleOf` cross-reference idiom alongside
+  `[TOC]` (1faa99f). Each recipe carries motivation, source
+  skeleton, rendered-result note, and a real-build gotcha.
 - **`docs/RELEASE_NOTES_v0.2.0.md`**: manual release-create
   instructions plus the publish-after-rollback path for the v0.2.0
   tag (f86faca, b6a42f9).
+- **`ROADMAP.md`**: forward-looking plan for v0.3 / v0.4 / "won't
+  do", split out of the existing CHANGELOG / TODO. Names the
+  parallel agent items (Mermaid, CFF/OTF, AFM kerning, cookbook
+  recipes 11-20) that landed during this cycle and the remaining
+  manual PyPI publish step (165eeed).
+- **`@Mermaid` passthrough macro for ` ```mermaid ` fenced blocks.**
+  Fourth client-side passthrough alongside `@Math` (KaTeX), `@ABC`
+  (abcjsharp), and `@SVG` (raw). mdlout gains `BlockType.MERMAID_BLOCK`
+  + `parse_markdown` routing that Lout-escapes the body and emits
+  `@Mermaid { "..." }`; `_build_html_scaffold` gains a
+  `mermaid_engine` parameter that lazy-loads mermaid.js (local copy
+  preferred, mermaid@10 CDN otherwise, `MDLOUT_MERMAID_URL` overrides
+  the CDN). Engine only ships when at least one `mermaid` block is
+  present. `--no-mermaid-engine` suppresses the injection entirely.
+  PDF mode falls back to a placeholder note. Companion svgmacros
+  entry wraps the body in `<foreignObject><div class="mermaid">…</div>`
+  for the SVG back-end. `examples/mermaid.md` showcases flowchart /
+  sequence / class diagrams; HTML + PDF outputs committed.
+  `tests/snippets/mermaid_inline.lt` + `mermaid_flowchart.lt` cover
+  the macro at the trivial-edge and four-node-graph scales (both
+  PASS-EXCELLENT, AE-ratio < 2%, SSIM > 0.95)
+  (lout d5bc449 -> mdlout 9187311).
 - **`tests/user_guide_diff/diag_gallery.html`** + 40 per-page
   thumbnails + 10 worst-NN panels for the @Diag chapter
   (User's Guide pages 190-229). Mean AE 6.93%, mean SSIM 0.9248;
@@ -91,6 +137,34 @@ graphics-heavy thresholds (now 2% AE / SSIM 0.95, was 20% / 0.75).
   original 0.5 em x 1.0 em bbox rectangle so `coltex`'s
   `charpath flattenpath pathbbox` callers still see a plausible
   bbox (lout 78244cc -> mdlout 6d2a529).
+- **[lout] CFF / OTF outline parsing (Type 2 charstrings) in
+  `z53_glyph.c`.** Extends the Type 1 charpath path with an OTF /
+  OTC container reader and a CFF Top DICT + Private DICT + CharStrings
+  + GlobalSubrs / LocalSubrs decoder, then a Type 2 charstring
+  interpreter sharing the same arena / cache as the Type 1 path
+  (rmoveto family, rlineto / hlineto / vlineto, rrcurveto and its
+  hh/vv/hv/vh/rcurveline/rlinecurve variants, hstem/vstem and hint
+  ops as no-ops, callsubr / callgsubr with the standard subr biases,
+  endchar, return, and the flex family). Lets `charpath` resolve
+  outlines for the system's OpenType base-35 shipments (most modern
+  URW++ packages are `.otf`, not `.pfb`). Missing CFF glyphs still
+  fall back to the bbox rectangle (lout b021b71 -> mdlout 9ab617b).
+- **[lout] AFM kern-pair emission in SVG text** via `<tspan dx>`.
+  `svg_emit_word_text` now consumes `FontKernLength` between
+  successive characters and emits the kern delta as a `<tspan dx>`
+  inside the `<text>` element, bringing SVG word spacing into line
+  with the PostScript back-end's glyph metrics. Most visible on
+  proper-noun heavy paragraphs where AV / To / Wa / Ya pairs were
+  noticeably loose (lout fc94e3c -> mdlout 2c4c498).
+- **[lout] `SVG_INCLUDES_AUDIT.md`** in the submodule: walks every
+  `@BackEnd @Case` block in `lout/include/*` and records how each
+  arm treats the SVG back-end. Findings: zero PostScript-only blocks
+  without an SVG or else fallback (automated brace-balanced scan);
+  the PS-side helpers in `bsf` (`LoutPageSet` / `LoutMargShift` /
+  `LoutPageDict`) are not yet hashed by `z53.c`, so `@Place` and
+  `@MargPut` silently drop in SVG mode (deferred). Fixes the
+  `svgmacros` `@SVGFile` doc-comment that named the wrong include
+  primitive (lout 6a2dac2 -> mdlout 2094ada).
 - **[lout] Rotated-show fix in `svg_ps_show`** (~22 LOC):
   propagates the path-delta rotation into a SVG `rotate()`
   transform on the emitted text wrapper, restoring correct
@@ -113,8 +187,11 @@ graphics-heavy thresholds (now 2% AE / SSIM 0.95, was 20% / 0.75).
   36 OK / 291 DIFF / mean SSIM 0.9230 to 38 OK / 289 DIFF / mean
   SSIM 0.9234 (e9664ff).
 - **`examples/out/index.html` + `examples/README.md`** regenerated
-  to include the new exam example and the regrouped recipe sections
-  in `docs/cookbook.md` (38b66f8, 3c50271).
+  to include the new exam / marginalia / multilingual / mermaid
+  examples and the regrouped recipe sections in `docs/cookbook.md`
+  (38b66f8, 3c50271, 1faa99f, 9187311).
+- **`CLAUDE.md` "Math, music, raw SVG" section** updated for the
+  new `@Mermaid` routing and engine-loading semantics (9187311).
 
 ### Fixed
 
@@ -150,7 +227,8 @@ graphics-heavy thresholds (now 2% AE / SSIM 0.95, was 20% / 0.75).
 ### Tests
 
 - Snippet corpus expanded 62 -> 63 (adds
-  `graphic_rotated_show.lt`).
+  `graphic_rotated_show.lt`), then 63 -> 65 with
+  `mermaid_inline.lt` + `mermaid_flowchart.lt`.
 - Snippet history viewer (`tests/snippet_history.html`) +
   per-snippet bisect (`compare.py --bisect`).
 - Microbenchmark suite (`tests/bench.py` +
@@ -164,12 +242,16 @@ graphics-heavy thresholds (now 2% AE / SSIM 0.95, was 20% / 0.75).
 ### Docs
 
 - `docs/CI.md`: GitHub Actions workflow overview + OAuth-scope dance.
-- `docs/cookbook.md`: 5 new task-oriented recipes
+- `docs/cookbook.md`: 10 new task-oriented recipes (11-20)
   (CV / conference handout / exam paper / scientific report with
-  bibliography / recipe page); `examples/README.md` regrouped by
-  category to match.
+  bibliography / recipe page / Mermaid flowchart / marginalia /
+  multilingual / footnoted poetry / TOC + cross-references);
+  `examples/README.md` regrouped by category to match.
+- `ROADMAP.md`: new forward-looking plan covering v0.3 / v0.4 /
+  "won't do" with status callouts for the parallel-agent items.
 - `docs/RELEASE_NOTES_v0.2.0.md`: manual release-create instructions,
   publish-after-rollback path for the v0.2.0 tag.
+- `docs/RELEASE_NOTES_v0.2.1.md`: this release.
 - `docs/chapter3_pagination_drift_investigation.md`: walks
   PS-vs-SVG at the Lout-coordinate level (not the rasterised pixel
   level) and finds every line and word emitted on identical
@@ -182,6 +264,8 @@ graphics-heavy thresholds (now 2% AE / SSIM 0.95, was 20% / 0.75).
   @Graphic (fixed 2026-05-22)" subsection and the broader
   @Fig / @Diag audit, plus the SVG-tracker refresh for hash-op-
   dispatch + glyph-gap audit (lout a0a5c28, 2ff1b24).
+- `[lout] SVG_INCLUDES_AUDIT.md`: 427-line per-include audit of
+  the @BackEnd Case arms, see Added (lout 6a2dac2).
 
 ### Packaging
 
@@ -463,6 +547,7 @@ submodule:
 - 2024-01-26: lout 3.43 (the version vendored at the time of initial
   commit).
 
-[Unreleased]: https://github.com/jclements3/mdlout/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/jclements3/mdlout/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/jclements3/mdlout/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/jclements3/mdlout/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/jclements3/mdlout/releases/tag/v0.1.0
