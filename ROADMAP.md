@@ -34,8 +34,8 @@ following text in `@Graphic` bodies (v0.2.3); a PEP 621
 SVG renders of all four documents that ship with the Lout source
 tree (`design`, `expert`, `slides`, `user`, with zero residual SVG
 `@Case` warnings as of v0.2.3). The 327-page
-User's Guide PS-vs-SVG diff sits at mean SSIM 0.9278 (47 OK / 279
-DIFF / 1 BAD / 0 MISSING after v0.2.4); the 65-snippet single-feature suite is
+User's Guide PS-vs-SVG diff sits at mean SSIM 0.9283 (49 OK / 277
+DIFF / 1 BAD / 0 MISSING after v0.2.5); the 65-snippet single-feature suite is
 100% Pass-Excellent under the post-v0.2 tightened thresholds (5% AE
 for text, 2% AE / SSIM 0.95 for graphics-heavy). Build size: ~848 KB
 lout binary, 150 KB single-file mdlout.py. User's Guide SVG build:
@@ -43,6 +43,37 @@ lout binary, 150 KB single-file mdlout.py. User's Guide SVG build:
 perf round 4 (was ~26-29 s in v0.2.2 round 2, ~32 s in v0.2.1,
 ~7 min mid-v0.2 cycle; the original v0.4 < 30 s stretch target
 is now cleared by ~7 s).
+
+## Shipped in v0.2.5
+
+Same-day follow-on to v0.2.4. First wave of text-shaping work plus a
+batch of docs and tests upkeep.
+
+- **fi/fl/ffi/ffl ligature substitution** (was v0.4 mid-term).
+  `svg_emit_word_text` walks each Lout word with a 2-3 byte
+  lookahead and folds the digrams `fi`/`fl` and trigrams
+  `ffi`/`ffl` into U+FB01-U+FB04 when the active font family is in
+  the Adobe-Type serif allowlist (Times, Palatino, Bookman,
+  Schoolbook, Chancery, Garamond, ITC\*, NimbusRomNo9L\*,
+  URWPalladio\*). Visible on text-heavy User's Guide chapters;
+  cumulative mean SSIM 0.9234 -> 0.9283 vs the v0.2.3 baseline.
+- **Per-font 256x256 kern table precompute** (perf follow-on to
+  v0.2.4 round 4). Replaces the per-gap `FontKernLength()` linear
+  scan with a single array index; ~1.5 MB heap for a typical
+  12-face document. SVG output byte-identical to the pre-cache
+  build across all 74 snippet SVGs.
+- **GSUB parser for `smcp` / `onum`, parser-only** (first half of
+  the v0.4 "text shaping" item). CFF/OTF + Lookup Type 1 in this
+  phase; the consumer side is queued for v0.2.6 under PR #167.
+  Ligature / contextual / chained / extension subtables and
+  TrueType GSUB are deferred (noted in `SVG_PORTING.md`).
+- **`docs/FAQ.md`, tutorial refresh, cookbook 33-35.** Closes the
+  "more cookbook recipes" near-term item (recipe count 32 -> 35,
+  covering bibliography idioms, multi-language documents at the
+  Lout-language level, and a longer-form `@Diag` walkthrough).
+- **`examples/gallery.md`** (54-page mdlout-rendered showcase).
+- **`tests/browser_test.sh --with-math-strict`** opt-in mode for
+  CI math regressions.
 
 ## Shipped in v0.2.4
 
@@ -159,25 +190,25 @@ list (see "Shipped in v0.2.3" above). Items still pending:
   Requires the user's PyPI token in `~/.pypirc`. Once published,
   `pip install mdlout` becomes the recommended install path for
   non-contributors.
-- **More cookbook recipes.** Recipe count is 30 after v0.2.3;
-  the next batch targets bibliography / citation idioms,
-  multi-language documents at the Lout-language level (not just
-  `@Char` / `@Sym`), and longer-form `@Diag` walkthroughs.
+- **More cookbook recipes** — closed in v0.2.5 (recipe count
+  32 -> 35; bibliography idioms, multi-language at the Lout
+  level, longer-form `@Diag` walkthrough).
 
 ## Mid-term (v0.4 target)
 
 Harder, longer-tail items that haven't started yet.
 
-- **Text shaping: ligatures and combining marks.** Today
-  `svg_emit_word_text` walks character-by-character with optional
-  AFM kern deltas (v0.2.1). It does not consult the font's GSUB
-  table for ligature substitution (`fi`, `fl`, `ffi`) or apply
+- **Text shaping: ligatures and combining marks** -- partially
+  shipped in v0.2.5. fi/fl/ffi/ffl ligature substitution lands
+  via a 2-3 byte lookahead on the Lout-word side (Adobe-Type
+  serif allowlist; Unicode codepoints U+FB01-U+FB04). The GSUB
+  table parser for `smcp` / `onum` is in place but parser-only
+  (consumer queued for v0.2.6 under PR #167). Still open:
   combining-mark positioning (combining acute / grave / cedilla
-  on Latin Extended-A). Both are visible on the multilingual.md
-  example and on math-heavy User's Guide pages. Pulling in a
-  minimal harfbuzz-shape-style stage (or a hand-rolled GSUB-lookup
-  + GPOS-anchor walker against the existing AFM / OT tables)
-  closes the gap.
+  on Latin Extended-A; visible on `multilingual.md`), GSUB
+  Lookup types beyond Type 1 (ligature subtables, contextual,
+  chained, extension), TrueType GSUB, and GPOS-anchor mark
+  attachment. Pulling in the remaining stages closes the gap.
 - **Shared rasteriser for true pixel parity.** The current ~5%
   antialiasing floor on the User's Guide diff is rsvg vs
   Ghostscript painting the same glyph outlines with different
@@ -257,6 +288,6 @@ project-redefining choice, not an incremental release.
 
 ---
 
-Last updated: 2026-05-23. See [CHANGELOG.md](CHANGELOG.md) for
+Last updated: 2026-05-23 (v0.2.5). See [CHANGELOG.md](CHANGELOG.md) for
 the release history this roadmap projects from, and
 [TODO.md](TODO.md) for the working-engineer task list.

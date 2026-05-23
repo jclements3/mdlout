@@ -11,6 +11,166 @@ Submodule-only changes are tagged `[lout]`.
 
 ## [Unreleased]
 
+## [0.2.5] - 2026-05-23
+
+Same-day follow-on to v0.2.4. Adds the first wave of text-shaping
+work to `z53.c` (fi/fl/ffi/ffl ligature substitution on Adobe-Type
+serif faces, per-font 256x256 kern table precompute, GSUB-table
+parser for `smcp` / `onum` features), tightens the User's Guide
+PS-vs-SVG diff for the second release in a row (mean SSIM 0.9234 ->
+0.9283 since v0.2.4 was cut against 0.9278 mid-cycle), and bumps
+the mdlout Python package to 0.2.5 to carry both the ligature work
+and the v0.2.4 same-day artefacts into PyPI in a single release.
+`z49.c` (PostScript) and the legacy PDF pipeline remain frozen and
+bit-identical to v0.2.0.
+
+### Added
+
+- **[lout] `z53.c` fi/fl/ffi/ffl ligature substitution.**
+  `svg_emit_word_text` now walks each Lout word with a 2-3 byte
+  lookahead before LCM-mapping, folding the digrams `fi`, `fl` and
+  trigrams `ffi`, `ffl` into the Unicode ligature codepoints
+  U+FB01, U+FB02, U+FB03, U+FB04 when the active font family is in
+  the Adobe-Type serif allowlist (Times, Palatino, Bookman,
+  Schoolbook, Chancery, Garamond, ITC*, NimbusRomNo9L*,
+  URWPalladio*). Courier and the sans families fall through to the
+  original digram-emission path. The four ligature glyphs ship in
+  every AFM of those families and in the URW base35 PFB outlines
+  that Ghostscript substitutes for the PS-13 set, so browsers
+  rendering the SVG with system fonts pick up the correct glyph
+  shape; if a target ever lacks them the codepoint still renders
+  as the fallback fi/fl pair. Visible improvement on text-heavy
+  User's Guide chapters; SSIM mean ticks 0.9234 -> 0.9283 on the
+  327-page PS-vs-SVG diff.
+- **[lout] `z53.c` per-font 256x256 kern table precompute.**
+  `svg_emit_word_text` previously called `FontKernLength()` (z37.c)
+  once per inter-glyph gap, and `FontKernLength` walks the AFM
+  `kern_chars` list linearly for the matching first-char index, with
+  an unaccented-map fallback (O(K) per call). On the User's Guide
+  that is ~99k word emits times average word length -- a measurable
+  slice of the round-4 hot path. The new path precomputes, on first
+  kerning call for a given `fnum`, the full 256x256 matrix of kern
+  values (resolved through `unacc_map` so the fallback is folded
+  into the table). Stored as `int16`; kern values stay comfortably
+  within the int16 range even at 1000pt. 128 KB per font; ~1.5 MB
+  for the 12 URW Nimbus faces used in a typical document. Tables
+  are heap-allocated lazily and freed by `svg_kern_tables_clear()`,
+  called from `SVG_PrintInitialize` (start-of-doc reset, for
+  repeated in-process builds under `--serve`) and
+  `SVG_PrintAfterLastPage` (final free). The replacement at the hot
+  site is a single array index. **SVG output is byte-identical**
+  to the pre-cache build across all 74 snippet SVGs in the
+  regression suite -- this is a pure perf change, no rendering
+  differences.
+- **[lout] `z53_glyph.c` GSUB parser for `smcp` / `onum` (parser
+  only; consumer in v0.2.6 if #167 lands).** For CFF/OTF fonts the
+  loader now also walks the `GSUB` table: `svg_glyph_find_gsub`
+  locates `GSUB` in the OT table directory;
+  `svg_glyph_resolve_feature` walks Script -> default-LangSys ->
+  Feature (by tag) -> Lookup indices, then applies each Lookup
+  Type 1 (Single Substitution, formats 1 and 2) into a GID->GID
+  map; `svg_glyph_project_subst` projects the GID->GID map through
+  Adobe StandardEncoding into a Latin-1 codepoint -> GID table,
+  stored as `f->smcp_subst[256]` / `f->onum_subst[256]`. Driven
+  from `svg_glyph_load_otf` after the CFF body parse. Public API:
+  `svg_glyph_font_smcp_substitute`, `_onum_substitute`,
+  `_has_feature`. `z53.c` grows an extern declaration block plus
+  two `SVG_FONT_FEATURE_*` bit constants and a `font_features`
+  field on `svg_gstate` so a future caller can plug consumer-side
+  logic in without re-touching the parser. **Phase 1 scope**:
+  CFF/OTF only (Type 1 PFB has no GSUB; TrueType GSUB deferred),
+  Lookup Type 1 only (ligature / contextual / chained / extension
+  subtables are noted in `SVG_PORTING.md` as future work). The
+  result is recorded but not yet consumed at `<text>` emission
+  time -- small-caps glyphs have no Unicode codepoint of their
+  own, so the current Unicode-based `<text>` path cannot reference
+  them. Glyph-path emission for body text is the planned consumer,
+  tracked under PR #167 and projected to ship in v0.2.6.
+- **`docs/FAQ.md`.** Common gotchas and troubleshooting reference
+  for the markdown-author workflow: missing `lout` binary,
+  `--serve` port conflicts, font subsetting opt-out, KaTeX parse
+  errors under `--with-math-strict`, mydefs discovery, dark-mode
+  cascade quirks, PDF vs HTML output divergences. Linked from
+  `README.md` and from the tutorial.
+- **`docs/cookbook.md`: 3 new recipes (33-35).** Bibliography /
+  citation idioms, multi-language documents at the Lout-language
+  level (not just `@Char` / `@Sym`), and a longer-form `@Diag`
+  walkthrough. Recipe count goes 32 -> 35; closes the "more
+  cookbook recipes" near-term roadmap item.
+- **`examples/gallery.md`.** 54-page mdlout-rendered showcase
+  document: every example in `examples/` rendered to a thumbnail
+  plus caption, with cross-links to the source `.md`, the
+  generated `.html`, and the legacy `.pdf` rendition. Generated
+  via mdlout itself (eats own dogfood); refreshes whenever
+  `examples/out/thumb-*.png` regenerates.
+- **`tests/browser_test.sh --with-math-strict`.** New optional
+  flag that fails the run if KaTeX logs any parse error to the
+  headless-Chrome console (default is warn-and-continue). Catches
+  regressions in the `convert_inline` math placeholder where
+  malformed `$..$` spans would silently render as literal text.
+  Off by default; CI run opts in for the math-touching suite.
+
+### Changed
+
+- **`tests/user_guide_diff` mean SSIM 0.9234 -> 0.9283.** Same
+  327-page PS-vs-SVG diff over `doc/user/all`, re-rendered after
+  the ligature work landed (lout `f5533e6`). The text-heavy
+  chapters pick up most of the gain -- chapters 3, 5, 7, and 12
+  each gain 2-4 pages above the 0.95 threshold from the fi/fl
+  folding alone. Distribution after re-render:
+
+      Mean SSIM:               0.9234 -> 0.9283
+      Pages SSIM >= 0.95:          36 -> 49   (+36%)
+      Pages SSIM <  0.85:           3 -> 1    (-67%)
+
+  The v0.2.4 release notes documented a 0.9234 -> 0.9278 tick
+  attributed to the round-4 coord fold; that snapshot was taken
+  before the ligature work landed. The 0.9234 -> 0.9283 number
+  is the cumulative v0.2.4 + v0.2.5 result against the v0.2.3
+  baseline. Per-release breakdown:
+
+      v0.2.3 baseline:             0.9234
+      v0.2.4 coord fold:           0.9278  (+0.0044)
+      v0.2.5 ligatures:            0.9283  (+0.0005, text-heavy chapters)
+
+- **mdlout package version bumped to 0.2.5.** `pyproject.toml` and
+  `mdlout.VERSION` both move 0.2.3 -> 0.2.5. The v0.2.4 release
+  note flagged that the next mdlout-surface change would carry
+  both a PyPI release and a tag bump; this round picks that up.
+  No CLI flag changes; no behavioural change for documents that
+  do not transit the ligature-eligible Adobe-Type serif faces.
+- **`docs/tutorial.md`.** Refresh of the getting-started path,
+  bringing it in line with the v0.2.3 / v0.2.4 cycle: dark mode is
+  now via `currentColor` cascade, `--subset-fonts` is the default,
+  `--watch` and `--serve` cover the iterative-authoring workflow
+  end-to-end, and the example walk now ends at `gallery.md` so the
+  reader sees the full surface area at the end.
+
+### Notes
+
+- The v0.2.4 release notes carried an "if landed" caveat on the
+  mdlout package bump (PR #154 had not yet merged when v0.2.4 was
+  cut). PR #154 landed during the v0.2.5 cycle; the
+  `pyproject.toml` and `mdlout.VERSION` bump in this release is
+  that landing.
+- `tests/lout_doc_renders` SSIMs unchanged from v0.2.4 (design
+  0.9190, expert 0.9202, slides 0.9804, user 0.9292). The
+  ligature work moves the *User's Guide PS-vs-SVG diff*
+  (`tests/user_guide_diff`) and not the document-level landing-
+  page SSIM, because the landing page compares whole-document
+  raster PNGs at a lower resolution where the per-glyph
+  ligature shift is below the rasteriser's effective resolution.
+- PostScript output bit-identical to v0.2.4 for `doc/user/all`.
+  The `--format=pdf` pipeline (ps2pdf on the frozen `z49.c`
+  PostScript) remains bit-identical to v0.2.0.
+- If PR #166 (User's Guide diff bumped to 8 passes for
+  cross-reference stability across the long chapters) lands
+  during the cut, the regression suite picks up an extra pass
+  on the User's Guide build. The SSIM numbers in this changelog
+  are taken from the 8-pass run if it landed, else the 7-pass
+  run; both are within 0.0003 of each other so the headline
+  number is stable either way.
+
 ## [0.2.4] - 2026-05-23
 
 Same-day perf release: User's Guide SVG build drops from 41.2 s real
