@@ -1,0 +1,26 @@
+###########################################################################
+#  text_smcp_kerned_lig - smcp synthesis interacting with the AFM kern    #
+#  pair matrix and the OpenType ligature allowlist in a single run.        #
+#                                                                          #
+#  text_smcp_active pins smcp / onum glyph substitution in isolation;      #
+#  text_ligatures_kerned pins ligatures+kerning in isolation.  This        #
+#  snippet wires both gates on at once so that any regression in the       #
+#  ordering of kerning -> ligature folding -> smcp glyph rewrite in        #
+#  z53.c's font pipeline (svg_font_apply_features /                        #
+#  svg_font_has_ligatures / svg_font_kerning_pair) shows up as a pixel     #
+#  divergence here even when the simpler companions still pass.            #
+#                                                                          #
+#  Independent verification: run_compare.sh routes this snippet through   #
+#  the same LOUT_SVG_FONT_FEATURES env-var trigger as text_smcp_active   #
+#  so the SVG output should contain at least one "<path d=" emission       #
+#  for the smcp-rewritten words.                                           #
+###########################################################################
+
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+AVAILABLE final affinity -- one paragraph carrying an "AV" kern pair,
+an "fi" ligature in "final" and an "ffi" ligature in "affinity",
+followed by the words intended for smcp glyph rewrite.  WaVe ToTal
+provides two more kern pairs alongside.
+@End @Text

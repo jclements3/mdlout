@@ -1,0 +1,24 @@
+###########################################################################
+#  diag_col_layout - a 2x3 grid of @Diag nodes tiled with the gap          #
+#  operators "||" (horizontal) and "//" (vertical).  Each cell is a        #
+#  small labelled @Box.  This is "column layout" inside a single @Diag,    #
+#  distinct from diag_multicol (one @Diag dropped into a two-column        #
+#  text galley) and diag_multi_link (a K3 link graph).                     #
+#                                                                          #
+#  The original brief named @ColGap, but that symbol is @Eq-internal       #
+#  (defined in include/eqf) and not available to @Diag; the equivalent    #
+#  tiling primitive inside @Diag is the gap operator.                      #
+###########################################################################
+
+@SysInclude { diag }
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+A two-by-three grid of small labelled boxes laid out inside one diagram:
+@DP
+@CentredDisplay @Diag {
+   @Node { Alpha }   ||1.5c @Node { Beta }    ||1.5c @Node { Gamma }
+   //1.0c
+   @Node { Delta }   ||1.5c @Node { Epsilon } ||1.5c @Node { Zeta }
+}
+@End @Text

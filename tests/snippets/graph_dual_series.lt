@@ -1,0 +1,40 @@
+###########################################################################
+#  graph_dual_series - a @Graph with two @Data blocks overlaid on the     #
+#  same axes (a linear series plus a quadratic series).  Existing graph   #
+#  snippets cover negative axes, log scale, bar histogram, and default-   #
+#  colour single-series plots; none exercise the multi-series layering   #
+#  path where @Graph emits two stroke sequences back-to-back inside one  #
+#  graphics-state nesting.                                                #
+#                                                                         #
+#  Swap rationale: the originally-proposed graph_log_axis duplicates the  #
+#  existing graph_log_scale.lt (also a ylog { 10 } plot), so this fills   #
+#  a genuine gap instead.                                                 #
+###########################################################################
+
+@SysInclude { graph }
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+Linear and quadratic series overlaid on a single set of axes:
+@DP
+@CentredDisplay -2p @Font @Graph
+   style { axes }
+   xorigin { 0 }
+   yorigin { 0 }
+   width { 8c }
+   height { 5c }
+   xticks { 0@ 1@ 2@ 3@ 4@ 5@ }
+   yticks { 0@ 5@ 10@ 15@ }
+   belowcaption { x }
+   leftcaption { y }
+{
+   @Data pairs { solid }
+   {
+      0 0   1 1   2 2   3 3   4 4   5 5
+   }
+   @Data pairs { dashed }
+   {
+      0 0   1 0.5   2 2   3 4.5   4 8   5 12.5
+   }
+}
+@End @Text

@@ -1,0 +1,26 @@
+###########################################################################
+#  box_save_restore - the smallest reproducer for the gsave/grestore       #
+#  path-save round trip exercised by issue #208.  Inside a raw @Graphic    #
+#  we call LoutBox (which deposits the @Box path on the current path),    #
+#  gsave, fill the path with a light grey, grestore, then stroke the      #
+#  same path with the default 1pt black.  The result is a filled box      #
+#  with a sharp black border.                                              #
+#                                                                          #
+#  If z53.c drops the path across the gsave/grestore boundary (the bug    #
+#  tracked in #208) the stroke after grestore lands on an empty path and  #
+#  the border disappears in the SVG render while staying intact in the    #
+#  PS reference -- so any regression of that path-save behaviour flips    #
+#  this snippet's verdict.                                                 #
+###########################################################################
+
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+Filled box with black border via gsave / fill / grestore / stroke:
+@DP
+@CentredDisplay {
+   "newpath LoutBox"
+   "gsave 0.85 setgray fill grestore"
+   "0 setgray 1 setlinewidth stroke"
+} @Graphic { 4c @Wide 2.5c @High }
+@End @Text

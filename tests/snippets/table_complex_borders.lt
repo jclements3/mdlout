@@ -1,0 +1,37 @@
+###########################################################################
+#  table_complex_borders - a @Tbl with selective per-cell border rules    #
+#  rather than the blanket rule { yes }.  Each header cell is given       #
+#  rulebelow { yes } so the table grows a single horizontal rule under    #
+#  the header band; the right-hand "Total" column gets ruleleft { yes }   #
+#  so the totals are separated by one vertical rule.  No other rules     #
+#  are drawn.                                                              #
+#                                                                          #
+#  Existing table snippets cover the blanket rule { yes } pattern         #
+#  (table_multi_row, table_align, table_spanned_columns, etc.) but none   #
+#  exercise the per-cell ra/rb/rl/rr options that produce selective       #
+#  borders -- this fills that gap.                                        #
+###########################################################################
+
+@SysInclude { tbl }
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+@CentredDisplay @Tbl
+   aformat {
+      @Cell rulebelow { yes } A
+    | @Cell rulebelow { yes } B
+    | @Cell rulebelow { yes } ruleleft { yes } C
+   }
+   bformat {
+      @Cell A
+    | @Cell B
+    | @Cell ruleleft { yes } C
+   }
+{
+@Rowa A { @B { Region } } B { @B { Units } } C { @B { Total } }
+@Rowb A { North } B { 12 } C { 120 }
+@Rowb A { South } B {  8 } C {  80 }
+@Rowb A { East  } B { 15 } C { 150 }
+@Rowb A { West  } B {  9 } C {  90 }
+}
+@End @Text

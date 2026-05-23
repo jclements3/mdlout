@@ -52,6 +52,7 @@ fixture rather than a slice of the User's Guide.
 | `box_curve.lt`                | Basic objects: shapes       | `@CurveBox`                                            | strict    |       |
 | `box_shadow.lt`               | Basic objects: shapes       | `@ShadowBox`                                           | graphics  |       |
 | `box_shadow_overlap.lt`       | Basic objects: shapes       | Multiple overlapping `@ShadowBox`, z-order             | strict    |       |
+| `box_save_restore.lt`         | Graphics                    | Raw `@Graphic` running `LoutBox` then `gsave fill grestore stroke` to paint a filled box with a sharp black border; the smallest reproducer for the gsave/grestore path-save round trip (issue #208) | strict    | If z53.c drops the path across `gsave`/`grestore`, the post-`grestore` `stroke` lands on an empty path and the border disappears in SVG while remaining in PS, flipping the verdict. |
 | `box_simple.lt`               | Basic objects: shapes       | `@Box`                                                 | strict    |       |
 | `bullet_list.lt`              | Lists                       | `@WideTaggedList` with `@Bullet`                       | strict    |       |
 | `cite_basic.lt`               | References                  | Manual `[1]`/`[2]` references + handmade bibliography  | strict    |       |
@@ -62,6 +63,7 @@ fixture rather than a slice of the User's Guide.
 | `diag_arrow_curved.lt`        | Diagrams: arrowheads        | `arrowstyle { curvedsolid }`                           | strict    |       |
 | `diag_arrow_solid.lt`         | Diagrams: arrowheads        | `arrowstyle { solid }`                                 | strict    |       |
 | `diag_arrowstyle_gallery.lt`  | Diagrams: arrowheads        | Full arrowstyle audit (solid / open / halfopen / solidwithbar / curvedsolid / curvedopen / curvedhalfopen) | strict    | Audit-style snippet; flips colour the moment any arrowhead shape regresses in `z53.c`. |
+| `diag_col_layout.lt`          | Diagrams                    | 2x3 grid of `@Node` cells tiled inside one `@Diag` using the `||` / `//` gap operators | strict    | The original brief named `@ColGap`, but that symbol is `@Eq`-internal (defined in `include/eqf`); the equivalent tiling primitive inside `@Diag` is the gap operator, so the snippet exercises that instead. |
 | `diag_dashed_lines.lt`        | Diagrams: links             | `@Link` with `pathstyle { dashed }`                    | strict    |       |
 | `diag_ellipse_with_tag.lt`    | Diagrams: nodes             | `@Ellipse` + external `nodelabel`                      | strict    |       |
 | `diag_labels_complex.lt`      | Diagrams: labels            | `nodelabel` / `clabel` / `alabel` / `blabel` / `linklabel` | graphics  |       |
@@ -89,6 +91,7 @@ fixture rather than a slice of the User's Guide.
 | `graph_axes_negative.lt`      | Graphs                      | `@Graph` with origin-crossing axes and negative tick labels (`y = x^3 / 20`) | strict    |       |
 | `graph_bar_chart.lt`          | Graphs                      | `@Graph` with `filledyhisto` pairs (bar chart variant) | strict    |       |
 | `graph_default_color.lt`      | Graphs                      | `@Graph` with default-coloured axes/strokes; locks in z53.c's "fold default black to currentColor" rule on the raw-PS path | strict    | currentColor resolves to black under rsvg's default cascade, matching the PS reference pixel-for-pixel. |
+| `graph_dual_series.lt`        | Graphs                      | `@Graph` with two `@Data` blocks (solid + dashed) overlaid on one set of axes | strict    | Swap rationale: the originally-proposed `graph_log_axis.lt` duplicates the existing `graph_log_scale.lt`. This fills the multi-series gap instead, exercising the path where `@Graph` emits two stroke sequences back-to-back inside one graphics-state nesting. |
 | `graph_log_scale.lt`          | Graphs                      | `@Graph` with `ylog { 10 }` exponential plot           | strict    |       |
 | `graphic_circle.lt`           | Graphics                    | Filled circle via raw PostScript                       | graphics  |       |
 | `graphic_line.lt`             | Graphics                    | Horizontal line via raw PostScript                     | graphics  |       |
@@ -111,6 +114,7 @@ fixture rather than a slice of the User's Guide.
 | `syntax_diag_repeat.lt`       | Diagrams: syntax diagrams   | `@SyntaxDiag` `@Repeat`                                | graphics  |       |
 | `table_align.lt`              | Tables                      | `@Cell A indent { left | ctr | right }`                | strict    |       |
 | `table_color_alternating.lt`  | Tables                      | `@Tbl` rows with alternating `paint { lightgrey }` cell-fill formats | strict    | First snippet to exercise the per-cell `paint` option; goes through the same raw-PS rectangle-fill path as `box_simple`. |
+| `table_complex_borders.lt`    | Tables                      | `@Tbl` with selective per-cell `rulebelow` / `ruleleft` borders (header underline + single vertical rule before the totals column) instead of blanket `rule { yes }` | strict    | Existing table snippets all use blanket `rule { yes }`; this fills the gap for the per-cell `ra` / `rb` / `rl` / `rr` options. |
 | `table_longtable.lt`          | Tables                      | Multi-page `@Tbl` via `@NP`                            | strict    |       |
 | `table_multi_row.lt`          | Tables                      | Inter-row rules + simulated header band                | strict    |       |
 | `table_rotated.lt`            | Tables                      | `@Tab` with `@Rotate { 60d }` header cells             | strict    |       |
@@ -120,6 +124,7 @@ fixture rather than a slice of the User's Guide.
 | `text_currentcolor_default.lt`| --                          | Default-black text exercising z53.c's "fold default black to currentColor" rule for the `<text fill>` and underline-rule paths | strict    | Companion to `graph_default_color`; pixel-identical to PS because rsvg resolves currentColor to black absent a CSS cascade. |
 | `text_ligatures_kerned.lt`    | Fonts                       | Kerning pairs (`AV`, `Wa`, `To`) interleaved with `fi`/`fl`/`ffi` ligatures in one Times-Roman paragraph | strict    | Tests interaction of the per-font kern-pair matrix with the ligature allowlist (`svg_font_has_ligatures`). |
 | `text_sizes.lt`               | Fonts                       | Six sizes from 8 p to 24 p                             | strict    |       |
+| `text_smcp_kerned_lig.lt`     | Fonts                       | smcp synthesis + AFM kerning + ligature substitution in one paragraph (`AVAILABLE final affinity`, `WaVe ToTal`) | strict    | Routes through the same `LOUT_SVG_FONT_FEATURES` trigger as `text_smcp_active`. Wires both font-pipeline gates on at once so a regression in the kerning -> ligature -> smcp ordering in z53.c shows up as a pixel divergence here even when the simpler companions still pass. |
 | `text_smcp_synthesis_off.lt`  | --                          | Locks in the "feature off" path: with `LOUT_SVG_FONT_FEATURES` unset, the smcp/onum synthesis routines bail at their getenv check and emit plain `<text>` | strict    | Pairs with `text_smcp_active`; together they pin both branches of the synthesis gate. |
 | `text_styles.lt`              | Fonts                       | `@B` / `@I` / `@II` runs                               | strict    |       |
 | `text_subscript_superscript.lt` | --                        | Chained plain-text `@Sub` / `@Sup` (chemistry, ordinals, indexed bounds) | strict    |       |
