@@ -751,6 +751,286 @@ misspelt"). For a multi-recipe cookbook switch to `type: book` and one
 recipe per chapter; the report-style auto-numbering then carries
 through the index.
 
+## 16. Mermaid flowchart
+
+` ```mermaid ` fenced blocks are intercepted by mdlout and routed through
+the bundled Mermaid.js engine in HTML mode. Each fence becomes a
+self-contained `<div class="mermaid">` block that the loaded engine
+turns into an SVG flowchart, sequence diagram, class diagram, etc., on
+page load. PDF mode renders the block as a `[Mermaid diagram: ...]`
+literal -- pre-render with the `mmdc` CLI and `![](diagram.svg)` it
+when archival fidelity matters.
+
+```yaml
+---
+type: doc
+title: Build Pipeline Overview
+font: Times Base 11p
+page: A4
+---
+
+# Build pipeline
+
+The end-to-end flow from a Markdown source file to the published HTML
+output:
+
+```mermaid
+flowchart LR
+  MD[Markdown source] --> PARSE[mdlout parser]
+  PARSE --> LT[Lout source]
+  LT --> LOUT[lout -G binary]
+  LOUT --> SVG[Per-page SVG]
+  SVG --> HTML[Final HTML]
+  HTML --> WEB[Web browser]
+```
+```
+
+Rendered: a left-to-right flowchart with six labelled nodes connected
+by arrows; the SVG is laid out by Mermaid's `dagre` engine at page
+load.
+
+**Gotcha:** Mermaid.js is loaded on demand (only when at least one
+` ```mermaid ` fence is present), but the engine itself is ~2 MB
+inlined into the HTML. Pass `--no-mermaid-engine` or
+`--external-assets` to trim the page weight in production. The PDF
+fallback is intentionally a placeholder -- the `mmdc` headless renderer
+needs a Chromium runtime, which is too heavy to ship in-process; the
+recommended pre-render command is
+`mmdc -i diagram.mmd -o diagram.svg`. Sequence and class diagrams work
+identically; just change the `flowchart LR` opening directive.
+
+## 17. Marginalia / sidenotes
+
+Lout exposes four margin-note macros: `@LeftNote`, `@RightNote`,
+`@OuterNote` (right on recto, left on verso), and `@InnerNote` (the
+opposite). They attach to the preceding word and ride in the column
+margin at the same vertical height -- shifting downward only to avoid
+overlap with a previous note, never forward to the next page. There is
+no markdown shorthand; drop into a raw-Lout fence at the attachment
+site.
+
+```yaml
+---
+type: doc
+font: Times Base 11p
+page: A4
+top-margin: 2.5c
+foot-margin: 2.5c
+left-margin: 2.5c
+right-margin: 5.5c
+para-gap: 1.0v
+para-indent: 0f
+page-headers: None
+---
+
+# Side-notes in practice
+
+```lout
+@LP
+The composite trapezoidal rule
+@RightNote @I { Named for the polygon you get when you join successive
+samples of @F { f } with straight lines. }
+estimates the integral of a function by summing the areas of trapezoids
+fitted under the integrand on a uniform grid.
+@LP
+```
+```
+
+Rendered: an A4 page with a 5.5 cm right margin holding the italic
+gloss; the main column reflows as if the note were not there.
+
+**Gotcha:** the default `right-margin: 2.5c` does not leave room for
+legible notes -- widen the margin to at least 4-5 cm. Customise note
+appearance with the `@MarginNoteFont`, `@MarginNoteHGap`, `@MarginNoteVGap`,
+and `@MarginNoteWidth` setup-file options. Margin notes are silently
+omitted in plain-text output and unreliable inside multi-column layouts;
+use them sparingly there. Working example:
+[`examples/marginalia.md`](../examples/marginalia.md).
+
+## 18. Multilingual document
+
+mdlout reads markdown as UTF-8, but the Lout binary itself reads
+ISO-Latin-1, so raw UTF-8 multi-byte sequences (accented Latin letters,
+the em-dash, Cyrillic) do not survive the round trip. The robust path
+is two-fold: use the `bsf` punctuation shorthands (` `` `, `''`, `--`,
+`---`, `...`) for routine prose, and drop into a raw-Lout fence with
+`@Char "eacute"` (or any glyph's Adobe PostScript name) for accented
+Latin letters. Greek and the standard math operators come from the
+Adobe Symbol font via `@Sym alpha`, `@Sym Pi`, `@Sym integral`, etc.
+
+```yaml
+---
+type: doc
+title: A Multilingual Sampler
+font: Times Base 11p
+page: A4
+language: English
+---
+
+# A worked example
+
+A few accented letters via the raw-Lout `@Char` route:
+
+```lout
+caf @Char "eacute" -- na @Char "idieresis" ve -- M @Char "udieresis" nchner
+```
+
+The Greek alphabet via the Symbol font:
+
+```lout
+@Sym alpha   @Sym beta   @Sym gamma   @Sym delta   @Sym epsilon
+//
+@Sym Alpha   @Sym Beta   @Sym Gamma   @Sym Delta   @Sym Epsilon
+```
+
+A KaTeX math display that itself uses Greek and the Symbol operators:
+
+$$
+\zeta(2) = \sum_{n=1}^{\infty} \frac{1}{n^2} = \frac{\pi^2}{6}.
+$$
+```
+
+Rendered: the Latin glyphs render directly from the document's body
+font (Times here); the Greek glyphs render in Symbol (Helvetica's
+companion); the math block renders via KaTeX in HTML mode and falls
+back to the `@Math` placeholder in PDF mode.
+
+**Gotcha:** the Symbol-font glyph table only landed in the SVG
+back-end at commit ec987be; older builds rendered Greek as "subtly
+wrong" glyphs. Verify with `lout/lout --version` that you have the
+fix. For Cyrillic, `@SysInclude { russian }` plus `{ Russian }
+@Language { ... }` wires KOI8-R input through the Russian fonts on the
+PostScript path; the SVG back-end does not yet ship the Cyrillic
+glyph table, so HTML-mode Cyrillic remains a known gap. Working
+example: [`examples/multilingual.md`](../examples/multilingual.md).
+
+## 19. Footnoted poetry
+
+Verse needs two things markdown alone cannot provide: hard line breaks
+within a stanza (markdown collapses single newlines to a space), and a
+clean way to attach scholarly footnotes to individual lines. The
+robust pattern is one raw-Lout fence per stanza using Lout's `//`
+vlist separator for the line breaks, plus standard markdown `[^name]`
+footnotes for the apparatus.
+
+```yaml
+---
+type: doc
+title: A Footnoted Stanza
+font: Times Base 11p
+page: A4
+left-margin: 3.0c
+right-margin: 3.0c
+para-gap: 1.4v
+para-indent: 0f
+page-headers: None
+---
+
+# from "Kubla Khan" [^source]
+
+```lout
+@LP
+@LeftDisplay {
+"In Xanadu did Kubla Khan"  [^xanadu]
+//
+"A stately pleasure-dome decree:"
+//
+"Where Alph, the sacred river, ran"  [^alph]
+//
+"Through caverns measureless to man"
+//
+"Down to a sunless sea."
+}
+@LP
+```
+
+[^source]: Coleridge, *Kubla Khan*, 1797 (published 1816).
+
+[^xanadu]: The capital of Kublai Khan's summer court, on the steppe
+north of present-day Beijing.
+
+[^alph]: The sacred river is invented; the name echoes Greek
+*Alphaeus*.
+```
+
+Rendered: a left-aligned stanza, one verse line per output line,
+indented from both margins, with three footnotes set at the foot of
+the page (PDF mode) or as numbered links to an end-of-document
+section (HTML mode).
+
+**Gotcha:** keep each line's text inside double quotes so Lout treats
+it as a literal string -- otherwise Lout's lexer may try to interpret
+punctuation, apostrophes, or em-dashes. The `[^name]` references live
+*outside* the raw-Lout fence, in the surrounding markdown, because
+mdlout's footnote scanner doesn't recurse into `lout` fences; place
+the markers just after the closing-quote of the line they belong to.
+The footnote *definitions* `[^name]: body text` must sit on their
+own paragraph-level lines, as usual.
+
+## 20. Auto-generated TOC + cross-references
+
+A long-form report benefits from two complementary patterns: the
+`[TOC]` placeholder for the table of contents (mdlout auto-populates
+this in HTML mode; Lout's `@MakeContents` setup clause renders the
+equivalent for PDF), and Lout's `@PageOf` / `@NumberOf` / `@TitleOf`
+cross-reference macros for in-prose pointers like
+"see section 3.2 on page 14". The reference macros require Lout
+`@Section ... @Tag { name }` blocks, which mdlout does not synthesise
+from `## headings` -- so for `@PageOf` to fire you have to write the
+section opener in raw Lout.
+
+```yaml
+---
+type: report
+title: A Worked Cross-Reference Pattern
+author: J. L. Clements
+cover: Yes
+contents: Yes
+section-numbers: Arabic
+---
+
+[TOC]
+
+```lout
+@Section
+    @Title { Introduction }
+    @Tag { intro }
+@Begin
+@PP
+This document is an exercise in forward and backward references. In
+Section @NumberOf conclusion (page @PageOf conclusion) we revisit the
+material, where the section is called "@TitleOf conclusion".
+@End @Section
+
+@Section
+    @Title { Conclusion }
+    @Tag { conclusion }
+@Begin
+@PP
+As foreshadowed in Section @NumberOf intro (page @PageOf intro), we
+close the loop here.
+@End @Section
+```
+```
+
+Rendered: a cover, an auto-numbered table of contents, two numbered
+sections, and in-prose references like "Section 2 (page 4)" that
+resolve on the second cross-reference pass.
+
+**Gotcha:** `@PageOf` / `@NumberOf` / `@TitleOf` need **two** Lout
+passes to resolve -- the first pass writes labels to the `.li`
+database, the second reads them back. mdlout already retries up to
+three times, but if you run Lout by hand from a raw `.lt` file you
+must re-invoke until the "unresolved cross reference" warnings stop.
+Forward references render blank on the first pass; this is normal.
+Tags must be unique across the document; a duplicate tag silently
+overwrites the earlier definition. To mix mdlout's auto-`@Section`
+generation with explicit `@Tag` references, prefix the relevant
+heading body with a raw-Lout opener of the same name -- mdlout will
+not double-emit. The snippet
+[`tests/snippets/crossref_pageof.lt`](../tests/snippets/crossref_pageof.lt)
+is a minimal worked example.
+
 ## Where to look next
 
 - [`docs/best_practices.md`](best_practices.md) -- idiom guide:
@@ -760,7 +1040,7 @@ through the index.
   deep-dive on the SVG back-end (`z53.c`).
 - [`docs/tutorial.md`](tutorial.md) -- end-to-end walkthrough from
   a fresh clone.
-- [`tests/snippets/`](../tests/snippets/) -- 62 single-feature Lout
+- [`tests/snippets/`](../tests/snippets/) -- 65 single-feature Lout
   snippets, the first place to look when a feature stops
   rendering.
 - [`tests/user_guide_diff/`](../tests/user_guide_diff/) -- the
