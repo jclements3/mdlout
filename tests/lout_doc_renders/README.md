@@ -14,10 +14,10 @@ bash tests/lout_doc_renders/build.sh
 
 | Doc | Pages | PS | PDF | SVG | HTML | PS wall | SVG wall | Sample SSIM | Diff %|
 |-----|------:|---:|----:|----:|-----:|--------:|---------:|------------:|------:|
-| [design](./design.html) | 40 | 431.9 KiB | [173.5 KiB](./design.pdf) | 2.4 MiB | [2.4 MiB](./design.html) | 3s | 9s | 0.9190 | 8.65% |
-| [expert](./expert.html) | 120 | 937.5 KiB | [496.0 KiB](./expert.pdf) | 6.0 MiB | [6.0 MiB](./expert.html) | 16s | 21s | 0.9202 | 6.71% |
-| [slides](./slides.html) | 42 | 150.3 KiB | [73.0 KiB](./slides.pdf) | 264.7 KiB | [266.7 KiB](./slides.html) | 2s | 3s | 0.9804 | 1.68% |
-| [user](./user.html) | 327 | 4.5 MiB | [1.6 MiB](./user.pdf) | 15.9 MiB | [15.9 MiB](./user.html) | 313s | 319s | 0.9292 | 7.73% |
+| [design](./design.html) | 40 | 431.9 KiB | [173.5 KiB](./design.pdf) | 2.0 MiB | [2.0 MiB](./design.html) | 4s | 8s | 0.9201 | 8.62% |
+| [expert](./expert.html) | 120 | 937.5 KiB | [496.0 KiB](./expert.pdf) | 5.1 MiB | [5.1 MiB](./expert.html) | 12s | 15s | 0.9206 | 6.70% |
+| [slides](./slides.html) | 42 | 150.3 KiB | [73.0 KiB](./slides.pdf) | 244.1 KiB | [246.0 KiB](./slides.html) | 5s | 3s | 0.9805 | 1.67% |
+| [user](./user.html) | 327 | 4.5 MiB | [1.6 MiB](./user.pdf) | 15.9 MiB | [15.9 MiB](./user.html) | 298s | 237s | 0.9297 | 7.72% |
 
 Sample SSIM is the mean of scikit-image `structural_similarity` (Wang et al. 2004) over 10 evenly-spaced sampled pages per document on luminance, data_range=255 (1.0 = pixel-identical, >0.95 = visually indistinguishable at 100 dpi, <0.85 = actually different). Diff % is the ImageMagick AE pixel-diff ratio at 5% fuzz averaged over the same samples. Side-by-side galleries:
 
