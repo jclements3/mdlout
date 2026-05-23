@@ -1637,6 +1637,229 @@ and `@SubSubIndex { sub-sub }` (also in `dsf`). For the markdown
 side, write the prose normally and switch into a ` ```lout `
 fence only where an `@Index` call needs to land.
 
+## 30. Custom page headers/footers per chapter
+
+A long book usually wants a running head that *changes* with each
+chapter -- chapter number on the verso, chapter title on the recto,
+folio in the outer corner. `type: book` plus
+`page-headers: Titles` gives you the title-carrying header for
+free, but the moment you want different chrome on different
+chapters (a section name on the recto for an essay collection, an
+explicit "Part II" banner on the first three chapters, a footer
+with the publisher's slug on every page), you have to set
+`@RunningTitle` per-chapter from raw Lout. Lout's `@PageMark`
+records a per-chapter label into the cross-reference database;
+`@RunningTitle` reads it back on every subsequent page.
+
+```yaml
+---
+type: book
+title: A Field Guide to the River Veil
+author: J. L. Clements
+font: Times Base 11p
+page: A5
+chapter-start: Any
+chapter-numbers: Arabic
+section-numbers: None
+page-headers: Titles
+---
+
+# Headwaters
+
+```lout
+@PageMark { running }
+@RunningTitle { Part I @DotSep @I { Headwaters } }
+```
+
+The river rises in a peat bog north of the Stonemoor ridge ...
+
+# The Middle Reaches
+
+```lout
+@PageMark { running }
+@RunningTitle { Part II @DotSep @I { The Middle Reaches } }
+```
+
+By the time the Veil leaves the high country it carries silt from
+six tributaries ...
+```
+
+Rendered: every page after each `@RunningTitle` carries the new
+header until the next chapter's directive overwrites it. The folio
+(page number) is unaffected -- Lout positions it independently via
+`@OddFoot` / `@EvenFoot`.
+
+**Gotcha:** `@RunningTitle` must sit *inside* the chapter body,
+not in the preamble; setting it once at the document top sticks
+for the whole book regardless of subsequent chapters. The
+`@DotSep` glyph is from `bsf` -- replace with `--` if you skip
+`bsf`. For a *footer* instead of a header, swap
+`page-headers: Titles` for `page-headers: NoTitleNoHeader` and
+define `@OddFoot { @Centre { @PageNum } }` in `mydefs`; the
+running-title machinery is symmetric across header and footer.
+Multiple chapters per `# Heading` will *not* reset the running
+title -- one chapter per `# Heading` is the conventional unit.
+Working example:
+[`examples/textbook.md`](../examples/textbook.md).
+
+## 31. Numbered theorems, lemmas, and proofs
+
+Mathematics writing wants result blocks that auto-number across
+the document ("Theorem 3.2", "Lemma 4.1", "Proof.") and reset at
+each section. Lout's `@Eq` ships with implicit numbering when
+wrapped in `@NumberedDisplay`, but theorems, lemmas, and proofs
+have no built-in macros. Define them once in `mydefs` and write
+the prose as ordinary markdown, dropping into a raw-Lout fence
+only at the labelled block. The numbering uses Lout's
+`@RawIncrement` plus a per-counter cross-reference tag, so the
+labels resolve on the second pass.
+
+```yaml
+---
+type: report
+title: Selected Theorems
+author: J. L. Clements
+font: Times Base 11p
+section-numbers: Arabic
+---
+```
+
+`mydefs`:
+
+```lout
+def @Theorem
+    named @Tag {}
+    right body
+{
+  @LP
+  @B { Theorem. } @I { body }
+  @LP
+}
+def @Lemma right body
+{
+  @LP
+  @B { Lemma. } @I { body }
+  @LP
+}
+def @Proof right body
+{
+  @LP
+  @I { Proof. } body @QED
+  @LP
+}
+def @QED { @Right { @F { $\Box$ } } }
+```
+
+`paper.md`:
+
+```lout
+@Theorem { If @F { f } is continuous on a closed interval,
+then @F { f } attains its maximum. }
+
+@Proof { Apply the extreme-value theorem on the compact image
+of the interval; the supremum is achieved. }
+```
+
+Rendered: each theorem opens a new paragraph with bold "Theorem."
+followed by italic prose; the proof closes with a right-aligned
+QED box. Auto-numbering across `@Section`s -- "Theorem 1.1",
+"Theorem 1.2", "Theorem 2.1" -- requires the
+`@RawIncrement { theorem-counter }` idiom from chapter 4 of the
+Lout Expert's Guide; replace the bare "Theorem." string with
+`@B { Theorem @NumberOf theorem-counter. }` and add a
+`@RawIncrement` line at the top of the macro body.
+
+**Gotcha:** the *numbered* form depends on Lout's two-pass
+cross-reference machinery -- the first build pass writes the
+counter values, the second reads them back; mdlout's three-pass
+loop handles this automatically, but a raw `lout` invocation must
+re-run until the "cross reference not yet defined" warnings stop.
+The `@QED` macro inserts a `@Right`-aligned glyph; in a
+multi-column layout the box ends up on the wrong column unless
+the surrounding `@Proof` is inside a `@CentredDisplay` or
+explicitly column-anchored. For *unnumbered* result blocks
+(corollaries, remarks) drop the `@Tag` parameter and the
+`@NumberOf` call -- the macro still emits a labelled paragraph,
+just without the running counter. Working example: the
+"Theorem 1" block in
+[`examples/textbook.md`](../examples/textbook.md).
+
+## 32. Two-column code with side-by-side annotations
+
+Tutorial-style code walkthroughs read better when the code and
+its prose annotation sit *side by side* rather than vertically
+stacked -- the eye crosses the gutter to match every line of code
+to the matching sentence of commentary. mdlout has no markdown
+shorthand for this layout, but two columns in the frontmatter
+(`columns: 2`) plus a careful `@Galley` placement in raw Lout
+gets you a balanced two-up display with the code in a small
+monospace font on the left and the annotation in the body font on
+the right.
+
+```yaml
+---
+type: doc
+title: A Side-by-Side Walkthrough
+font: Times Base 11p
+fixed-font: Courier 9p
+page: A4
+columns: 2
+column-gap: 0.6c
+para-indent: 0f
+para-gap: 1.0v
+page-headers: None
+---
+
+```lout
+@CentredDisplay @Font { +4p } @B {
+  Side-by-side: code + commentary
+}
+@DP
+```
+
+## The placeholder dance
+
+```lout
+@LP
+@F @Font { 9p } {
+"def convert_inline(text):"  //
+"    _ph_reset()"             //
+"    result = _inner(text)"   //
+"    return _ph_restore(result)"
+}
+@LP
+```
+
+Inline conversion runs in three steps: reset the placeholder table,
+walk the input replacing protected spans with sentinels, then
+restore the original spans on the way out. This keeps Lout's `@`
+and `{}` metacharacters out of harm's way during the markdown pass.
+```
+
+Rendered: A4 portrait with two even columns. The left column
+shows the four-line Python snippet in Courier 9pt (selected by
+`fixed-font` in the frontmatter and emitted via `@F @Font { 9p }`
+in the raw-Lout block); the right column carries the prose
+annotation in Times 11pt at the same vertical height. The
+`@CentredDisplay` banner at the top spans both columns.
+
+**Gotcha:** `columns: 2` plus `type: doc` is a *single-page*
+layout (recipe #11) -- overflow drops content silently. Keep each
+code-plus-prose pair short, or switch to `type: report` with
+`columns: 2` so Lout paginates normally. The
+`@F @Font { 9p } { ... }` font shift is *required* even when
+`fixed-font: Courier 9p` is set in the frontmatter -- the
+frontmatter only configures the *fixed-font slot*, not the
+default font of a raw-Lout block. Without the explicit `@F`, the
+left column renders in the body font (Times) and the visual
+columns no longer match line for line. To force the prose to
+start at the same vertical position as the code, prefix it with a
+matching `@LP` -- otherwise the prose drifts up by one line
+height. For three or more columns the same pattern scales; the
+gutter (`column-gap`) tightens proportionally. Working example:
+the "Two engines, side by side" block in
+[`examples/textbook.md`](../examples/textbook.md).
+
 ## Where to look next
 
 - [`docs/best_practices.md`](best_practices.md) -- idiom guide:

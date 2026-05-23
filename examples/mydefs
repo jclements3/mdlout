@@ -1,0 +1,23 @@
+# mydefs for examples/textbook.md
+#
+# Defines @Theorem, @Lemma, @Proof labelled result blocks.  See
+# cookbook recipe #31.
+#
+# Note: mydefs is included before @BasicSetup is in scope, so the
+# high-level shortcuts @B / @I / @LP are not yet defined here.  Use
+# the underlying primitives directly.
+
+def @Theorem right body
+{
+  { Bold @Font Theorem. } { Slope @Font body }
+}
+
+def @Lemma right body
+{
+  { Bold @Font Lemma. } { Slope @Font body }
+}
+
+def @Proof right body
+{
+  { Slope @Font Proof. } body
+}
