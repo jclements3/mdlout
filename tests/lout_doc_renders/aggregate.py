@@ -104,6 +104,8 @@ def main() -> int:
                  "pipeline (`lout -G` + HTML scaffold). Both runs use 7 passes for "
                  "cross-reference convergence.")
     lines.append("")
+    lines.append("Landing page: [index.html](./index.html) (thumbnails + summary table).")
+    lines.append("")
     lines.append("Reproduce with:")
     lines.append("")
     lines.append("```bash")
@@ -185,13 +187,30 @@ def main() -> int:
                  "operations is future work. Page-level effect is the diagram "
                  "appears as an XML comment with surrounding text intact.")
     lines.append("")
-    lines.append("3. **Per-pass output alternation continues.** With 7 passes, "
-                 "every doc's SVG run alternates between the full multi-page "
-                 "output and a smaller partial output on each pass — the same "
-                 "phenomenon `tests/user_guide_diff.sh` already documents. "
-                 "We pick the biggest of the seven by file size as the canonical "
-                 "output. (`design` peaks on pass 2, `expert` on pass 4, "
-                 "`slides` on pass 2, `user` on pass 4.)")
+    lines.append("3. **Per-pass output alternation continues.** With 7 "
+                 "passes, every doc's SVG run alternates between the full "
+                 "multi-page output and a smaller partial output on each "
+                 "pass — the same phenomenon `tests/user_guide_diff.sh` "
+                 "already documents. `build.sh` picks the latest "
+                 "*converged* pass (the one where two consecutive passes "
+                 "agree on file size) as the canonical output, falling "
+                 "back to the largest non-crashed pass if no two passes "
+                 "agree.")
+    lines.append("")
+    lines.append("4. **`expert` doc asserts in `Parse()` at lout HEAD "
+                 "from PS pass 4 onward.** A regression somewhere in the "
+                 "current submodule pointer makes `lout` (PostScript "
+                 "back-end) fail with `internal error: assert failed "
+                 "in Parse: *token!` on the fourth and later passes "
+                 "of `lout/doc/expert/all`. The SVG back-end is "
+                 "unaffected; only the PostScript pipeline crashes. "
+                 "`build.sh` therefore picks PS pass 2 as the best "
+                 "available PostScript output for `expert`, which "
+                 "leaves cross-references unresolved (rendered as `??`) "
+                 "and drops the expert sample SSIM from ~0.92 to ~0.71 "
+                 "relative to the previously committed renders. PDF "
+                 "page count goes from 120 to 115. The SVG (`lout -G`) "
+                 "pipeline converges normally and is unchanged.")
     lines.append("")
     lines.append("Each per-doc gallery (`*_diff.html`) shows 10 evenly-spaced "
                  "sample pages with PS / SVG / pixel-diff panels side by side.")

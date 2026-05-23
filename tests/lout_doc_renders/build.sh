@@ -42,9 +42,54 @@ build_doc() {
         "$LOUT_BIN" -I "$INCLUDE" -I . all \
             > "/tmp/${d}.ps.${i}" 2>"/tmp/${d}.ps.${i}.err" || true
       done )
-    cp "/tmp/${d}.ps.${PASSES}" "/tmp/${d}.ps"
+    # Pick the latest "converged" PS pass (where two consecutive passes
+    # produce the same file size, i.e. cross-refs are resolved) among
+    # the non-crashed passes. At lout HEAD the expert doc starts
+    # asserting in Parse() from pass 4 onward, producing a 45 KB stub
+    # -- the earlier passes still emit a valid multi-hundred-KB
+    # PostScript file. Filter passes whose stderr contains
+    # "internal error" before considering them.
+    biggest_ps=""
+    prev_size=-1
+    for i in $(seq 1 "$PASSES"); do
+        f="/tmp/${d}.ps.${i}"
+        e="/tmp/${d}.ps.${i}.err"
+        [[ -s "$f" ]] || continue
+        if grep -q "internal error" "$e" 2>/dev/null; then
+            continue
+        fi
+        sz=$(stat -c%s "$f")
+        # Remember the last pass that matched the previous size.
+        if [[ "$sz" -eq "$prev_size" ]]; then
+            biggest_ps=$f
+        fi
+        prev_size=$sz
+    done
+    if [[ -z "$biggest_ps" ]]; then
+        # No convergence: fall back to largest non-crashed pass.
+        biggest_size=0
+        for i in $(seq 1 "$PASSES"); do
+            f="/tmp/${d}.ps.${i}"
+            e="/tmp/${d}.ps.${i}.err"
+            [[ -s "$f" ]] || continue
+            if grep -q "internal error" "$e" 2>/dev/null; then continue; fi
+            sz=$(stat -c%s "$f")
+            if [[ "$sz" -gt "$biggest_size" ]]; then
+                biggest_size=$sz
+                biggest_ps=$f
+            fi
+        done
+    fi
+    if [[ -z "$biggest_ps" ]]; then
+        biggest_ps=$(ls -S /tmp/${d}.ps.[1-9] 2>/dev/null | head -1)
+    fi
+    if [[ -z "$biggest_ps" ]]; then
+        echo "   ERROR: no PS output produced for $d" >&2
+        return 1
+    fi
+    cp "$biggest_ps" "/tmp/${d}.ps"
     end_ps=$(date +%s)
-    echo "   PS bytes: $(stat -c%s /tmp/${d}.ps)  wall=$((end_ps - start_ps))s"
+    echo "   PS bytes: $(stat -c%s /tmp/${d}.ps)  wall=$((end_ps - start_ps))s  (from $biggest_ps)"
 
     echo "-- $d: SVG via z53.c ($PASSES passes)"
     ( cd "$src_dir" && rm -f ./*.li ./*.ldx ./*.lpc )
@@ -54,8 +99,23 @@ build_doc() {
         "$LOUT_BIN" -G -I "$INCLUDE" -I . all \
             > "/tmp/${d}.svg.${i}" 2>"/tmp/${d}.svg.${i}.err" || true
       done )
-    # pick the largest .svg.N as the canonical output (matches user_guide_diff.sh)
-    biggest=$(ls -S /tmp/${d}.svg.[1-9] 2>/dev/null | head -1)
+    # Same convergence rule as for PS: pick the latest pass whose size
+    # matches the previous pass (xref-converged). Fall back to the
+    # largest pass if no two consecutive passes agree.
+    biggest=""
+    prev_size=-1
+    for i in $(seq 1 "$PASSES"); do
+        f="/tmp/${d}.svg.${i}"
+        [[ -s "$f" ]] || continue
+        sz=$(stat -c%s "$f")
+        if [[ "$sz" -eq "$prev_size" ]]; then
+            biggest=$f
+        fi
+        prev_size=$sz
+    done
+    if [[ -z "$biggest" ]]; then
+        biggest=$(ls -S /tmp/${d}.svg.[1-9] 2>/dev/null | head -1)
+    fi
     if [[ -z "$biggest" ]]; then
         echo "   ERROR: no SVG output produced for $d" >&2
         return 1
@@ -86,6 +146,7 @@ build_doc() {
         echo "ps_wall=$((end_ps - start_ps))"
         echo "svg_wall=$((end_svg - start_svg))"
         echo "biggest_svg_pass=$(basename "$biggest")"
+        echo "biggest_ps_pass=$(basename "$biggest_ps")"
     } > "$WORK/${d}.stats"
 }
 
@@ -105,6 +166,12 @@ echo "==> aggregating README"
 echo "============================================================"
 
 python3 "$OUT/aggregate.py"
+
+echo "============================================================"
+echo "==> building index.html landing page"
+echo "============================================================"
+
+python3 "$OUT/make_index.py"
 
 echo "Done. Outputs in $OUT/"
 ls -la "$OUT"
