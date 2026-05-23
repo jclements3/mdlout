@@ -45,6 +45,58 @@ perf round 4 (was ~26-29 s in v0.2.2 round 2, ~32 s in v0.2.1,
 ~7 min mid-v0.2 cycle; the original v0.4 < 30 s stretch target
 is now cleared by ~7 s).
 
+## Shipped in v0.3.0
+
+First minor-version bump beyond v0.2. The headline change is a
+correctness fix in `z53.c`'s embedded PostScript interpreter
+(submodule commit `6688249`, issue #208): `gsave` / `grestore`
+now snapshot and restore the **current path** alongside the
+gstate struct. Every `LoutBox` border across the corpus now
+renders correctly (matched fill + stroke) instead of silently
+dropping the stroke half of the idiom. PostScript output and the
+`--format=pdf` pipeline remain bit-identical to v0.2.9.
+
+- **[lout] `z53.c`: `gsave` / `grestore` path save/restore**
+  (submodule commit `6688249`, mdlout commit `134017b`, issue
+  #208). The fix extends `svg_gstate` with `saved_path` /
+  `plen` / `had_geom` plus the cursor / curve-flag state.
+  `<build path> gsave fill grestore stroke` previously dropped
+  the trailing stroke because the path snapshot was missing.
+  User's Guide `stroke=` attribute count `6912 → 7736` (+824,
+  +11.9%); page 308 (colour-swatch grid) `<path>` element count
+  `185 → 366`. No regressions: `tests/run_all.sh` stays at 163
+  Pass-Excellent / 0 Fail.
+- **Regression corpus 90 → 95 snippets** (commit `3f18943`).
+  Five new PASS-EXCELLENT snippets including a dedicated
+  `box_save_restore` reproducer for #208, plus
+  `text_smcp_kerned_lig` (smcp + AFM kerning + OT ligatures
+  stacked), `graph_dual_series` (overlaid `@Data` series),
+  `diag_col_layout` (2×3 `@Node` grid via `||` / `//`), and
+  `table_complex_borders` (`@Tbl` with selective per-cell
+  rules — exercises the same `LoutBox`-stroke path on table
+  internals).
+- **11 non-A4 example PDFs rebuilt at correct page sizes**
+  (commit `a85abbd`). Refresh after the v0.2.9 ps2pdf
+  page-size passthrough — A0 poster, A3 magazine, A5 letter,
+  Letter for article / journal / CV / textbook / chord chart /
+  book chapters / scientific paper. No source changes.
+- **`docs/cookbook.md`: recipes 51-53** (commit `747f8e5`).
+  Recipe count 50 → **53**: 51 (self-contained HTML with
+  inline raster images via `--inline-raster`), 52 (test-suite-
+  driven authoring loop using `tests/run_all.sh` +
+  `tests/browser_test.sh`), 53 (comprehensive CLI flag
+  reference table cross-referenced back into the recipes).
+- **[lout] `SVG_PORTING.md`: v0.3.0 status refresh**
+  (submodule commit `841874d`, mdlout commit `e2494f9`).
+  Re-baselines the document as the v0.3.0 status doc: preamble
+  with v0.3.0 baseline numbers (UG mean SSIM ~0.95 @ 150 DPI,
+  95-snippet corpus, 22.6 s UG SVG build); "Shipped through
+  v0.3.0" section listing landed work; "Remaining known
+  issues" trimmed to three open items (cross-token `@Code`
+  kerning, long-tail `@Graphic` raw-PS ops, shared
+  rasteriser); historical entries demoted under a new
+  "Historical context" header.
+
 ## Shipped in v0.2.9
 
 Same-day follow-on to v0.2.8. Lands the `ps2pdf` page-size
@@ -353,29 +405,46 @@ during the v0.2.2 cycle and are no longer roadmap candidates.
   `FontKernLength` between successive characters and emits the
   kern delta as a `<tspan dx>` inside the `<text>` element.
 
-## Near-term (v0.3 remainder, post-v0.2.3)
+## Near-term (post-v0.3.0 polish)
 
-The v0.2.3 cycle cleared the bulk of the original v0.3 candidate
-list (see "Shipped in v0.2.3" above). Items still pending:
+The v0.3.0 cut closed the `gsave` / `grestore` path-save
+correctness item from #208 and the original v0.3 candidate list
+is now drained. The remaining near-term items below carry forward
+into the v0.3.x patch line (or roll up into v0.4 — see Mid-term):
 
-- **`LoutMargShift` translate(x, y).** The v0.2.2 hashed-op work
-  cleared the operand-stack drift but did not yet implement the
-  margin-note shift itself, so SVG-mode `@MargNote` / `@OuterNote`
-  still render at the page origin. Tracked as a follow-on in the
-  `z53.c` op-dispatch table.
-- **PyPI publish.** The `pyproject.toml` from v0.2.1 builds a
-  clean wheel, but the user has not yet pushed it to PyPI. Action
-  is manual:
-  ```
-  python3 -m build
-  python3 -m twine upload dist/*
-  ```
-  Requires the user's PyPI token in `~/.pypirc`. Once published,
-  `pip install mdlout` becomes the recommended install path for
-  non-contributors.
-- **More cookbook recipes** — closed in v0.2.5 (recipe count
-  32 -> 35; bibliography idioms, multi-language at the Lout
-  level, longer-form `@Diag` walkthrough).
+- **TrueType GSUB advanced features.** The v0.2.5 / v0.2.6 work
+  shipped the smcp / onum end-to-end story for CFF / OTF
+  fonts via GSUB Lookup Type 1. The TrueType GSUB consumer
+  side, plus the remaining Lookup types (ligature, contextual,
+  chained, extension) for both font flavours, are queued.
+  Pulling these in extends the working `font-features:`
+  surface from "the two-knob v0.2.6 demo" to a more useful
+  subset of the OpenType feature catalogue.
+- **Hardening across UTF-8 input.** The C Lout core still
+  reads ISO-LATIN-1; this works for any document whose source
+  fits in 8-bit Latin-1, but multilingual documents that need
+  CJK / Devanagari / Arabic byte streams don't round-trip
+  cleanly through the lexer. A full UTF-8 input layer (z02.c /
+  z03.c / `FULL_CHAR` widening) is the precondition for those
+  to work. Tracked here rather than mid-term because the v0.3
+  line is the natural home for the consumer-side hardening
+  that lands once the input layer exists.
+- **More cookbook recipes.** The cookbook is the primary
+  forward-facing docs artefact. v0.3.0 closes at recipe 53;
+  the v0.3 patch line will continue extending it as new idioms
+  surface from the field.
+- **PyPI publish.** The `pyproject.toml` builds a clean
+  sdist + wheel; the `python3 -m twine upload dist/*` step is
+  manual and pending the user's PyPI token in `~/.pypirc`.
+  Once published, `pip install mdlout` becomes the recommended
+  install path for non-contributors. Unchanged from the v0.2.x
+  carry-over.
+- **`LoutMargShift` translate(x, y)** *(carried from v0.2.3)*.
+  The v0.2.2 hashed-op work cleared the operand-stack drift
+  but did not yet implement the margin-note shift itself, so
+  SVG-mode `@MargNote` / `@OuterNote` still render at the page
+  origin. Tracked as a follow-on in the `z53.c` op-dispatch
+  table.
 
 ## Mid-term (v0.4 target)
 
@@ -475,6 +544,6 @@ project-redefining choice, not an incremental release.
 
 ---
 
-Last updated: 2026-05-23 (v0.2.9). See [CHANGELOG.md](CHANGELOG.md) for
+Last updated: 2026-05-23 (v0.3.0). See [CHANGELOG.md](CHANGELOG.md) for
 the release history this roadmap projects from, and
 [TODO.md](TODO.md) for the working-engineer task list.

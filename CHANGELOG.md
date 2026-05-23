@@ -12,6 +12,7 @@ Submodule-only changes are tagged `[lout]`.
 ## Releases
 
 - [Unreleased](#unreleased)
+- [0.3.0 (2026-05-23)](#030---2026-05-23)
 - [0.2.9 (2026-05-23)](#029---2026-05-23)
 - [0.2.8 (2026-05-23)](#028---2026-05-23)
 - [0.2.7 (2026-05-23)](#027---2026-05-23)
@@ -25,6 +26,204 @@ Submodule-only changes are tagged `[lout]`.
 - [0.1.0 (2026-03-16)](#010---2026-03-16)
 
 ## [Unreleased]
+
+## [0.3.0] - 2026-05-23
+
+The first minor-version bump beyond v0.2. The headline change is a
+**correctness fix in `z53.c`'s embedded PostScript interpreter**
+(submodule commit `6688249`, issue #208): `gsave` / `grestore` now
+snapshot and restore the **current path** alongside the gstate
+struct. PostScript's `gsave` saves the entire graphics state —
+including the path under construction — and `grestore` restores it.
+The interpreter previously only snapshotted the gstate struct, so
+the very common idiom
+
+    <build path> gsave fill grestore stroke
+
+silently dropped the stroke: `fill` cleared the path, `grestore`
+put the gstate back but the path stayed empty, and the next emit
+saw `had_geom=FALSE`. The visible consequence was that **every
+`LoutBox` border** (table cell rules, colour-swatch grids on User's
+Guide pages 302-305, framed displays) rendered as fill-only with no
+stroke. The fix lands `+824` `stroke=` attributes across the
+327-page User's Guide build (6912 → **7736**, +11.9%); page 308 (a
+colour-swatch grid) goes from **185 to 366** `<path>` elements as
+each `LoutBox` now emits both the fill and the trailing stroke
+pair. No regressions: `tests/run_all.sh` stays at 163 Pass-Excellent
+/ 0 Fail.
+
+A path-save/restore correctness bug in the embedded interpreter is
+the kind of latent issue that warrants a minor-version bump rather
+than a 10th patch-level bump on the v0.2 line: the SVG output for
+every document with a `LoutBox` border is materially different
+from v0.2.9 (correctly so), and downstream pipelines that
+byte-diff SVG output across releases will see the change. The
+v0.2 line is otherwise feature-locked; v0.3.0 ships the
+correctness fix plus the small set of polish items that landed
+alongside it.
+
+Also lands: regression corpus 90 → **95** snippets (`tests/snippets`
+gains a dedicated `box_save_restore` reproducer for #208 plus
+four more single-feature snippets), 11 non-A4 example PDFs
+rebuilt against the v0.2.9 `ps2pdf` page-size pipeline (they had
+been built pre-#198 and were silently clipped to A4),
+`docs/cookbook.md` 50 → **53** recipes (inline-raster
+self-contained HTML, test-suite-driven authoring loop, CLI flag
+reference table), and a `SVG_PORTING.md` refresh in the submodule
+that re-baselines the document at v0.3.0 (UG mean SSIM ~0.95,
+95-snippet corpus, 22.6 s UG build) and demotes the long-list of
+shipped items under a new "Historical context" header.
+
+`z49.c` (PostScript) and the legacy `--format=pdf` pipeline
+remain frozen and bit-identical to v0.2.0.
+
+### Fixed
+
+- **[lout] `z53.c`: `gsave` / `grestore` snapshot the current
+  path** (submodule commit `6688249`, mdlout commit `134017b`,
+  issue #208). The embedded PS interpreter inside `z53.c`
+  previously only saved / restored the `svg_gstate` struct
+  (colour, line width, transform, dash array). PostScript's
+  `gsave` saves the entire graphics state — including the current
+  path — and `grestore` restores it. The
+  `<build path> gsave fill grestore stroke` idiom (the standard
+  way to draw a filled-AND-stroked box in PostScript) silently
+  lost the stroke under the old behaviour: `fill` clears the
+  path, `grestore` put the gstate back but the path was now
+  empty, and `had_geom=FALSE` skipped the trailing stroke
+  emission. The fix extends `svg_gstate` with `saved_path` /
+  `plen` / `had_geom` plus `saved_have_cp` / `has_curve` /
+  `last_pt_valid` / `cur_x` / `cur_y` / `last_xp` / `last_yp`.
+  `svg_op_h_gsave` stashes the live values into the new stack
+  top after the existing struct-copy; `svg_op_h_grestore` reads
+  them back before decrementing. `SVG_OP_SAVE` / `SVG_OP_RESTORE`
+  mirror the same dance. Static cost: 16 KB path buffer × 32
+  gstate slots ≈ 512 KB, acceptable for a one-shot doc build.
+  Verified: User's Guide `stroke=` attribute count **6912 →
+  7736** (+824, +11.9%); page 308 (the colour-swatch grid)
+  `<path>` element count **185 → 366** as each `LoutBox` now
+  emits the fill AND the trailing stroke pair; the full snippet
+  suite stays at 163 Pass-Excellent / 0 Fail. `tests/snippets/`
+  ships a dedicated reproducer (`box_save_restore.lt`) that
+  exercises the exact `LoutBox` + `gsave` + `fill` + `grestore` +
+  `stroke` shape — failing before this commit, PASS-EXCELLENT
+  after.
+
+### Added
+
+- **`tests/snippets/`: 5 more snippets — corpus 90 → 95
+  PASS-EXCELLENT** (commit `3f18943`). All five clear the strict
+  text-tier gate (worst is `text_smcp_kerned_lig` at 0.62% AE /
+  SSIM 0.9933):
+  - `text_smcp_kerned_lig.lt` — smcp + AFM kerning + OT
+    ligatures in one paragraph; same `LOUT_SVG_FONT_FEATURES`
+    trigger as `text_smcp_active`, but stacks all three text-
+    shaping pipelines so a regression in any one would surface.
+  - `graph_dual_series.lt` — two overlaid `@Data` series (solid
+    + dashed) on one set of axes. Swapped from the originally
+    proposed `graph_log_axis` (which would have duplicated
+    `graph_log_scale`).
+  - `diag_col_layout.lt` — 2×3 grid of `@Node` cells tiled in a
+    single `@Diag` via `||` / `//` gap operators. (`@ColGap`
+    turned out to be `@Eq`-internal, so `@Diag`'s native gap
+    operator is used.)
+  - `box_save_restore.lt` — the dedicated reproducer for #208 —
+    `LoutBox` followed by `gsave` / `fill` / `grestore` /
+    `stroke`. In PostScript this produces a filled box with a
+    sharp black border; in SVG before this release the border
+    was silently dropped because `z53.c` didn't save the path
+    across `gsave` / `grestore`. Now PASS-EXCELLENT after the
+    #208 fix.
+  - `table_complex_borders.lt` — `@Tbl` with selective per-cell
+    `rulebelow` / `ruleleft` (no blanket `rule { yes }`).
+    Exercises the same `LoutBox`-stroke path on table internals.
+
+- **`examples/`: 11 non-A4 PDFs rebuilt at correct page sizes**
+  (commit `a85abbd`). The 11 example documents whose frontmatter
+  declares a non-A4 page size (A0 poster, A3 magazine layout, A5
+  letter, Letter for academic article + journal + CV + textbook
+  + chord chart + book chapters + scientific paper) were built
+  pre-#198, so `ps2pdf` had silently emitted them as A4 with the
+  rest of the page clipped. After landing the v0.2.9 page-size
+  passthrough, those binaries on disk were stale. This commit
+  rebuilds all 11 against the post-#198 pipeline so the gallery
+  thumbnails and downloadable PDFs reflect the intended page
+  dimensions. No source changes — purely a binary refresh.
+
+### Docs
+
+- **`docs/cookbook.md`: recipes 51-53** (commit `747f8e5`).
+  Recipe count 50 → **53**:
+  - **51. Self-contained HTML with inline raster images** —
+    documents the `--inline-raster` flag and the equivalent
+    `inline-raster: true` frontmatter field for emitting HTML
+    that includes every referenced PNG / JPG as a base64
+    data-URL, so a single `.html` file can be emailed or
+    archived without losing its photos.
+  - **52. Test-suite-driven authoring loop** — documents the
+    `tests/run_all.sh` + `tests/browser_test.sh` harness as a
+    build-verification step for in-progress documents,
+    including how to scope to a single snippet and how to read
+    the SSIM gate output.
+  - **53. CLI flag reference table** — a comprehensive
+    cookbook-style reference for every `mdlout` CLI flag,
+    cross-referenced back into the recipes that demonstrate
+    each one in context.
+- **[lout] `SVG_PORTING.md`: v0.3.0 status refresh** (submodule
+  commit `841874d`, mdlout commit `e2494f9`). The document is
+  re-baselined as the v0.3.0 status document. Adds a preamble
+  with the v0.3.0 baseline numbers (UG mean SSIM ~0.95 at 150
+  DPI, 95-snippet corpus at 100% Pass-Excellent, 22.6 s UG SVG
+  build). Adds a "Shipped through v0.3.0" section listing the
+  work that has landed since the previous revision (Adobe
+  Symbol glyph table, Type 1 / CFF / TrueType outline parsers,
+  GSUB `smcp` / `onum`, AFM kerning, fi/fl/ffi/ffl ligatures,
+  `<textPath>`, `gsave` / `grestore` path save/restore,
+  `currentColor` fold, `setlinecap` / `setlinejoin` /
+  `setmiterlimit`, …). Trims "Remaining known issues" to the
+  three actual open items (cross-token `@Code` kerning, the
+  long tail of `@Graphic` raw-PS ops, shared rasteriser);
+  demotes the previous historical entries under a new
+  "Historical context" header. Cross-references
+  `SVG_PERFORMANCE.md` for the timing-side story.
+
+### Notes
+
+- **Why minor bump (v0.3.0, not v0.2.10).** The path-save/restore
+  fix in `z53.c` materially changes SVG output for every document
+  with a `LoutBox` border — table-cell rules, framed displays,
+  colour-swatch grids, etc. Across the 327-page User's Guide
+  build that is `+824` `stroke=` attributes (+11.9%) and on page
+  308 (a colour-swatch grid) it is `+181` `<path>` elements
+  (185 → 366, +97.8%). The new output is correct — every
+  `LoutBox` now matches the PostScript reference instead of
+  silently dropping the border stroke — but downstream pipelines
+  that byte-diff SVG output across mdlout releases will see the
+  change on every document containing a `LoutBox`. A patch-level
+  bump on the v0.2 line (v0.2.10) would obscure that under the
+  "patch / docs / tests" rubric the v0.2.x line has been using.
+  Semver permits this either way (a defect fix is patch-level by
+  default; correctness fixes that visibly change output are at
+  the maintainer's discretion). Choosing the minor bump signals
+  the changed-output intent clearly.
+- PostScript output is bit-identical to v0.2.9 for `doc/user/all`.
+  The legacy `--format=pdf` pipeline (`ps2pdf` over the frozen
+  `z49.c` PostScript) is bit-identical to v0.2.9 for documents
+  that don't set `page:` in frontmatter; documents with an
+  explicit `page:` field continue to produce a PDF media box
+  matching the requested sheet size (the v0.2.9 behaviour).
+- The 95-snippet corpus stays at 100% PASS-EXCELLENT under the
+  post-v0.2 tightened thresholds (5% AE for text, 2% AE / SSIM
+  0.95 for graphics-heavy). The new `box_save_restore.lt`
+  snippet is the dedicated guard against regressions in the
+  #208 path save/restore fix.
+- The full `tests/user_guide_diff` regen against the post-#208
+  submodule head is not gated on this release — the rendered
+  SVG strictly gains `stroke=` attributes against the PS
+  reference, so the mean-SSIM number is expected to tick up, but
+  the existing 150 DPI baseline reflects a strictly worse
+  pre-fix state and the release-gate threshold (mean SSIM ≥
+  0.95) is unchanged.
 
 ## [0.2.9] - 2026-05-23
 
@@ -1804,7 +2003,8 @@ submodule:
 - 2024-01-26: lout 3.43 (the version vendored at the time of initial
   commit).
 
-[Unreleased]: https://github.com/jclements3/mdlout/compare/v0.2.9...HEAD
+[Unreleased]: https://github.com/jclements3/mdlout/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/jclements3/mdlout/compare/v0.2.9...v0.3.0
 [0.2.9]: https://github.com/jclements3/mdlout/compare/v0.2.8...v0.2.9
 [0.2.8]: https://github.com/jclements3/mdlout/compare/v0.2.7...v0.2.8
 [0.2.7]: https://github.com/jclements3/mdlout/compare/v0.2.6...v0.2.7
