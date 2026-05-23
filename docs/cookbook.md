@@ -2931,6 +2931,193 @@ served content, copy the asset into the output tree and use a
 relative URL, or pass `--external-assets` to inline a base64
 data URI instead (`mdlout.py --external-assets --inline-svg`).
 
+## 48. A pre-built mydefs library shared across projects
+
+When you maintain a half-dozen reports and books with mdlout,
+the same `mydefs` macros (a custom heading font, a brand-colour
+`@MyAccent` symbol, a `@CalloutBox` definition for sidebars)
+end up duplicated in every project's source tree. Drift is
+inevitable: a tweak in one repo never reaches the others.
+mdlout does *not* honour a `MDLOUT_MYDEFS_PATH` environment
+variable (only `MDLOUT_MERMAID_URL` is wired up -- grep the
+source for `os.environ.get` and you find one hit). The two
+working alternatives are an explicit `--mydefs /shared/path`
+flag in every invocation, or a symlink farm that drops a
+`mydefs` symlink into each project's input directory pointing
+at a single canonical file.
+
+```bash
+# One-time setup of the shared library
+mkdir -p ~/lout-shared
+cat > ~/lout-shared/mydefs <<'EOF'
+def @MyAccent { @PaleBlue }
+def @CalloutBox right @Body {
+  { Helvetica Base } @Font
+  @Box paint { @MyAccent } margin { 0.4c } @Body
+}
+EOF
+
+# In each project's source tree:
+ln -s ~/lout-shared/mydefs ~/projects/q4-report/mydefs
+ln -s ~/lout-shared/mydefs ~/projects/handbook/mydefs
+
+# Or, if symlinks are awkward (Windows, archive tarballs):
+alias mdlout='./mdlout.py --mydefs ~/lout-shared/mydefs'
+```
+
+Rendered: every project that holds a symlink (or invokes the
+alias) picks up the same `@MyAccent` colour and `@CalloutBox`
+macro; a single edit to `~/lout-shared/mydefs` propagates on
+the next build of each downstream document. Inside the
+markdown, the macros are used exactly as if they were defined
+locally: ` ```lout\n@CalloutBox { Heads up! } \n``` `.
+
+**Gotcha:** mdlout copies the resolved file (not the symlink)
+into its scratch build directory via `shutil.copy2`, so the
+build sees a snapshot of `mydefs` as it was at invocation time
+-- a `--watch` loop will *not* pick up edits to the shared
+file unless you also touch the input markdown. Add a `find
+~/lout-shared/mydefs -newer "$1" -exec touch "$1" \;` step in
+your editor's save hook, or just save the `.md` file again
+after editing `mydefs`. Second, `--mydefs` overrides the
+sibling-file auto-discovery, so if you pass `--mydefs` and
+*also* have a local `mydefs` next to the input, the local one
+is silently ignored. Third, the shared file is included
+verbatim with `@Include { mydefs }` -- it must be syntactically
+valid Lout (no markdown, no shell), or every build in every
+project fails simultaneously. Keep the shared library in its
+own git repo and gate edits behind a smoke-test build of one
+representative document.
+
+## 49. Adding a logo to the title page of a report or book
+
+`type: report` and `type: book` in the YAML frontmatter
+generate a Lout title page from the `title`, `author`, and
+`date` fields. There is no first-class `logo:` field, but
+because the title block is emitted as ordinary Lout it can
+host any markup the back-end understands -- including an
+`@SVGFile` inclusion. The trick is to override `@Title` (or
+`@CoverPage` for books) in `mydefs` so the logo sits above
+the title text, then build as normal.
+
+```yaml
+---
+type: report
+title: Annual Reliability Review 2026
+author: Site Reliability Engineering
+date: May 2026
+cover: Yes
+---
+
+# Executive summary
+
+The platform sustained four nines of availability across
+all customer-facing regions in FY2026...
+```
+
+Alongside that markdown, a `mydefs` file:
+
+```lout
+def @LogoBlock {
+  @CentredDisplay @SVGFile { "logo.svg" }
+}
+def @TitleComponent {
+  @LogoBlock
+  //0.5v
+  { Helvetica Bold 24p } @Font @Title
+  //0.3v
+  { Helvetica Base 14p } @Font @Author
+  //0.2v
+  { Helvetica Base 12p } @Font @Date
+}
+```
+
+Rendered: in HTML mode `logo.svg` is inlined via `<image>` at
+the top of the cover page, above the title, author, and date.
+In PDF mode the same SVG is rasterised through Ghostscript and
+embedded as a PostScript image; pass an EPS file instead for a
+fully vector PDF cover.
+
+**Gotcha:** `@SVGFile` resolves its path against the scratch
+build directory, not the source directory, so `logo.svg` has
+to either be copied in alongside `mydefs` (mdlout does this
+automatically only for files named `mydefs` -- everything else
+needs an absolute path or a manual copy) or you must give an
+absolute path like `/home/me/brand/logo.svg`. The cleanest fix
+is `--mydefs` plus an absolute `@SVGFile { "/abs/path/logo.svg" }`
+inside it. Second, the `cover: Yes` frontmatter key is what
+triggers the title-page emission for `type: report`; without
+it, `@TitleComponent` is defined but never invoked, and your
+logo never appears. Third, books use `@CoverPage` rather than
+`@TitleComponent` -- check the generated `.lt` (mdlout writes
+it next to the output when you pass `--lout-only`) if the
+override silently does nothing.
+
+## 50. Tables with mixed cell types -- text, math, and code
+
+A pipe table in Markdown is fine for tabular text, but a
+parameter-reference table that needs an equation, a code
+sample, *and* prose in the same row outgrows the pipe syntax
+fast. Drop into a raw `@Tbl` block via a ` ```lout ` fence and
+combine `@Math` (KaTeX in HTML, placeholder in PDF) with `@F`
+(fixed-pitch font, the Lout equivalent of inline `<code>`).
+Lout's `@Cell` accepts arbitrary inline content, so each cell
+is a full mini-document.
+
+````markdown
+## Solver tuning parameters
+
+```lout
+@Tbl
+  aformat { @Cell A | @Cell indent { ctr } B | @Cell C | @Cell paint { lightgrey } D }
+{
+  @Rowa A { @B Symbol } B { @B Definition } C { @B Default } D { @B Tuning hook }
+  @Rowa
+    A { @Math { \alpha } }
+    B { Step-size scaling factor }
+    C { @Math { 10^{-3} } }
+    D { @F { solver.set_alpha(1e-3) } }
+  @Rowa
+    A { @Math { \beta } }
+    B { Momentum decay coefficient }
+    C { @Math { 0.9 } }
+    D { @F { solver.set_beta(0.9) } }
+  @Rowa
+    A { @Math { \epsilon } }
+    B { Numerical-stability floor }
+    C { @Math { 10^{-8} } }
+    D { @F { solver.set_eps(1e-8) } }
+}
+```
+````
+
+Rendered: a four-column table where column A holds Greek
+letters typeset by KaTeX (HTML) or Lout's `@Eq` placeholder
+(PDF), column B is body text, column C is a math expression
+for the default value, and column D is a monospaced code
+fragment shaded light grey via the `aformat` clause. The
+column widths auto-size to content; pass `indent { ctr }` or
+`mwidth { 3c }` inside an `aformat` `@Cell` to fix them.
+
+**Gotcha:** in HTML mode, `@Math` inside `@Tbl` works because
+`z53.c` emits the math as a `<foreignObject>` sized to the
+math's bounding box -- but Lout has *already* asked the
+foreign object for its width during table layout, and KaTeX
+hasn't rendered yet at that point. The result is a column
+that's allocated zero width and then visually overflows once
+the browser runs KaTeX. The fix is to give the math-bearing
+column an explicit width: `@Cell mwidth { 2c }` in the
+`aformat` clause. Second, `@F { ... }` is *fixed-pitch font*,
+not a syntax-highlighted code block; if you want highlighting,
+either pre-render the snippet through Pygments and embed the
+resulting SVG via `@SVGFile`, or drop the row out of the table
+and reference it from below the table. Third, PDF mode renders
+`@Math` cells as the `[math: ...]` placeholder -- for a PDF
+build with real equations, swap `@Math { \alpha }` for
+`@Eq { alpha }` (Lout's native equation syntax). The two
+syntaxes do not compose, so pick one per build target or
+maintain parallel tables behind an `@Use` switch.
+
 ## Where to look next
 
 - [`docs/best_practices.md`](best_practices.md) -- idiom guide:
