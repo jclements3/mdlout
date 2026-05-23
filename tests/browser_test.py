@@ -45,8 +45,11 @@ Optional check categories (all default OFF):
   --with-mermaid-strict   stricter mermaid smoke: per-diagram structural check
                           (recognized aria-roledescription or mermaid CSS class)
                           plus parse-error detection
-  --with-all              enable a11y + print + dark (mermaid-strict stays opt-in
-                          to keep the default flag set's signal shape stable)
+  --with-math-strict      stricter KaTeX check: count `.katex-error` spans and
+                          `title="ParseError: ..."` markers per page; fail if any
+  --with-all              enable a11y + print + dark (mermaid-strict and
+                          math-strict stay opt-in to keep the default flag set's
+                          signal shape stable)
 
 The optional checks work by writing an *instrumented copy* of each HTML into
 the staging directory: the copy carries an injected <script> tag that runs
@@ -140,6 +143,19 @@ RE_KATEX = re.compile(r'class\s*=\s*"[^"]*\bkatex\b[^"]*"', re.I)
 # Counting these (instead of every `.katex` element) avoids over-counting the
 # multiple nested `.katex*` layers KaTeX inserts within a single equation.
 RE_KATEX_HTML = re.compile(r'class\s*=\s*"[^"]*\bkatex-html\b[^"]*"', re.I)
+# KaTeX surfaces malformed LaTeX in two distinct ways. (1) When KaTeX is
+# called with `throwOnError: false` (mdlout's default for inline math),
+# the bad equation is rendered as `<span class="katex-error" title="...">`
+# carrying the raw source -- visible to readers but never a thrown error.
+# (2) When KaTeX *does* parse but emits a `.katex` span carrying
+# `title="ParseError: ..."` it means the renderer attached the error
+# message as a tooltip on the rendered (often-malformed) output. The
+# default `katex` check counts `.katex-html` containers and so silently
+# accepts both forms. The strict check below catches them.
+RE_KATEX_ERROR_SPAN = re.compile(
+    r'<span\b[^>]*\bclass\s*=\s*"[^"]*\bkatex-error\b[^"]*"', re.I)
+RE_KATEX_PARSEERROR_TITLE = re.compile(
+    r'<span\b[^>]*\btitle\s*=\s*"\s*ParseError:', re.I)
 RE_HLJS_TOKEN = re.compile(r'<span\s+class\s*=\s*"\s*hljs-[\w-]+', re.I)
 RE_SVG = re.compile(r'<svg\b', re.I)
 # The lout HTML emitter spaces attributes out as `class=  "  mermaid  "`, so
@@ -678,6 +694,27 @@ def mermaid_strict_check(dom_html: str) -> tuple[int, int, int, list[str]]:
     return div_count, strict_ok, errors, details
 
 
+def math_strict_check(dom_html: str) -> tuple[int, int]:
+    """Strict KaTeX render check.
+
+    Returns `(errors, parse_error_titles)`:
+      - errors             : count of `<span class="katex-error">` elements.
+                             These are KaTeX's user-visible failure markers
+                             (rendered when `throwOnError: false`).
+      - parse_error_titles : count of `<span ... title="ParseError: ...">`
+                             tooltips. KaTeX uses this when the
+                             unrecoverable error message is attached to a
+                             rendered span rather than emitted as a
+                             standalone `.katex-error`.
+
+    Caller decides how to combine the two. Both are summed into `K` for
+    the page-level signal `math_strict=ok(N/M rendered; K errors)`.
+    """
+    err_spans = len(RE_KATEX_ERROR_SPAN.findall(dom_html))
+    parse_titles = len(RE_KATEX_PARSEERROR_TITLE.findall(dom_html))
+    return err_spans, parse_titles
+
+
 # Languages that highlight.js ships in its default "common" bundle (the one
 # mdlout pulls in via the bundled hljs payload). Code blocks tagged with
 # languages outside this set won't tokenise, so penalising them here would
@@ -808,7 +845,8 @@ def run_chrome(chrome: str, html_path: Path, work_dir: Path,
 def evaluate_example(html_path: Path, chrome: str, work_dir: Path,
                      audit_modes: Optional[list] = None,
                      axe_url: str = DEFAULT_AXE_URL,
-                     mermaid_strict: bool = False) -> ExampleResult:
+                     mermaid_strict: bool = False,
+                     math_strict: bool = False) -> ExampleResult:
     name = html_path.name
     audit_modes = audit_modes or []
     try:
@@ -848,6 +886,34 @@ def evaluate_example(html_path: Path, chrome: str, work_dir: Path,
         name="katex", ok=math_ok, expected=math_in, found=math_out,
         detail="" if math_ok else
         f"only {math_out} katex-html matches for {math_in} spans"))
+
+    # --- check 2b (opt-in): strict KaTeX check ---
+    # Surfaces malformed LaTeX that the lax `katex` check silently accepts.
+    # KaTeX emits `<span class="katex-error">` (with `throwOnError: false`)
+    # and may also tag rendered spans with `title="ParseError: ..."`. We
+    # count both and fail if either is present. Pages with no math spans
+    # report (N/A) and pass, mirroring the abcjs/mermaid zero pattern.
+    if math_strict:
+        err_spans, parse_titles = math_strict_check(dom)
+        total_errors = err_spans + parse_titles
+        if math_in == 0:
+            ms_pass = True
+            ms_detail = ""
+        else:
+            ms_pass = total_errors == 0
+            parts = [f"{math_out}/{math_in} rendered",
+                     f"{total_errors} errors"]
+            if total_errors and (err_spans or parse_titles):
+                breakdown = []
+                if err_spans:
+                    breakdown.append(f"katex-error={err_spans}")
+                if parse_titles:
+                    breakdown.append(f"parse-title={parse_titles}")
+                parts.append("(" + ",".join(breakdown) + ")")
+            ms_detail = "; ".join(parts) if not ms_pass else ""
+        result.checks.append(CheckResult(
+            name="math_strict", ok=ms_pass,
+            expected=math_in, found=math_out, detail=ms_detail))
 
     # --- check 3: abcjs rendered every <div class="abc-music"> ---
     abc_in = len(RE_DIV_ABC.findall(src))
@@ -1107,6 +1173,11 @@ def main(argv: list[str]) -> int:
                     help="stricter mermaid render check: verify each rendered "
                          "SVG has a recognised mermaid role/structure and no "
                          "parse-error markers (opt-in; default OFF)")
+    ap.add_argument("--with-math-strict", action="store_true",
+                    dest="with_math_strict",
+                    help="stricter KaTeX render check: count katex-error spans "
+                         "and ParseError tooltip titles per page; fail if any "
+                         "(opt-in; default OFF)")
     args = ap.parse_args(argv)
 
     audit_modes: list[str] = []
@@ -1155,6 +1226,8 @@ def main(argv: list[str]) -> int:
         print(f"==> audits enabled: {','.join(audit_modes)}")
     if args.with_mermaid_strict:
         print("==> mermaid-strict enabled")
+    if args.with_math_strict:
+        print("==> math-strict enabled")
 
     results: list[ExampleResult] = []
     with tempfile.TemporaryDirectory(prefix="mdlout_browser_") as td:
@@ -1162,7 +1235,8 @@ def main(argv: list[str]) -> int:
         for html in htmls:
             r = evaluate_example(html, chrome, work,
                                  audit_modes=audit_modes, axe_url=axe_url,
-                                 mermaid_strict=args.with_mermaid_strict)
+                                 mermaid_strict=args.with_mermaid_strict,
+                                 math_strict=args.with_math_strict)
             results.append(r)
             tag = "PASS" if r.ok else "FAIL"
 
@@ -1170,7 +1244,9 @@ def main(argv: list[str]) -> int:
                 # The strict-mermaid signal carries extra context inline so
                 # the per-page console line shows pass count *and* parse
                 # errors even when the check passes (matches the spec
-                # `mermaid_strict=ok(N/M strict pass; K errors)`).
+                # `mermaid_strict=ok(N/M strict pass; K errors)`). The
+                # strict-math signal follows the same shape:
+                # `math_strict=ok(N/M rendered; K errors)`.
                 state = "ok" if c.ok else "X"
                 if c.name == "mermaid_strict":
                     if c.expected == 0:
@@ -1181,6 +1257,13 @@ def main(argv: list[str]) -> int:
                         return f"{c.name}={state}({err})"
                     body = f"{c.found}/{c.expected} strict pass"
                     return f"{c.name}={state}({body})"
+                if c.name == "math_strict":
+                    if c.expected == 0:
+                        return f"{c.name}={state}(N/A)"
+                    if c.detail:
+                        return f"{c.name}={state}({c.detail})"
+                    return (f"{c.name}={state}"
+                            f"({c.found}/{c.expected} rendered; 0 errors)")
                 return f"{c.name}={state}({c.found}/{c.expected})"
 
             checks = " ".join(_fmt_check(c) for c in r.checks)
@@ -1222,6 +1305,8 @@ def main(argv: list[str]) -> int:
         manifest["axe_url"] = axe_url
     if args.with_mermaid_strict:
         manifest["mermaid_strict"] = True
+    if args.with_math_strict:
+        manifest["math_strict"] = True
     Path(args.out).write_text(json.dumps(manifest, indent=2))
     print(f"==> manifest: {args.out}")
     print(f"==> pass {manifest['pass']} / fail {manifest['fail']} / total {manifest['total']}")
