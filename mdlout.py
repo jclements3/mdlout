@@ -1738,11 +1738,24 @@ def _block_to_lout(block: Block) -> str:
             return f'@LP\n@CentredDisplay @DMath {{ "{_lout_string_encode(body)}" }}'
         case BlockType.ABC:
             _needs_svgmacros = True
-            return f'@LP\n@ABC {{ "{_lout_string_encode(block.content)}" }}'
+            # svgmacros wraps the body in <div data-abc="@Body">.  If the
+            # ABC source contains `"`, `<`, `>`, or `&` the surrounding HTML
+            # attribute (or, for @Mermaid below, the element text) gets
+            # mangled by the browser parser before abcjs/mermaid sees it.
+            # HTML-encode first; both engines DOM-decode the textContent /
+            # attribute back to the original characters at render time, so
+            # the original notation reaches the engine intact.
+            return (
+                f'@LP\n@ABC {{ '
+                f'"{_lout_string_encode(_html_escape(block.content))}" }}'
+            )
         case BlockType.MERMAID_BLOCK:
             _needs_svgmacros = True
             _has_mermaid = True
-            return f'@LP\n@Mermaid {{ "{_lout_string_encode(block.content)}" }}'
+            return (
+                f'@LP\n@Mermaid {{ '
+                f'"{_lout_string_encode(_html_escape(block.content))}" }}'
+            )
         case BlockType.SVG_RAW:
             _needs_svgmacros = True
             return f'@LP\n@SVG {{ "{_lout_string_encode(block.content)}" }}'

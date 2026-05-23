@@ -295,6 +295,57 @@ lowest-overhead one that works:
 only partially through the SVG back-end. See `examples/diag_gallery.md`
 and `examples/complex_diag.md` for what does and doesn't survive.
 
+### Hand-authoring `@Math` / `@ABC` / `@Mermaid` in raw Lout: gotchas
+
+mdlout sanitises Markdown before it emits the passthrough macros, so
+authors writing in Markdown never see the issues below. They only
+matter if you are writing a `.lt` file by hand (or via a different
+generator) and invoking `@Math`, `@ABC`, or `@Mermaid` directly.
+
+**1. HTML-active characters in the body.** The macros' SVG-mode
+expansion places `@Body` inside an HTML attribute (`@ABC` -- `data-abc
+= "@Body"`) or as element text content (`@Mermaid` -- `<div
+class="mermaid">@Body</div>`). A literal `&`, `<`, `>`, or `"` in
+`@Body` therefore corrupts the surrounding markup before
+abcjs / mermaid.js can read it. HTML-escape on the way in:
+
+    @ABC { "T:&#x20;Title\012M:&#x20;4/4\012K:&#x20;C\012C&amp;D" }
+    @Mermaid { "graph LR\012A[Apple&#x20;&amp;&#x20;Pear]&#x20;-->&#x20;B" }
+
+The browser DOM-decodes attribute values and element text content
+before the engines see them, so `&amp;` -> `&`, `&lt;` -> `<`, etc.,
+all round-trip correctly. mdlout does this automatically; raw `.lt`
+authors must do it themselves.
+
+**2. Lout-special characters in the body of non-SVG fallbacks.** In
+PostScript / PDF / PlainText back-ends, the macro `else` branch
+emits `@Body` as ordinary Lout-parsed words. Lout's parser will see
+any unescaped `{`, `}`, `@`, `|`, or `^` in `@Body` and interpret them
+as syntax -- usually turning the build into a cryptic parse error.
+
+The pragmatic fix is to wrap the body in a Lout literal string `"..."`
+before passing it to the macro, so Lout's lexer treats it as one
+atomic word:
+
+    @ABC { "X: 1\012T: Sample\012K: C\012{|C^4 D E F|}" }
+
+Inside a `"..."` literal only `"`, `\\`, and embedded newlines need
+escaping (see `_lout_string_encode` in mdlout.py for the canonical
+encoding). mdlout always quotes the body this way; hand-authors are
+encouraged to do the same.
+
+**3. Newlines.** Lout's lexer treats a literal LF inside `"..."` as
+an unterminated string. Either join all lines into one space-separated
+form, or use Lout's octal escape `\012` for each newline. mdlout
+emits `\012` between source lines; this works for both abcjs (which
+treats the decoded LF as a record separator) and mermaid (which also
+accepts `;`).
+
+These three rules together explain every "the macro looks right in
+the source but the output is broken" report we've seen. If you are
+generating `.lt` files programmatically, mirroring `_lout_string_encode`
+plus `_html_escape` from `mdlout.py` is the safest route.
+
 ## 6. Citations and references
 
 mdlout implements pandoc-style citations: inline `[@key]` plus a
