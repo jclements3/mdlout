@@ -92,11 +92,17 @@ bit-identical to v0.2.0.
   errors under `--with-math-strict`, mydefs discovery, dark-mode
   cascade quirks, PDF vs HTML output divergences. Linked from
   `README.md` and from the tutorial.
-- **`docs/cookbook.md`: 3 new recipes (33-35).** Bibliography /
-  citation idioms, multi-language documents at the Lout-language
-  level (not just `@Char` / `@Sym`), and a longer-form `@Diag`
-  walkthrough. Recipe count goes 32 -> 35; closes the "more
-  cookbook recipes" near-term roadmap item.
+- **`docs/cookbook.md`: 3 new recipes (33-35).** Including SVG
+  diagrams from external files (`@SVGFile` + `--inline-raster`
+  fallback for raster), using `@Strike` from Markdown
+  (`~~text~~` -> `@OverStrike`, companion to recipe 27), and
+  combining `columns: 2` with multi-page content (`type: doc` is
+  single-page; `report`/`book` paginate). Recipe count goes
+  32 -> 35; closes the "more cookbook recipes" near-term roadmap
+  item. (corrected on 2026-05-23: the original entry described
+  recipes 33-35 as bibliography / multi-language / `@Diag`
+  walkthrough; the actual commit `aea5e48` ships the three
+  recipes listed above.)
 - **`examples/gallery.md`.** 54-page mdlout-rendered showcase
   document: every example in `examples/` rendered to a thumbnail
   plus caption, with cross-links to the source `.md`, the
@@ -148,11 +154,15 @@ bit-identical to v0.2.0.
 
 ### Notes
 
-- The v0.2.4 release notes carried an "if landed" caveat on the
-  mdlout package bump (PR #154 had not yet merged when v0.2.4 was
-  cut). PR #154 landed during the v0.2.5 cycle; the
-  `pyproject.toml` and `mdlout.VERSION` bump in this release is
-  that landing.
+- v0.2.4 deferred the mdlout package version bump
+  (`pyproject.toml`, `mdlout.VERSION` stayed at 0.2.3) because no
+  mdlout-surface change had landed; v0.2.4 was a submodule + tests
+  refresh. The ligature work and per-font kern table precompute in
+  this release are the next mdlout-visible behaviour change, so
+  the deferred bump rolls forward to 0.2.5. (corrected on
+  2026-05-23: the original entry framed v0.2.4 as carrying an
+  "if landed" caveat for PR #154; the v0.2.4 Notes block in fact
+  said "is not bumped in this release" with no PR reference.)
 - `tests/lout_doc_renders` SSIMs unchanged from v0.2.4 (design
   0.9190, expert 0.9202, slides 0.9804, user 0.9292). The
   ligature work moves the *User's Guide PS-vs-SVG diff*
@@ -201,9 +211,12 @@ PDF pipeline remain frozen and bit-identical to v0.2.0.
   `closepath`, `setrgbcolor`, `setgray`, `setlinewidth`, `gsave`,
   `grestore`); cold ops still flow through the legacy switch.
   Combined with the round-3 stdio buffering / dispatch tightening
-  that landed earlier in v0.2.3 (`f1fdd77`), the User's Guide SVG
+  that landed earlier in v0.2.2 (`f1fdd77`), the User's Guide SVG
   build now drops from 41.2 s real / 35.4 s user (v0.2.2 baseline)
   to 22.6 s real / 19.8 s user (lout f234cde -> mdlout 94277d7).
+  (corrected on 2026-05-23: lout `f1fdd77` was bumped into mdlout
+  via `5810261`, which shipped in v0.2.2, not v0.2.3; the original
+  text mislabelled the host release.)
 
 ### Changed
 
