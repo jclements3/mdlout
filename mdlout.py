@@ -32,7 +32,7 @@ from enum import Enum, auto
 from pathlib import Path
 
 
-VERSION = "0.2.2"
+VERSION = "0.2.3"
 
 
 # ---------------------------------------------------------------------------
