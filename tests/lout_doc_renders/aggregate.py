@@ -167,27 +167,47 @@ def main() -> int:
     lines.append("## Bugs / divergences surfaced by these renders")
     lines.append("")
     lines.append("Building the three previously-unrendered docs through z53.c "
-                 "highlighted three issue classes:")
+                 "highlighted a handful of issue classes. The first two are "
+                 "now fixed at lout HEAD; the rest are the long-tail residue:")
     lines.append("")
-    lines.append("1. **`@Case { PostScript ... PDF ... }` lacks an `SVG` branch.** "
-                 "Many Lout include files (most loudly `s2_3` in `design`) ship "
-                 "with explicit `PostScript` and `PDF` cases for back-end-specific "
-                 "instructions. Under `lout -G` these fall through to the "
-                 "PostScript branch — the message `replacing unknown @Case option "
-                 "SVG by PostScript` accounts for most of the stderr volume. "
-                 "Functionally harmless (the PostScript branch is usually fine) "
-                 "but it should grow an `SVG` case in `lout/include/`.")
+    lines.append("1. **`@Case { PostScript ... PDF ... }` lacked an `SVG` "
+                 "branch** *(fixed at lout HEAD)*. Many Lout include files "
+                 "(most loudly `s2_3` in `design`) shipped with explicit "
+                 "`PostScript` / `PDF` cases for back-end-specific "
+                 "instructions; under `lout -G` these fell through to the "
+                 "PostScript branch, emitting `replacing unknown @Case "
+                 "option SVG by PostScript` warnings (~96 for `design`, "
+                 "~235 for `expert`). The fork now adds explicit `SVG` "
+                 "branches in `lout/include/` and in `doc/{design,expert}` "
+                 "(see PRs #141 and #143). Stderr volume for these docs "
+                 "drops from hundreds of warnings to zero, restoring the "
+                 "design SSIM from 0.6560 (build was picking a "
+                 "non-converged pass) to 0.9190.")
     lines.append("")
-    lines.append("2. **Raw PostScript inside `@Graphic { ... }`.** The `design` "
-                 "document embeds hand-written PostScript snippets in its "
-                 "algorithm-flow diagrams (`lightgrey`, `lfig` operators in "
-                 "`s2_3`). z53.c flags these as `unknown PostScript operator`. "
-                 "This is the long tail tracked by `lout/SVG_PORTING.md` — "
-                 "translating PostScript drawing primitives to SVG `<path>` "
-                 "operations is future work. Page-level effect is the diagram "
-                 "appears as an XML comment with surrounding text intact.")
+    lines.append("2. **Concurrent-runner cross-reference races** *(fixed in "
+                 "`build.sh`, a4a20df)*. Lout writes `*.li` / `*.ldx` / "
+                 "`lout.lix` to the cwd as it resolves cross-references, "
+                 "so two agents running the same doc in parallel raced on "
+                 "those files — yielding `assert failed in Parse: *token!`, "
+                 "`rename failed`, and `line too long` errors that "
+                 "previously dropped `expert`'s SSIM from ~0.92 to ~0.71 "
+                 "and PDF page count from 120 to 115. `build.sh` now "
+                 "copies each doc into a per-run scratch dir "
+                 "(`/tmp/loutdocs/src/$doc/`) before invoking `lout`, so "
+                 "concurrent agents no longer collide; the expert SSIM is "
+                 "back to 0.9202 and the page count back to 120.")
     lines.append("")
-    lines.append("3. **Per-pass output alternation continues.** With 7 "
+    lines.append("3. **Raw PostScript inside `@Graphic { ... }`.** The "
+                 "`design` document embeds hand-written PostScript snippets "
+                 "in its algorithm-flow diagrams (`lightgrey`, `lfig` "
+                 "operators in `s2_3`). z53.c flags these as `unknown "
+                 "PostScript operator`. This is the long tail tracked by "
+                 "`lout/SVG_PORTING.md` — translating PostScript drawing "
+                 "primitives to SVG `<path>` operations is future work. "
+                 "Page-level effect is the diagram appears as an XML "
+                 "comment with surrounding text intact.")
+    lines.append("")
+    lines.append("4. **Per-pass output alternation continues.** With 7 "
                  "passes, every doc's SVG run alternates between the full "
                  "multi-page output and a smaller partial output on each "
                  "pass — the same phenomenon `tests/user_guide_diff.sh` "
@@ -196,21 +216,6 @@ def main() -> int:
                  "agree on file size) as the canonical output, falling "
                  "back to the largest non-crashed pass if no two passes "
                  "agree.")
-    lines.append("")
-    lines.append("4. **`expert` doc asserts in `Parse()` at lout HEAD "
-                 "from PS pass 4 onward.** A regression somewhere in the "
-                 "current submodule pointer makes `lout` (PostScript "
-                 "back-end) fail with `internal error: assert failed "
-                 "in Parse: *token!` on the fourth and later passes "
-                 "of `lout/doc/expert/all`. The SVG back-end is "
-                 "unaffected; only the PostScript pipeline crashes. "
-                 "`build.sh` therefore picks PS pass 2 as the best "
-                 "available PostScript output for `expert`, which "
-                 "leaves cross-references unresolved (rendered as `??`) "
-                 "and drops the expert sample SSIM from ~0.92 to ~0.71 "
-                 "relative to the previously committed renders. PDF "
-                 "page count goes from 120 to 115. The SVG (`lout -G`) "
-                 "pipeline converges normally and is unchanged.")
     lines.append("")
     lines.append("Each per-doc gallery (`*_diff.html`) shows 10 evenly-spaced "
                  "sample pages with PS / SVG / pixel-diff panels side by side.")
