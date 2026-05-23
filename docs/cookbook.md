@@ -2244,6 +2244,255 @@ HTML-only (see #36); `cover`, `abstract`, `institution`,
 or to add a new key, edit the maps near the top of
 [`mdlout.py`](../mdlout.py) (search for `_BASIC_SETUP_MAP`).
 
+## 39. Dual-language documents (English + Spanish, French, German)
+
+Multilingual reports -- a conference proceedings with abstracts in
+three languages, a comparative-literature monograph, a translation
+study -- need *language-switched hyphenation*. Lout ships hyphenation
+tables for ~20 languages and exposes per-region switching via
+`Lang @Language { ... }`, which scopes the active language to that
+braced group. Inside the scope Lout pulls hyphenation patterns from
+`lout/hyph/<lang>.lp`, swaps in language-specific quote glyphs, and
+honours locale punctuation. The document-wide default still comes
+from `language:` in the frontmatter.
+
+```yaml
+---
+type: report
+title: Translation Notes on Three Lyrics
+author: J. L. Clements
+font: Times Base 11p
+page: A4
+language: English
+section-numbers: Yes
+---
+
+# English original
+
+The opening stanza, hyphenated by the English patterns Lout's default
+locale ships.
+
+# Une note en français
+
+```lout
+French @Language {
+@LP
+Une explication courte de la stratégie de traduction adoptée pour
+la première strophe, avec un vocabulaire technique d'analyse poétique
+qui doit s'hyphéner selon les règles françaises.
+@LP
+}
+```
+
+# Eine deutsche Anmerkung
+
+```lout
+German @Language {
+@LP
+Eine entsprechende Bemerkung auf Deutsch -- die zusammengesetzten
+Hauptwörter ("Übersetzungsstrategie", "Strophenanalyse") werden
+nach deutschen Trennregeln umgebrochen.
+@LP
+}
+```
+
+# Una nota en español
+
+```lout
+Spanish @Language {
+@LP
+Las reglas de silabación españolas se aplican aquí; las palabras
+largas ("traducción", "interpretación") se cortan al final de línea
+según los patrones del castellano.
+@LP
+}
+```
+```
+
+Rendered: four numbered `@Section`s, one per language. Each
+`@Language` block opens a hyphenation scope -- line breaks inside the
+French section follow `lout/hyph/french.lp`, the German section
+follows `german.lp`, etc. The English default carries over to any
+text *outside* an `@Language` group (the section headings here render
+in the document default, which is English). Punctuation and
+quotation marks remain bsf-style (`` `` ``, `''`, `--`) regardless of
+locale; the language switch only changes hyphenation and the
+language-specific Lout caption strings (e.g. "Chapter" vs "Chapitre"
+in TOC entries when `@InitialLanguage` is paired in).
+
+**Gotcha:** *RTL scripts (Arabic, Hebrew, Persian, Urdu, Syriac) are
+currently unsupported.* Lout's galley engine assumes left-to-right
+flow throughout; there is no bidi (UAX #9) implementation and no
+right-aligned line breaker. Hebrew text typed into a `Hebrew
+@Language { ... }` block renders left-to-right with mirrored
+punctuation, which is wrong; the SVG back-end inherits the same
+limitation. For RTL content the practical workaround is to drop a
+`<foreignObject>` of HTML inside a ` ```svg ` fence and let the
+browser handle bidi -- but this only works in HTML mode and breaks
+PDF output. Beyond RTL: CJK (Chinese, Japanese, Korean) needs its own
+font and glyph table; only the PostScript path with a CJK-specific
+`@SysInclude { chinese }` works, and only in PDF mode. The
+`@Language` *name* must match Lout's spelling exactly -- `French`
+not `french`, `Spanish` not `Castilian` -- and the locale must have
+a `.lp` file in `lout/hyph/`; see `lout/hyph/Makefile` for the full
+list. Mixing `language:` (frontmatter, document-wide) and inline
+`@Language` (raw Lout, per-region) is fine and is the canonical
+pattern for multi-locale documents. Working example:
+[`examples/multilingual.md`](../examples/multilingual.md).
+
+## 40. Per-section font switching
+
+In a long technical document the bulk of the prose sets cleanly in
+a serif body font (Times, Palatino) but isolated *technical*
+sections -- a configuration listing, an API reference, a wire-format
+walkthrough -- read better in a sans-serif at a slightly different
+size. Lout's `@Font` macro scopes a font change to a braced
+expression, and dropping it at the top of a `@Section`'s body
+swaps the family for that section only; the next `@Section`
+inherits the document default again.
+
+```yaml
+---
+type: report
+title: Wire Protocol v3 Reference
+author: J. L. Clements
+font: Times Base 11p
+heading-font: Helvetica Bold
+page: A4
+section-numbers: Yes
+---
+
+# Overview
+
+A few paragraphs of narrative prose set in the document body font
+(Times 11pt). Readers skim the overview before diving into the
+wire-format details.
+
+# Frame layout
+
+```lout
+@Font { Helvetica Base 10p }
+```
+
+Each frame carries a 4-byte length prefix, a 1-byte opcode, and a
+variable-length payload. The sans-serif setting here makes the
+field-by-field walkthrough easier to scan; technical sections set
+in 10pt sans pack ~15% more content per page than the 11pt serif
+body.
+
+# Worked example
+
+The example returns to the body font automatically -- the `@Font`
+shift above was scoped to `# Frame layout` only.
+```
+
+Rendered: three numbered sections. Section 1 ("Overview") and 3
+("Worked example") set in Times 11pt (the document default).
+Section 2 ("Frame layout") opens with the raw-Lout `@Font` shift,
+so its body text -- and any subsequent paragraphs *within the same
+section* -- render in Helvetica 10pt. The headings themselves stay
+in `heading-font: Helvetica Bold` throughout (heading typography is
+controlled separately from body font).
+
+**Gotcha:** `@Font { ... }` *without* a braced body is a *global*
+switch that bleeds into following sections -- exactly what you
+don't want here. The pattern above relies on Lout's per-section
+scoping (`# Section` becomes `@Section @Begin ... @End @Section`
+in the generated Lout, which closes the font scope at the
+`@End`). To switch fonts for only *part* of a section, wrap that
+part in `@Font { ... } { body }` (note the *second* brace). Setting
+the size only (`@Font { 10p }`) keeps the current family and just
+changes the size; the size token can be relative too -- `@Font {
++1p }` enlarges by 1pt over the current. The `@Font` macro accepts
+the same family-face-size triple as the frontmatter `font:` key, so
+`@Font { Palatino Italic 12p }` works inline. For *code blocks*
+specifically, use `fixed-font:` in frontmatter (see recipe #32) --
+`@Font` inside a Markdown fenced code block applies to the raw-Lout
+output, not to the rendered code, and is usually a mistake.
+Switching to a font Lout cannot find produces a runtime error
+("font Foo Bar 10p not found in fontdefs"), not a silent fallback,
+so verify family + face names against `lout/font/*.AFM` first.
+
+## 41. Embedding YouTube / video links in HTML output
+
+HTML output has a capability PDF cannot match: live embeds of
+video, audio, and interactive widgets. Browsers honour `<video>`,
+`<audio>`, and `<iframe>` natively, and Lout's SVG back-end
+preserves raw markup verbatim when it appears inside an `@SVG`
+passthrough. The ` ```svg ` fence is the entry point: anything
+inside is passed through `@SVG { ... }`, reaches `z53.c` as a raw
+buffer, and lands in the page's `<svg>` element unchanged. By
+wrapping the embed in `<foreignObject>` the browser then renders
+the HTML iframe inside the SVG region.
+
+```yaml
+---
+type: doc
+title: A Page with an Embedded Demo Video
+font: Times Base 11p
+page: A4
+page-headers: None
+---
+
+# Demo: the typesetting pipeline end-to-end
+
+The five-minute screencast below walks through the `mdlout`
+pipeline from a markdown source to a rendered PDF.
+
+```svg
+<foreignObject x="0" y="0" width="500" height="300">
+  <iframe xmlns="http://www.w3.org/1999/xhtml"
+          width="500" height="300"
+          src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+          title="mdlout demo"
+          frameborder="0"
+          allow="autoplay; encrypted-media; picture-in-picture"
+          allowfullscreen></iframe>
+</foreignObject>
+```
+
+In PDF mode the video falls back to the URL printed in monospace:
+[https://youtu.be/dQw4w9WgXcQ](https://youtu.be/dQw4w9WgXcQ).
+```
+
+Rendered (HTML): a 500x300-pixel iframe pointing at YouTube,
+embedded inside the SVG page, plays inline when the reader clicks
+the thumbnail. Same pattern works for Vimeo (`/video/<id>`),
+self-hosted `<video src="local.mp4" controls>`, audio
+(`<audio src="podcast.mp3" controls>`), CodePen / JSFiddle embeds,
+maps (`<iframe src="https://www.google.com/maps/embed?...">`), and
+any other URL the host permits in an iframe. Rendered (PDF): the
+SVG passthrough body is discarded by the PostScript back-end
+(which has no `<foreignObject>` equivalent) and the surrounding
+markdown link renders as the URL placeholder; the page still
+builds.
+
+**Gotcha:** `<foreignObject>` requires the `xmlns` attribute on
+the child element (`xmlns="http://www.w3.org/1999/xhtml"`) --
+without it Chrome and Firefox silently skip the embed and render
+an empty box. The width/height on `<foreignObject>` are in SVG
+user units, not CSS pixels; if the embed looks tiny, increase
+both. Iframe security: many video hosts (YouTube, Vimeo) send a
+`X-Frame-Options: SAMEORIGIN` header for the watch-page URL but
+*not* for the `/embed/<id>` URL, so always use the embed form.
+Mixed-content rules apply -- HTTPS pages can only iframe HTTPS
+sources; loading `http://` URLs from an HTTPS-served HTML page is
+blocked. The fallback URL in PDF mode is not automatic; the
+markdown author writes it explicitly (see the trailing
+`[https://youtu.be/...]` link in the skeleton above) so that PDF
+readers still see the citation. For *self-hosted* video with
+`--inline-raster`-style embedding, the asset is not base64'd --
+`<video src="local.mp4">` references a file relative to the HTML,
+so distribute the video alongside the `.html` artefact. Autoplay
+is blocked by browsers without a user gesture; the `allow=
+"autoplay"` attribute only unblocks it for *trusted* origins
+(YouTube, etc., depending on browser policy). For interactive
+demos that need bidirectional postMessage with the parent page,
+the iframe pattern still works -- but `mdlout --serve`'s SSE
+reload script is the *only* JS in the parent page, so a custom
+listener has to be injected via a separate ` ```svg ` block
+holding a `<script>` element.
+
 ## Where to look next
 
 - [`docs/best_practices.md`](best_practices.md) -- idiom guide:
