@@ -11,7 +11,183 @@ Submodule-only changes are tagged `[lout]`.
 
 ## [Unreleased]
 
-Nothing yet.
+Post-v0.2.0 maintenance: CI, packaging, perf instrumentation, more
+examples, and a follow-on round of SVG back-end fixes. User's Guide
+diff aggregate ticked from mean SSIM 0.9230 to 0.9234 (36 -> 38 pages
+in the OK bucket); snippet corpus expanded to 63 with strictly tighter
+graphics-heavy thresholds (now 2% AE / SSIM 0.95, was 20% / 0.75).
+
+### Added
+
+- **CI: GitHub Actions workflows.** `.github/workflows/ci.yml` builds
+  lout and runs the snippet regression suite on every push / PR.
+  `.github/workflows/user-guide-diff.yml` runs the 327-page PS-vs-SVG
+  diff weekly (Mondays 06:00 UTC) and uploads the per-page manifest +
+  worst-NN PNGs as artefacts. Actions pinned to current majors
+  (checkout@v4, setup-python@v5, cache@v4, upload-artifact@v4)
+  (1aabc68, 213d112, 53164c7, dc1be74).
+- **`docs/CI.md`**: covers what each workflow does, the
+  `gh auth refresh -s workflow` OAuth-scope dance required to push
+  workflow files, local reproduction (act, plain bash), and the
+  submodule init dependency (3f4d8af).
+- **Packaging: `pyproject.toml`** (PEP 621, setuptools backend, single-
+  module layout) exposing `mdlout` as a console_script entry point.
+  Builds a clean sdist + wheel via `python -m build`; pip install
+  registers the `mdlout` command and resolves `--version` to `0.2.0`.
+  `.gitignore` picks up `dist/`, `build/`, `*.egg-info/` artefacts
+  (1c63a39, 06bff7e).
+- **`tests/bench.py` microbenchmark suite.** Per-snippet timing of
+  four pipeline stages (PS build, SVG build, ps2pdf, rsvg-convert) at
+  median-of-3; one JSON record per run appended to `tests/bench.jsonl`.
+  Regression detection compares against median of last 5 runs, prints
+  `WARNING` at >1.5x baseline, exits non-zero with `--strict`.
+  `tests/run_all.sh` gains an optional `--bench` flag (default off).
+  `tests/bench.html` is a dependency-free 30-run stacked-bar +
+  sortable per-snippet line chart. Baseline (63 snippets): PS+SVG
+  total ~21 s, ps2pdf ~33 s, rsvg ~45 s; full run ~5 min on the
+  reference host (6444b6b).
+- **`tests/compare.py --bisect <snippet>`**: binary-search over a
+  failing snippet's body lines to localize the smallest contiguous
+  range that still reproduces the FAIL verdict, rendering each
+  candidate through the same PS+SVG pipeline as `run_compare.sh`
+  (1dd327d).
+- **`tests/snippet_history.html` + history viewer.** `history.py`
+  now appends one JSON record per snippet to
+  `tests/snippet_history.jsonl` (63 records per clean run); the new
+  vanilla-JS viewer has a sidebar list of all snippets and inline-SVG
+  charts of AE diff_ratio and SSIM over time (1dd327d).
+- **`examples/exam.md`**: a five-question calculus midterm with
+  blank workspace via the `//Nc` vlist-separator idiom and a separate
+  Answer Key section. Builds clean to PDF (3 pages) and HTML
+  (6 pages); uses prose math throughout so both back-ends stay in
+  sync (38b66f8).
+- **Five new cookbook recipes in `docs/cookbook.md`**: CV, conference
+  handout, exam paper, scientific report with bibliography, and
+  recipe page. Each carries motivation, source skeleton, rendered-
+  result note, and a real-build gotcha (38b66f8, 3c50271).
+- **`docs/RELEASE_NOTES_v0.2.0.md`**: manual release-create
+  instructions plus the publish-after-rollback path for the v0.2.0
+  tag (f86faca, b6a42f9).
+- **`tests/user_guide_diff/diag_gallery.html`** + 40 per-page
+  thumbnails + 10 worst-NN panels for the @Diag chapter
+  (User's Guide pages 190-229). Mean AE 6.93%, mean SSIM 0.9248;
+  worst page p221 at SSIM 0.8820 (e9664ff).
+- **Snippet `tests/snippets/graphic_rotated_show.lt`**: 12 rotated
+  `(label)` strings around a circle perimeter via the PS-prologue
+  rotated-show path; SSIM 0.9927, Pass-Excellent (61471c6).
+- **[lout] Real Type 1 glyph outlines for `charpath`** via the new
+  `z53_glyph.c` module. Lazily loads URW++ / gsfonts `.pfb` files
+  for the Adobe base-35 PS names, unwraps PFB segments, decrypts the
+  eexec body (key 55665, lenIV 4) and per-charstring blobs (key 4330,
+  lenIV from `/lenIV`), and runs a Type 1 charstring interpreter
+  covering hsbw / sbw, the rmoveto family, rlineto / hlineto /
+  vlineto, rrcurveto, vhcurveto / hvcurveto, closepath, callsubr /
+  return, endchar, seac, div, callothersubr / pop, and the flex
+  group. Subrs cap 4096; glyphs cap 1024; Adobe StandardEncoding
+  honoured by `seac`. Per-glyph outlines cached in a per-font arena.
+  Search path: `$LOUT_T1_FONT_DIR`, then
+  `/usr/share/fonts/type1/{gsfonts,urw-fonts}/`, then the Ghostscript
+  `Resource/Font/` tree. Missing fonts / glyphs fall back to the
+  original 0.5 em x 1.0 em bbox rectangle so `coltex`'s
+  `charpath flattenpath pathbbox` callers still see a plausible
+  bbox (lout 78244cc -> mdlout 6d2a529).
+- **[lout] Rotated-show fix in `svg_ps_show`** (~22 LOC):
+  propagates the path-delta rotation into a SVG `rotate()`
+  transform on the emitted text wrapper, restoring correct
+  orientation for the `translate N rotate moveto show` PS idiom.
+  Drives `ldiagshowtags` in `diagf.lpg` (User's Guide page 207
+  compass-point label demo) and any `@Diag` link-label using
+  `linklabelangle`. Document audit lives in `SVG_PORTING.md`
+  (lout 78244cc / a0a5c28 -> mdlout 61471c6).
+
+### Changed
+
+- **Snippet thresholds tightened.** The graphics-heavy tier moves
+  from 20% AE / SSIM 0.75 to 2% AE / SSIM 0.95. With the embedded PS
+  interpreter and Symbol-font glyph table both in tree, the worst
+  graphics-heavy snippet (`colour_mixed`) clears 0.49% AE / SSIM
+  0.9926. New bar leaves ~1.5% / ~0.04 of margin to absorb CI
+  jitter; suite stays 63/63 Pass-Excellent (9384168).
+- **User's Guide diff baseline rebuilt** for lout a0a5c28
+  (real Type 1 charpath + rotated-show fix). Aggregate moves from
+  36 OK / 291 DIFF / mean SSIM 0.9230 to 38 OK / 289 DIFF / mean
+  SSIM 0.9234 (e9664ff).
+- **`examples/out/index.html` + `examples/README.md`** regenerated
+  to include the new exam example and the regrouped recipe sections
+  in `docs/cookbook.md` (38b66f8, 3c50271).
+
+### Fixed
+
+- **`tests/user_guide_diff.sh` no longer silently dies under
+  `set -euo pipefail`.** Two compounding hazards: `compare -metric
+  AE` exits non-zero on any visual difference (i.e. every page),
+  and `identify -format "%w %h"` emits no trailing newline so
+  `read w h` returns 1 even though both variables are populated.
+  The per-page loop used to abort after writing only the header
+  line of `manifest.txt`; now `compare` is wrapped with `|| true`
+  and the `read` is also guarded. A clean run produces a fully
+  populated 328-line manifest (header + 327 pages) without manual
+  intervention (ff27bc3, 1e9900d).
+- **[lout] Always-on `stroke-linecap` / `stroke-linejoin` /
+  `stroke-miterlimit` emission** introduced by the a3e9d04
+  line-style port was perturbing rsvg's edge antialiasing on
+  the User's Guide page 308 swatch grid. `svg_ps_emit_path` now
+  emits these attributes only when the gstate value differs from
+  the SVG default (butt / miter / 4), restoring the pre-a3e9d04
+  shape of the output for paths that never touched
+  `setlinecap` / `setlinejoin` (lout 999168f -> mdlout f33d25a).
+- **[lout] Lout tag-name leaks** surfacing as
+  `<!-- z53.c: unimplemented PostScript op 'A1' -->` XML comments
+  in `diag_arrowstyle_gallery.svg`. `svg_ps_exec_value` now
+  silently drops unknown names matching Lout's tag-identifier
+  shape (uppercase ASCII + digits, starts with a letter); these
+  arrive through `@Diag` / `@Fig` macro expansion, not from any
+  `@Graphic` prologue, so the PS interpreter has nothing to bind
+  them to. Output goes from 7 visible XML comments + a "suppressed"
+  tail to 0; the per-snippet `.svg.err` is now empty
+  (lout 999168f -> mdlout f33d25a).
+
+### Tests
+
+- Snippet corpus expanded 62 -> 63 (adds
+  `graphic_rotated_show.lt`).
+- Snippet history viewer (`tests/snippet_history.html`) +
+  per-snippet bisect (`compare.py --bisect`).
+- Microbenchmark suite (`tests/bench.py` +
+  `tests/bench.jsonl` + `tests/bench.html`) with a 1.5x baseline
+  regression alert.
+- @Diag chapter gallery (`tests/user_guide_diff/diag_gallery.html`,
+  40 thumbnails + 10 worst panels).
+- User's Guide PS-vs-SVG diff now reproducible end-to-end under
+  `set -euo pipefail` after the two shell-loop fixes.
+
+### Docs
+
+- `docs/CI.md`: GitHub Actions workflow overview + OAuth-scope dance.
+- `docs/cookbook.md`: 5 new task-oriented recipes
+  (CV / conference handout / exam paper / scientific report with
+  bibliography / recipe page); `examples/README.md` regrouped by
+  category to match.
+- `docs/RELEASE_NOTES_v0.2.0.md`: manual release-create instructions,
+  publish-after-rollback path for the v0.2.0 tag.
+- `docs/chapter3_pagination_drift_investigation.md`: walks
+  PS-vs-SVG at the Lout-coordinate level (not the rasterised pixel
+  level) and finds every line and word emitted on identical
+  `(x, y)`. The apparent 2.25 pt body offset traces to comparing
+  a stale May-20 PS snapshot against the fresh May-22 SVG; after
+  a fresh PS rebuild the coordinates match bit-for-bit. Conclusion:
+  the chapter-3 worst-10 panels are antialiasing-only artefacts
+  of the rsvg vs Ghostscript font pipeline (685fb95).
+- `[lout] SVG_PORTING.md` updated with the "Rotated show inside
+  @Graphic (fixed 2026-05-22)" subsection and the broader
+  @Fig / @Diag audit, plus the SVG-tracker refresh for hash-op-
+  dispatch + glyph-gap audit (lout a0a5c28, 2ff1b24).
+
+### Packaging
+
+- `pyproject.toml` for pip-installable mdlout (PyPI publish is
+  manual via `python3 -m twine upload`, deferred until v0.3 per
+  `ROADMAP.md`).
 
 ## [0.2.0] - 2026-05-22
 

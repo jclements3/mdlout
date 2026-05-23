@@ -49,15 +49,19 @@ for the full release notes; the headlines:
 - PDF path: working, **frozen**. PostScript back-end (`z49.c`)
   untouched and bit-identical to the pre-z53.c era.
 
-Regression status (v0.2.0):
+Regression status (post-v0.2.0, latest main):
 
-- 53-snippet single-feature suite: 0 Fail, 100% Pass-Excellent
-  (`bash tests/run_all.sh`).
-- 327-page User's Guide PS-vs-SVG diff: 0 BAD, 0 MISSING, mean SSIM
-  0.92, 322 / 327 pages at SSIM >= 0.85.
-- Headless-Chrome browser-test runner: 31 / 31 examples PASS on the
-  default 5 checks (`tests/browser_test.sh`); 30 / 30 on
+- 63-snippet single-feature suite: 0 Fail, 100% Pass-Excellent
+  (`bash tests/run_all.sh`) under tightened thresholds (text 5%,
+  graphics-heavy 2% AE / SSIM >= 0.95).
+- 327-page User's Guide PS-vs-SVG diff: 0 BAD, 0 MISSING, 38 OK
+  (AE < 5%) / 289 DIFF, mean SSIM 0.9234.
+- Headless-Chrome browser-test runner: 37 / 37 examples PASS on
+  the default 5 checks (`tests/browser_test.sh`); green on
   `--with-all` (axe-core, print CSS, dark mode).
+- CI: `.github/workflows/ci.yml` builds lout + runs the snippet
+  suite on every push / PR; `user-guide-diff.yml` runs the
+  327-page diff weekly.
 
 See [CLAUDE.md](CLAUDE.md) for engineering details and
 [TODO.md](TODO.md) for the current roadmap.
