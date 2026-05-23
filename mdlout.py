@@ -1859,12 +1859,25 @@ def _find_lout_lib(lout_bin: str) -> list[str]:
     return flags
 
 
-def _run_lout(lout_bin: str, lout_flags: list[str], lt_file: str, ps_file: str) -> None:
-    """Run lout up to 3 times to resolve cross-references."""
+def _run_lout(lout_bin: str, lout_flags: list[str], lt_file: str, ps_file: str,
+              env: dict | None = None) -> None:
+    """Run lout up to 3 times to resolve cross-references.
+
+    The optional `env` dict is merged onto the parent environment so
+    callers can inject back-end-specific knobs (e.g. LOUT_SVG_FONT_FEATURES
+    for the SVG GSUB consumer path) without touching the parent process's
+    environment.
+    """
     cmd = [lout_bin] + lout_flags + [lt_file, '-o', ps_file]
+    if env is not None:
+        child_env = os.environ.copy()
+        child_env.update(env)
+    else:
+        child_env = None
     result = None
     for _ in range(3):
-        result = subprocess.run(cmd, capture_output=True, text=True)
+        result = subprocess.run(cmd, capture_output=True, text=True,
+                                env=child_env)
         if result.stderr and 'unresolved cross reference' in result.stderr:
             continue
         break
@@ -3436,9 +3449,25 @@ def _build_once(args) -> str | None:
             if input_dir != tmpdir:
                 lout_flags = ['-I', input_dir] + lout_flags
 
+        # Frontmatter `font-features: smcp,onum` -> environment knob that
+        # the SVG back-end picks up at SVG_PrintInitialize.  Only meaningful
+        # in HTML mode (PDF path goes through z49.c which has no GSUB
+        # consumer).  Accepts either a comma-separated string or a YAML
+        # list; values land in LOUT_SVG_FONT_FEATURES verbatim.
+        lout_env: dict | None = None
+        ff = frontmatter.get('font-features', frontmatter.get('font_features'))
+        if ff:
+            if isinstance(ff, list):
+                ff_str = ','.join(str(x).strip() for x in ff if str(x).strip())
+            else:
+                ff_str = str(ff).strip()
+            if ff_str:
+                lout_env = {'LOUT_SVG_FONT_FEATURES': ff_str}
+
         if args.format == 'html':
             svg_file = os.path.join(tmpdir, f'{input_stem}.svg')
-            _run_lout(lout_bin, lout_flags + ['-G'], lt_file, svg_file)
+            _run_lout(lout_bin, lout_flags + ['-G'], lt_file, svg_file,
+                      env=lout_env)
 
             with open(svg_file, encoding='utf-8') as f:
                 svg = f.read()

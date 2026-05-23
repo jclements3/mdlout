@@ -1,0 +1,26 @@
+###########################################################################
+#  text_smcp_active - GSUB smcp consumer-side activation.                  #
+#                                                                          #
+#  Phase 2 of the OpenType smcp/onum work.  When the env var               #
+#  LOUT_SVG_FONT_FEATURES is set (here: forced by run_compare.sh by way of #
+#  recognising this snippet's name) the SVG back-end routes every word    #
+#  with an active substitution through <path d="..."/> emission instead   #
+#  of <text>.                                                              #
+#                                                                          #
+#  The standard URW Type 1 base35 set has no OpenType GSUB table, so a     #
+#  test-only synthetic mode (LOUT_SVG_FONT_FEATURES_SYNTH=smcp,onum)       #
+#  maps each lowercase letter to its uppercase glyph entry inside the     #
+#  same font and each digit to its named-glyph entry.  This proves that   #
+#  the consumer path emits <path> elements end to end without requiring  #
+#  an OTF/CFF font with real smcp data in Lout's AFM tree.                 #
+#                                                                          #
+#  Verification (independent of pixel diff): the .svg output for this     #
+#  snippet must contain at least one "<path d=" substring inside a word   #
+#  region.  See tests/run_compare.sh for the env-var trigger.             #
+###########################################################################
+
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+small caps abc and figures 0123.
+@End @Text

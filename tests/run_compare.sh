@@ -88,8 +88,28 @@ for lt in "${SNIPPETS[@]}"; do
    fi
 
    # 2) SVG output.
+   #
+   # Per-snippet env-var hooks for back-end features that have no
+   # PostScript counterpart.  text_smcp_active exercises the OpenType
+   # GSUB consumer path added in z53.c phase 2; the synth fall-back maps
+   # lower-case to upper-case in Type 1 fonts so the test runs without
+   # needing a CFF/OTF font with real smcp data in the Lout AFM tree.
+   svg_env=()
+   case "${name}" in
+      text_smcp_active)
+         svg_env=(LOUT_SVG_FONT_FEATURES=smcp,onum
+                  LOUT_SVG_FONT_FEATURES_SYNTH=smcp,onum)
+         ;;
+   esac
    if [[ "${status}" == "OK" ]]; then
-      if ! ( cd "${OUT_DIR}" && run_lout -s -G -o "${svg}" "${lt}" ) 2> "${svg_err}"; then
+      if ! ( cd "${OUT_DIR}" && env "${svg_env[@]}" \
+             "${LOUT_BIN}" \
+                -I "${LOUT_DIR}/include" \
+                -D "${LOUT_DIR}/data" \
+                -F "${LOUT_DIR}/font" \
+                -C "${LOUT_DIR}/maps" \
+                -H "${LOUT_DIR}/hyph" \
+                -s -G -o "${svg}" "${lt}" ) 2> "${svg_err}"; then
          status="SVG_FAIL"
          note="lout SVG failed"
       fi
