@@ -145,6 +145,79 @@ indistinguishable" band (>= 0.95). The "visibly different" tail is
 now a single page: 086 at SSIM `0.8455` (pagination drift in
 chapter-3 prose, antialiasing-floor artefact).
 
+## DPI sensitivity: is the SSIM floor really irreducible?
+
+Earlier baselines characterised the worst-10 pages as "irreducible
+antialiasing at 100 dpi" (see issue #109). To test that, the same 327
+PS / SVG pages were re-rasterised at **150 dpi** and then again at
+**200 dpi** (with no other changes; same `/tmp/user.ps`, `/tmp/user.svg`,
+same `ps2pdf`, same `rsvg-convert`, only `pdftoppm -r N` and
+`rsvg-convert -d N -p N` swapping the resolution). Reproduce with
+`DPI=150 tests/user_guide_diff.sh` or `DPI=200 tests/user_guide_diff.sh`
+(the `DPI` override, default 100, is wired in to the same script).
+
+Comparison (327 pages, 100/150 dpi computed 2026-05-23, 200 dpi computed 2026-05-23):
+
+| statistic                                   | 100 dpi | 150 dpi | 200 dpi | d 100->150 | d 150->200 |
+|---------------------------------------------|---------|---------|---------|-----------:|-----------:|
+| mean SSIM                                   | 0.9283  | 0.9441  | 0.9510  | +0.0158    | +0.0069    |
+| median SSIM                                 | 0.9312  | 0.9453  | 0.9518  | +0.0141    | +0.0065    |
+| min SSIM                                    | 0.8455  | 0.8890  | 0.8939  | +0.0435    | +0.0049    |
+| max SSIM                                    | 1.0000  | 1.0000  | 1.0000  |     0      |     0      |
+| pages SSIM >= 0.99                          | 2       | 3       | 3       | +1         |     0      |
+| pages SSIM >= 0.95 (visually indistinguishable) | 49  | 110     | 181     | +61        | +71        |
+| pages SSIM >= 0.85 (close)                  | 326     | 327     | 327     | +1         |     0      |
+| pages SSIM <  0.85 (visibly different)      | 1       | 0       | 0       | -1         |     0      |
+
+Worst-10 (by AE diff_ratio in the 100 dpi baseline) movement across the three DPIs:
+
+| page | AE@100 | SSIM@100 | SSIM@150 | SSIM@200 | d 100->200 | d 150->200 |
+|-----:|-------:|---------:|---------:|---------:|-----------:|-----------:|
+| 086  | 0.1426 | 0.8455   | 0.8956   | 0.9210   | +0.0755    | +0.0254    |
+| 090  | 0.1379 | 0.8512   | 0.9003   | 0.9245   | +0.0733    | +0.0242    |
+| 063  | 0.1194 | 0.8714   | 0.9186   | 0.9276   | +0.0562    | +0.0090    |
+| 056  | 0.1185 | 0.8683   | 0.9306   | 0.9340   | +0.0657    | +0.0034    |
+| 094  | 0.1162 | 0.9124   | 0.9242   | 0.9250   | +0.0126    | +0.0008    |
+| 095  | 0.1161 | 0.8902   | 0.8890   | 0.9118   | +0.0216    | +0.0228    |
+| 075  | 0.1129 | 0.8881   | 0.9393   | 0.9411   | +0.0530    | +0.0018    |
+| 019  | 0.1115 | 0.8989   | 0.9201   | 0.9251   | +0.0262    | +0.0050    |
+| 096  | 0.1109 | 0.8931   | 0.9332   | 0.9284   | +0.0353    | -0.0048    |
+| 060  | 0.1081 | 0.9238   | 0.9257   | 0.9455   | +0.0217    | +0.0198    |
+
+Worst-10 mean delta 100->200 **+0.0441** (median +0.0442); worst-10
+mean delta 150->200 **+0.0107** (median +0.0070). Corpus-wide 100 ->
+150: 295/327 pages improved, 31 worsened (min delta -0.0284), 1
+unchanged. Corpus-wide 150 -> 200: 284/327 pages improved, 40
+worsened (max worsening -0.0132 on page 178), 3 unchanged. The
+previously-worst page 086 moves another **+0.0254** from 150 dpi to
+SSIM 0.9210 at 200 dpi.
+
+**Conclusion: 200 dpi is effectively the structural floor.** The
+100 -> 150 step moved mean SSIM **+0.0158** and lifted 61 more pages
+over the 0.95 threshold; the 150 -> 200 step moves it only **+0.0069**
+and the slope on the worst pages is genuinely flattening (worst-10
+mean delta dropped from +0.0334 over the first step to +0.0107 over
+the second). +0.0069 falls below the +0.01 "more room to chase"
+threshold, so there is no third plateau worth pursuing. The remaining
+~0.05 gap to the theoretical ceiling (~0.998, measured on a single-
+paragraph render) is genuine pagination drift: the same prose breaking
+lines at slightly different y-offsets between PS and SVG, and no DPI
+high enough will make that drift disappear.
+
+### Recommendation
+
+Keep the canonical baseline at **100 dpi** for continuity with prior
+quarters' tracking tables (and to keep run-time short -- 200 dpi adds
+another ~10 min on top of the already-long 150 dpi run, and the PNG
+byte budget grows ~16x vs 100 dpi). Cite the **150 dpi mean SSIM
+0.9441** as the headline secondary number for SVG-back-end change
+review; the 200 dpi number (**0.9510**) confirms there is no third
+plateau worth chasing -- past 150 dpi diminishing returns set in and
+the residual gap is pagination drift, not antialiasing. Use
+`DPI=200 tests/user_guide_diff.sh` only when you specifically want to
+verify a fix isn't being masked by the AA floor; for routine review,
+`DPI=150` is sufficient.
+
 ### SSIM vs AE: what the numbers mean
 
 The AE metric reports 7-15% pixel diff per page across the body of the

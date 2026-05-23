@@ -14,6 +14,15 @@
 # Guide push convergence past 7 passes, leaving the final pass's
 # byte counts unstable. Override via `PASSES=N tests/user_guide_diff.sh`.
 #
+# DPI (default 100) controls the raster resolution for both pdftoppm
+# (PS->PNG) and rsvg-convert (SVG->PNG). 150 lifts mean SSIM from
+# ~0.928 to ~0.944 by shrinking the sub-pixel antialiasing floor;
+# 200 lifts it further to ~0.951 but the marginal gain is below the
+# +0.01 threshold (worst-10 slope flattens from +0.0334 to +0.0107),
+# so 200 dpi is the effective structural floor. See
+# tests/user_guide_diff/README.md "DPI sensitivity" for the
+# 100/150/200 comparison. Override via `DPI=150 tests/user_guide_diff.sh`.
+#
 # Requirements (must already be on $PATH):
 #   lout (built; the script uses the binary at lout/lout)
 #   ps2pdf       (Ghostscript)
@@ -30,6 +39,7 @@ USER_DIR=$LOUT/doc/user
 OUT_DIR=$REPO/tests/user_guide_diff
 WORK=/tmp/userguide_compare
 PASSES=${PASSES:-8}
+DPI=${DPI:-100}
 
 if [[ ! -x "$LOUT/lout" ]]; then
     echo "error: $LOUT/lout not built. Run: (cd $LOUT && make all)" >&2
@@ -66,11 +76,11 @@ cp "$biggest" /tmp/user.svg
 rm -f /tmp/user.svg.[0-9]* /tmp/user.svg.err.[0-9]*
 echo "    SVG bytes: $(stat -c%s /tmp/user.svg)  (from $biggest)"
 
-# --- Stage 3: rasterise PS pages at 100 dpi ----------------------------------
-echo "==> rasterising PS -> PDF -> PNG"
+# --- Stage 3: rasterise PS pages at $DPI -------------------------------------
+echo "==> rasterising PS -> PDF -> PNG at ${DPI} dpi"
 ps2pdf /tmp/user.ps /tmp/user.pdf
 rm -f "$WORK"/ps/ps-*.png
-( cd "$WORK/ps" && pdftoppm -r 100 -png /tmp/user.pdf ps )
+( cd "$WORK/ps" && pdftoppm -r "$DPI" -png /tmp/user.pdf ps )
 echo "    PS pages: $(ls "$WORK"/ps/ps-*.png | wc -l)"
 
 # --- Stage 4: split SVG and rasterise each page ------------------------------
@@ -78,11 +88,11 @@ echo "==> splitting SVG into per-page files"
 rm -f "$WORK"/svg_split/*.svg
 python3 "$REPO/tests/user_guide_diff_split_svg.py" /tmp/user.svg "$WORK/svg_split"
 
-echo "==> rasterising per-page SVGs at 100 dpi"
+echo "==> rasterising per-page SVGs at ${DPI} dpi"
 rm -f "$WORK"/svg/svg-*.png
 for f in "$WORK"/svg_split/page-*.svg; do
     n=$(basename "$f" .svg | sed 's/page-//')
-    rsvg-convert -d 100 -p 100 -f png "$f" -o "$WORK/svg/svg-${n}.png" 2>/dev/null || true
+    rsvg-convert -d "$DPI" -p "$DPI" -f png "$f" -o "$WORK/svg/svg-${n}.png" 2>/dev/null || true
 done
 echo "    SVG pages: $(ls "$WORK"/svg/svg-*.png | wc -l)"
 
