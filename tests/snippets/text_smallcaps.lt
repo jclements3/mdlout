@@ -1,0 +1,8 @@
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+The quick brown fox jumps over the lazy dog -- text intended for
+the OpenType smcp (small-caps) feature.  Phase 1 records the GSUB
+substitution table on CFF/OTF fonts but does not yet rewrite the
+emitted codepoints, so both back-ends render plain lower-case here.
+@End @Text

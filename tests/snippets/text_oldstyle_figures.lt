@@ -1,0 +1,9 @@
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+Digits for the OpenType onum (old-style figures) feature:
+0 1 2 3 4 5 6 7 8 9, plus an in-line year 2026 and a price
+3.14159.  Phase 1 records the GSUB substitution table on CFF/OTF
+fonts but does not yet rewrite the emitted codepoints, so both
+back-ends render lining figures here.
+@End @Text
