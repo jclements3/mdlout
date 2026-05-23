@@ -1,0 +1,19 @@
+###########################################################################
+#  text_on_path - raw @Graphic that traces a curve via moveto/curveto    #
+#  then `show`s a string.  Exercises z53.c's textPath emission heuristic: #
+#  the path contains a curveto between the last `newpath` and the next   #
+#  `show`, so z53.c should emit <text><textPath href="#textpath-N">..>   #
+#  rather than a static <text> at the post-curve current point.  This    #
+#  keeps the text following the underlying curve geometry in SVG mode.   #
+###########################################################################
+
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+A line of text rendered along a Bezier curve:
+@DP
+@CentredDisplay {
+   "newpath 0 0 moveto 100 0 100 100 200 100 curveto"
+   "(Curving text!) show"
+} @Graphic { 8c @Wide 4c @High }
+@End @Text
