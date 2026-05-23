@@ -1061,20 +1061,49 @@ def render_snippet_history(snip_jsonl: Path, html_path: Path) -> None:
     }
   });
 
-  var latestSnip = null, latestTs = '';
-  Object.keys(data).forEach(function(nm) {
-    var rs = data[nm];
-    if (rs.length === 0) return;
-    var ts = rs[rs.length - 1].timestamp || '';
-    if (ts > latestTs) { latestTs = ts; latestSnip = nm; }
-  });
-  if (latestSnip) {
+  function selectByName(nm) {
+    if (!nm || !data[nm]) return false;
     var target = list.querySelector("li[data-snippet='" +
-      latestSnip.replace(/'/g, "\\'") + "']");
-    if (target) {
-      target.classList.add('active');
-      renderSnippet(latestSnip);
+      nm.replace(/'/g, "\\'") + "']");
+    if (!target) return false;
+    var items = list.querySelectorAll('li');
+    for (var i = 0; i < items.length; i++) items[i].classList.remove('active');
+    target.classList.add('active');
+    target.scrollIntoView({block: 'nearest'});
+    renderSnippet(nm);
+    return true;
+  }
+
+  function hashSnippet() {
+    var h = (window.location.hash || '').replace(/^#/, '');
+    if (!h) return null;
+    var parts = h.split('&');
+    for (var i = 0; i < parts.length; i++) {
+      var kv = parts[i].split('=');
+      if (kv[0] === 'snippet' && kv.length > 1) {
+        try { return decodeURIComponent(kv[1]); } catch (e) { return kv[1]; }
+      }
     }
+    return null;
+  }
+
+  window.addEventListener('hashchange', function() {
+    var nm = hashSnippet();
+    if (nm) selectByName(nm);
+  });
+
+  var initial = hashSnippet();
+  if (initial && selectByName(initial)) {
+    /* selected from hash */
+  } else {
+    var latestSnip = null, latestTs = '';
+    Object.keys(data).forEach(function(nm) {
+      var rs = data[nm];
+      if (rs.length === 0) return;
+      var ts = rs[rs.length - 1].timestamp || '';
+      if (ts > latestTs) { latestTs = ts; latestSnip = nm; }
+    });
+    if (latestSnip) selectByName(latestSnip);
   }
 })();
 </script>
