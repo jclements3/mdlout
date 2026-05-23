@@ -3850,6 +3850,7 @@ def _run_serve(args, port: int) -> None:
         sys.exit(1)
     out_path_abs = os.path.abspath(out_path)
 
+    import errno         # noqa: E402
     import http.server  # noqa: E402
 
     class Handler(http.server.BaseHTTPRequestHandler):
@@ -3924,8 +3925,29 @@ def _run_serve(args, port: int) -> None:
     class ThreadingServer(http.server.ThreadingHTTPServer):
         daemon_threads = True
 
-    httpd = ThreadingServer(('127.0.0.1', port), Handler)
-    print(f'serving http://127.0.0.1:{port}/  (Ctrl-C to exit)', file=sys.stderr)
+    # Probe up to 20 ports starting at `port` so a busy default doesn't
+    # kill the dev loop. First free wins.
+    httpd = None
+    chosen_port = port
+    for p in range(port, port + 20):
+        try:
+            httpd = ThreadingServer(('127.0.0.1', p), Handler)
+            chosen_port = p
+            break
+        except OSError as e:
+            if e.errno == errno.EADDRINUSE:
+                continue
+            raise
+    if httpd is None:
+        print(
+            f'error: no free port in {port}..{port + 20}',
+            file=sys.stderr,
+        )
+        sys.exit(2)
+    print(
+        f'serving http://127.0.0.1:{chosen_port}/  (Ctrl-C to exit)',
+        file=sys.stderr,
+    )
 
     def _serve_forever():
         try:
