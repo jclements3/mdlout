@@ -1,0 +1,13 @@
+  8.73     10.74     1.62                             svg_ps_exec_op
+  7.38     12.11     1.37                             SVG_PrintBetweenPages
+  4.58     12.96     0.85                             SVG_LinkDest
+  3.45     15.07     0.64                             SVG_RestoreGraphicState
+  0.92     17.20     0.17                             svg_ps_run
+  0.75     17.65     0.14                             svg_graphic_concat.constprop.0
+  0.16     18.13     0.03                             svg_byte_to_codepoint
+  0.11     18.33     0.02                             svg_ps_new_matrix_array
+  0.11     18.31     0.02                             svg_ps_arc
+  0.11     18.27     0.02                             SVG_PrintWord
+  0.05     18.56     0.01                             svg_ps_call
+  0.05     18.55     0.01                             svg_colour_rgb
+  0.05     18.50     0.01                             SVG_PrintUnderline
