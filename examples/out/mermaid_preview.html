@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Mermaid diagrams in mdlout - mdlout preview</title>
+<style>
+  :root {
+    --fg: #1a1a1a;
+    --muted: #555;
+    --bg: #fafafa;
+    --card-bg: #ffffff;
+    --border: #d8d8d8;
+    --accent: #2c5aa0;
+    --warn-bg: #fff4d6;
+    --warn-border: #e0b94a;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    line-height: 1.5; }
+  header, main, footer { max-width: 1000px; margin: 0 auto; padding: 1.4rem 1.5rem; }
+  header { padding-bottom: 0.4rem; }
+  header .back a { color: var(--accent); text-decoration: none; font-size: 0.92rem; }
+  header .back a:hover { text-decoration: underline; }
+  header h1 { margin: 0.5rem 0 0.3rem 0; font-size: 1.8rem; }
+  header p.desc { margin: 0.3rem 0 0.6rem 0; color: var(--muted); font-size: 1.02rem; }
+  header .meta { font-size: 0.85rem; color: var(--muted); }
+  main { padding-top: 0.6rem; }
+  .actions { margin-bottom: 1.0rem; }
+  .actions a { display: inline-block; background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: 4px; padding: 0.45rem 0.9rem; margin-right: 0.5rem; margin-bottom: 0.4rem;
+    color: var(--accent); text-decoration: none; font-size: 0.94rem; }
+  .actions a:hover { border-color: var(--accent); background: #f0f5ff; }
+  .hero { background: var(--card-bg); border: 1px solid var(--border); border-radius: 6px;
+    padding: 1rem; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
+  .hero .frame { display: flex; align-items: flex-start; justify-content: center;
+    background: #f4f4f4; border: 1px solid var(--border); border-radius: 4px;
+    overflow: hidden; padding: 0.6rem; }
+  .hero .frame svg, .hero .frame img { display: block; max-width: 100%; height: auto;
+    background: white; box-shadow: 0 0 4px rgba(0,0,0,0.08); }
+  .hero .caption { color: var(--muted); font-size: 0.85rem; margin-top: 0.6rem; text-align: center; }
+  .no-svg { color: var(--muted); padding: 2rem; text-align: center; }
+  .banner { background: var(--warn-bg); border: 1px solid var(--warn-border);
+    padding: 0.5rem 0.7rem; border-radius: 4px; font-size: 0.9rem; color: #6b4f10;
+    margin-bottom: 1rem; }
+  footer { border-top: 1px solid var(--border); margin-top: 1.5rem; padding-top: 1rem;
+    color: var(--muted); font-size: 0.88rem; }
+  footer a { color: var(--accent); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+  code { background: #f0f0f0; padding: 0.05rem 0.25rem; border-radius: 3px;
+    font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 0.88em; }
+</style>
+</head>
+<body>
+<header>
+  <p class="back"><a href="index.html">&larr; Back to gallery</a></p>
+  <h1>Mermaid diagrams in mdlout</h1>
+  <p class="desc">The new @Mermaid passthrough macro routes mermaid fenced code blocks through the SVG back-end&#x27;s foreignObject, where the browser&#x27;s mermaid.js engine engraves them at view-time. Three of the most common shapes are below;...</p>
+  <p class="meta">Source: <code>mermaid.md</code></p>
+</header>
+<main>
+  <div class="actions">
+    <a href="mermaid.html">View full HTML</a>
+    <a href="mermaid.pdf">Download PDF</a>
+    <a href="../mermaid.md">Source .md</a>
+  </div>
+  <div class="hero">
+    <div class="frame">
+      <object type="image/svg+xml" data="preview-mermaid.svg" aria-label="Page 1 of Mermaid diagrams in mdlout"></object>
+    </div>
+    <p class="caption">Page 1 of the rendered PDF (rasterised to SVG by <code>pdftocairo</code>).</p>
+  </div>
+</main>
+<footer>
+  <p><a href="index.html">Back to gallery</a> &middot;
+     <a href="../README.md">examples/README.md</a> &middot;
+     <a href="../../README.md">project README</a></p>
+</footer>
+</body>
+</html>

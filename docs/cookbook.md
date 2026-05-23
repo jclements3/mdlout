@@ -1031,6 +1031,222 @@ not double-emit. The snippet
 [`tests/snippets/crossref_pageof.lt`](../tests/snippets/crossref_pageof.lt)
 is a minimal worked example.
 
+## 21. Book chapter with epigraph + footnotes
+
+A literary `type: book` chapter often opens with a leading epigraph
+(an italic quotation, attribution beneath), salts the prose with dense
+`[^name]` footnote markers, and closes with a short summary section.
+mdlout does not have a markdown shorthand for the epigraph; drop into
+a raw-Lout `@CentredDisplay @I { ... }` fence directly after the
+chapter heading.
+
+```yaml
+---
+type: book
+title: Three Letters from the Coast
+author: J. L. Clements
+font: Times Base 11p
+page: A5
+chapter-start: Any
+chapter-numbers: Roman
+section-numbers: None
+page-headers: Titles
+---
+
+# The First Letter
+
+```lout
+@LP
+@CentredDisplay @I {
+"The sea writes its letters in salt, and salt forgets nothing."
+}
+@CentredDisplay { --- Eleni Markou, @I { Coastal Notebooks } (1962) }
+@LP
+```
+
+The first letter arrived on a Tuesday.[^hand] Mrs. Devlin had found
+it on the floor inside the door, fanned around with the morning's
+post as if it had been there first.[^devlin]
+
+[^hand]: Halloran kept all his correspondence in a wooden file box.
+
+[^devlin]: Mrs. Devlin maintained the envelope was *under* the others.
+
+## Section summary
+
+The chapter establishes the appointment and the manner of it.
+```
+
+Rendered: an A5 chapter opener with the Roman chapter number above
+the chapter title, the italic epigraph and attribution beneath, body
+prose with superscripted footnote numerals, and the corresponding
+footnote bodies set at the foot of the page in a smaller size. The
+trailing `## Section summary` becomes a styled display heading inside
+the chapter; book mode does not number sections.
+
+**Gotcha:** the epigraph fence has to sit *after* the `# Heading`
+line, not before it, or mdlout cannot tell where the chapter starts
+and Lout swallows the epigraph into the previous chapter's body. Keep
+the `[^name]: body` definition blocks at paragraph level (not indented
+inside another block) so mdlout's footnote scanner sees them. One-letter
+italics like `*H.*` work fine in body prose but break inside `"..."`
+quoted spans in a raw-Lout fence; either move the italic outside the
+quote or split the quoted span at the line break (one quoted string
+per line, with bare `//` between them). Working example:
+[`examples/book_with_epigraphs.md`](../examples/book_with_epigraphs.md).
+
+## 22. Two-sided letter
+
+A formal letter that runs past one page needs the sender's address,
+date, recipient address, salutation, body, sign-off, and signature
+block on page 1, then a "page 2" continuation header carrying the
+recipient's name and the page number across the second sheet, and
+optionally a postscript at the foot. mdlout has no `type: letter`;
+combine `type: doc` with raw-Lout `@RightDisplay`, `@LeftDisplay`,
+and an explicit `\newpage` plus continuation-header fence at the
+boundary.
+
+```yaml
+---
+type: doc
+font: Times Base 11p
+page: Letter
+top-margin: 2.5c
+foot-margin: 2.5c
+left-margin: 2.5c
+right-margin: 2.5c
+para-gap: 1.2v
+para-indent: 0f
+page-headers: None
+---
+
+```lout
+@RightDisplay {
+James Clements III //
+1742 Larkspur Lane  //
+Portland, OR 97214
+}
+@RightDisplay { 21 May 2026 }
+```
+
+```lout
+@LeftDisplay {
+Dr. Eleanor Whitcombe //
+Lyrebird Acoustics, Inc.
+}
+```
+
+Dear Dr. Whitcombe,
+
+[... body paragraphs that overflow page 1 ...]
+
+```lout
+\newpage
+@RightDisplay @I { Dr. Whitcombe -- page 2 }
+@LP
+```
+
+[... continuation paragraphs ...]
+
+```lout
+@LP
+Yours sincerely,
+@LP
+@LP
+James Clements III
+@LP
+@I { P.S. } I have attached three representative code samples for
+your consideration.
+```
+```
+
+Rendered: page 1 is the standard US business letter (right-aligned
+sender block and date, left-aligned recipient block, opener, body,
+sign-off, signature), page 2 opens with the italic continuation
+header right-aligned at the top, and the postscript sits two lines
+below the typed signature.
+
+**Gotcha:** Lout does not automatically repeat a "page 2 of N" header
+on continuation sheets the way Word does; the `\newpage` plus
+continuation-header fence has to go in by hand at the page break,
+which means you have to know where the break falls. Build the letter
+once, look at the page boundary in the PDF, then insert the
+continuation fence at the right paragraph. If the body length changes
+the break moves and you re-insert. For an automated header on every
+page, switch `page-headers: None` to `page-headers: Titles` and set
+`@RunningTitle` via raw Lout -- that produces a repeating header on
+every page but pays for it with header chrome on page 1 too. Working
+example:
+[`examples/letter.md`](../examples/letter.md).
+
+## 23. Inline diagrams via `@Mermaid` in a math-heavy doc
+
+mdlout routes ` ```mermaid ` fenced code blocks to a `@Mermaid`
+passthrough that wraps the body in a `foreignObject` for mermaid.js
+to engrave at view-time. Pair that with ` ```math ` (or `$$...$$`)
+fences for KaTeX and you have a documented derivation in which each
+algebraic move is mirrored by a sequence diagram of named actors
+("Calculus", "Algebra", "Scribe", "Checker") narrating what the
+proof is doing.
+
+```yaml
+---
+type: doc
+title: Math proofs with sequence diagrams
+font: Times Base 11p
+page: A4
+para-indent: 0f
+para-gap: 1.0v
+page-headers: None
+---
+
+# The derivative of x squared
+
+The limit definition:
+
+$$
+f'(x) = \lim_{h \to 0} \frac{f(x+h) - f(x)}{h}.
+$$
+
+For $f(x) = x^2$:
+
+$$
+\frac{(x+h)^2 - x^2}{h} = 2x + h \xrightarrow{h \to 0} 2x.
+$$
+
+The same calculation as a back-and-forth between two engines:
+
+```mermaid
+sequenceDiagram
+    participant CA as Calculus
+    participant AL as Algebra
+    CA->>AL: Expand (x + h)^2
+    AL-->>CA: x^2 + 2xh + h^2
+    CA->>AL: Subtract x^2, divide by h
+    AL-->>CA: 2x + h
+    CA->>AL: Take limit as h to 0
+    AL-->>CA: 2x
+```
+```
+
+Rendered: in HTML mode the math blocks render through KaTeX and the
+`sequenceDiagram` block renders through mermaid.js, side by side in
+the same flow. In PDF mode the math goes through the `@Math`
+placeholder (use raw `@Eq` for archival fidelity, see recipe #2) and
+each mermaid block becomes the literal `[Mermaid diagram omitted in
+non-SVG back-end]`.
+
+**Gotcha:** mermaid.js refuses to parse `sequenceDiagram` arrow
+labels that include LaTeX backslashes -- write `n to infinity`, not
+`n \to \infty`, in the diagram even though the surrounding math
+block uses the LaTeX form. Stick to bare-word actor names
+(`participant CA as Calculus`); quoted aliases with spaces break the
+parser on some mermaid versions. If your derivation needs more than
+five round-trip messages the diagram outgrows the column; either
+widen the page (`page: A4`, `columns: 1`), or split the diagram into
+two consecutive fences. Working example:
+[`examples/math_with_diagrams.md`](../examples/math_with_diagrams.md).
+
 ## Where to look next
 
 - [`docs/best_practices.md`](best_practices.md) -- idiom guide:
