@@ -11,6 +11,96 @@ Submodule-only changes are tagged `[lout]`.
 
 ## [Unreleased]
 
+## [0.2.8] - 2026-05-23
+
+Same-day follow-on to v0.2.7. Lands the **`xml:space="preserve"`
+predicate** in `z53.c` (submodule commit `069d60e`): SVG renderers
+collapse leading / trailing / runs of internal spaces inside `<text>`
+content by default, which was breaking the column alignment in
+`doc/slides/all` `@Code` blocks against the PostScript reference. The
+new predicate scans each word and marks the element with
+`xml:space="preserve"` exactly when the default mode would visibly
+drop characters (leading / trailing space, or runs of 2+ internal
+spaces). Slides p019 SSIM lifts **0.9441 → 0.9811** at 150 DPI; p032
+is unchanged (its `@Code` listing is already tokenised into per-word
+`<text>` elements, so the predicate correctly leaves them alone).
+The regression corpus grows 80 → **85** with five more single-feature
+snippets locking in v0.2.5-v0.2.7 work (kerned ligatures, currentColor
+default, verbatim whitespace, smcp/onum-off, ABC chord names). Adds
+`examples/menu.md` — a 2-column A4 restaurant menu in Palatino. `z49.c`
+(PostScript) and the legacy PDF pipeline remain frozen and
+bit-identical to v0.2.0.
+
+### Added
+
+- **[lout] `z53.c` `xml:space="preserve"` predicate on
+  whitespace-significant `<text>`** (submodule commit `069d60e`,
+  mdlout commit `21600d8`). SVG renderers (browsers, librsvg)
+  default to `xml:space="default"`, which collapses leading and
+  trailing spaces and reduces runs of internal spaces to a single
+  space inside `<text>` content. `@Code` blocks in
+  `lout/doc/slides` (e.g. page 019) rely on those exact spaces
+  for column alignment, so the rendered SVG was visibly losing
+  characters relative to the PostScript reference. `SVG_PrintWord`
+  now scans `string(x)` before building the `<text>` opener and
+  sets `xml:space="preserve"` when the word starts or ends with a
+  space or has two-or-more consecutive spaces anywhere — the cases
+  where the default mode visibly drops characters. Words without
+  any of those patterns keep the historic opener byte-for-byte (no
+  attribute added). Slides p019 SSIM (PS vs SVG at 150 DPI):
+  **0.9441 → 0.9811**. Slides p032 SSIM (0.9726) is unchanged —
+  its `@Code` listing is already tokenised into per-word `<text>`
+  elements with no internal space runs in any single element, so
+  the predicate correctly leaves them alone. Regression suite
+  stays Pass-Excellent / 0 Fail.
+- **`tests/snippets/`: 5 more snippets locking in v0.2.5-v0.2.7
+  features** (commit `8ac11a0`). Corpus 80 → **85**
+  PASS-EXCELLENT / 0 Fail. New:
+  - `text_ligatures_kerned.lt` — kern pairs (AV / Wa / To)
+    interleaved with fi / fl / ffi ligatures, exercising the
+    GPOS-kern + GSUB-ligature paths together.
+  - `text_currentcolor_default.lt` — default-black text
+    exercising `z53.c`'s currentColor fold (the colour attribute
+    is omitted when the colour matches the page default, which
+    is what lets the dark-mode `currentColor` cascade work).
+  - `text_verbatim_whitespace.lt` — `@Verbatim` with multi-space
+    column alignment, exercising the new `xml:space="preserve"`
+    heuristic from this release.
+  - `text_smcp_synthesis_off.lt` — locks in the "feature off"
+    branch of the smcp/onum synthesis gate (no
+    `LOUT_SVG_FONT_FEATURES_SYNTH` env var → no glyph remap →
+    plain `<text>` output).
+  - `abc_chord_names.lt` — chord-symbol overlays on an ABC
+    `@ABC` block, exercising the `data-abc` attribute escaping
+    for `|` and `:` characters.
+
+  All five are under 30 lines and land PASS-EXCELLENT under the
+  post-v0.2 tightened thresholds (5% AE for text, 2% AE /
+  SSIM 0.95 for graphics-heavy).
+- **`examples/menu.md`** (commit `aac7dc6`). A 2-column A4
+  restaurant menu in Palatino for "La Maison Verte" — single page
+  in both HTML and PDF. One `type: doc` flow with raw-Lout blocks
+  for the typography (right-tab leaders to align prices, small-cap
+  section headers, em-dashes between course names and dish
+  descriptions). Exercises the multi-column page-layout path and
+  the right-tab leader idiom that hadn't been covered by any
+  prior example. Both `--format=html` and `--format=pdf` build
+  clean.
+
+### Notes
+
+- PostScript output bit-identical to v0.2.7 for `doc/user/all`.
+  The `--format=pdf` pipeline (ps2pdf on the frozen `z49.c`
+  PostScript) remains bit-identical to v0.2.0.
+- The 85-snippet corpus stays at 100% PASS-EXCELLENT under the
+  post-v0.2 tightened thresholds (5% AE for text, 2% AE / SSIM
+  0.95 for graphics-heavy).
+- The slides p019 fix is the visible win of the cycle (SSIM
+  jumps +0.037 on that page); mean User's Guide SSIM at the
+  150 DPI release-gate is unchanged because the predicate fires
+  only on words with significant whitespace, which the User's
+  Guide body text doesn't have.
+
 ## [0.2.7] - 2026-05-23
 
 Same-day follow-on to v0.2.6. Lands the **slides p040 font-propagation

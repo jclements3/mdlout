@@ -45,6 +45,37 @@ perf round 4 (was ~26-29 s in v0.2.2 round 2, ~32 s in v0.2.1,
 ~7 min mid-v0.2 cycle; the original v0.4 < 30 s stretch target
 is now cleared by ~7 s).
 
+## Shipped in v0.2.8
+
+Same-day follow-on to v0.2.7. Lands the `xml:space="preserve"`
+predicate in `z53.c` (closes the slides p019 column-alignment drift),
+grows the snippet corpus 80 → 85 with five v0.2.5-v0.2.7
+feature-lock snippets, and adds `examples/menu.md` (a 2-column A4
+restaurant menu in Palatino exercising the right-tab leader idiom).
+
+- **`z53.c` `xml:space="preserve"` predicate** (submodule commit
+  `069d60e`). `SVG_PrintWord` marks `<text>` elements with
+  `xml:space="preserve"` when the word starts or ends with a space,
+  or contains a run of two-or-more internal spaces — the cases
+  where SVG renderers' default whitespace collapse would visibly
+  drop characters. Slides p019 SSIM lifts 0.9441 → **0.9811** at
+  150 DPI; p032 (already tokenised into per-word `<text>`) is
+  unchanged. Words without significant whitespace keep the historic
+  opener byte-for-byte, so the bulk of every document is unchanged.
+- **Regression corpus 80 → 85** (commit `8ac11a0`). Five new
+  single-feature snippets locking in v0.2.5-v0.2.7 work: kerned
+  ligatures (`AV` / `Wa` / `To` + fi / fl / ffi), default-colour
+  `currentColor` fold, `@Verbatim` multi-space column alignment
+  (exercises the new predicate end-to-end), smcp/onum synthesis
+  off-branch, and ABC chord-name overlays with `|`/`:` attribute
+  escaping. All PASS-EXCELLENT under the post-v0.2 tightened
+  thresholds.
+- **`examples/menu.md`** (commit `aac7dc6`). 2-column A4
+  restaurant menu in Palatino exercising the multi-column
+  page-layout path and the right-tab leader idiom (dish prices
+  aligned on the right margin via `@RightDisplay { ... @Tab ... }`).
+  Builds clean in both `--format=html` and `--format=pdf`.
+
 ## Shipped in v0.2.7
 
 Same-day follow-on to v0.2.6. Lands the slides p040 font-propagation
@@ -393,6 +424,6 @@ project-redefining choice, not an incremental release.
 
 ---
 
-Last updated: 2026-05-23 (v0.2.7). See [CHANGELOG.md](CHANGELOG.md) for
+Last updated: 2026-05-23 (v0.2.8). See [CHANGELOG.md](CHANGELOG.md) for
 the release history this roadmap projects from, and
 [TODO.md](TODO.md) for the working-engineer task list.
