@@ -51,6 +51,7 @@ FALLBACK_DESCRIPTIONS: dict[str, str] = {
     "diag_gallery": "Every @Diag arrowstyle, shape macro, and @Tree example in one document.",
     "letter": "Formal US business letter built on type: doc plus raw-Lout passthrough.",
     "scientific_paper": "Workshop paper comparing trapezoidal vs Simpson's rules for quadrature.",
+    "journal": "Single-column academic journal article: SGD under heavy-tailed noise, two theorems + proofs, table, figure, references.",
     "poster_a0": "A0 portrait three-column scientific poster: MoE routing for long-context transformers.",
     "slides_basic": "type: slides six-slide intro to Lout.",
     "presentation": "type: slides ten-slide deck mixing prose, math, code, and a mermaid diagram.",
