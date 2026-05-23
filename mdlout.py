@@ -3348,15 +3348,51 @@ def _lout_lang_to_bcp47(lout_lang: str | None) -> str | None:
     return _LOUT_LANG_TO_BCP47.get(key, lout_lang.strip())
 
 
-def _run_ps2pdf(ps_file: str, pdf_file: str) -> None:
-    """Convert PostScript to PDF using ps2pdf (Ghostscript)."""
+# Page size lookup table in PostScript points (1/72 inch), portrait orientation.
+# Used by _page_size_pt() to size the ps2pdf output media box. Without this,
+# ps2pdf defaults to A4 and clips larger sheets (A3/A0) or mis-fits Letter/Legal.
+_PAGE_SIZES_PT: dict[str, tuple[int, int]] = {
+    'a4':     (595, 842),
+    'a3':     (842, 1191),
+    'a0':     (2384, 3370),
+    'letter': (612, 792),
+    'legal':  (612, 1008),
+    'a5':     (420, 595),
+}
+
+
+def _page_size_pt(name: str | None, orientation: str | None) -> tuple[int, int]:
+    """Return (width, height) in PostScript points for the named page size,
+    honouring orientation. Unknown names fall back to A4."""
+    key = (name or 'A4').strip().lower().replace(' ', '')
+    w, h = _PAGE_SIZES_PT.get(key, _PAGE_SIZES_PT['a4'])
+    if (orientation or '').strip().lower() == 'landscape':
+        w, h = h, w
+    return w, h
+
+
+def _run_ps2pdf(ps_file: str, pdf_file: str,
+                page_size: str | None = None,
+                orientation: str | None = None) -> None:
+    """Convert PostScript to PDF using ps2pdf (Ghostscript). Passes
+    -dDEVICEWIDTHPOINTS / -dDEVICEHEIGHTPOINTS / -dPDFFitPage so the PDF
+    media box matches the frontmatter page size instead of defaulting to A4."""
     ps2pdf = shutil.which('ps2pdf')
     if not ps2pdf:
         print('ps2pdf not found — install Ghostscript to produce PDF', file=sys.stderr)
         print(f'PostScript output is at {ps_file}', file=sys.stderr)
         sys.exit(1)
 
-    result = subprocess.run([ps2pdf, ps_file, pdf_file], capture_output=True, text=True)
+    w, h = _page_size_pt(page_size, orientation)
+    cmd = [
+        ps2pdf,
+        f'-dDEVICEWIDTHPOINTS={w}',
+        f'-dDEVICEHEIGHTPOINTS={h}',
+        '-dPDFFitPage',
+        ps_file,
+        pdf_file,
+    ]
+    result = subprocess.run(cmd, capture_output=True, text=True)
     if result.returncode != 0:
         print(f'ps2pdf failed: {result.stderr.strip()}', file=sys.stderr)
         sys.exit(result.returncode)
@@ -3611,7 +3647,12 @@ def _build_once(args) -> str | None:
             return out
 
         pdf_file = os.path.join(tmpdir, f'{input_stem}.pdf')
-        _run_ps2pdf(ps_file, pdf_file)
+        _run_ps2pdf(
+            ps_file,
+            pdf_file,
+            page_size=str(frontmatter.get('page') or 'A4'),
+            orientation=str(frontmatter.get('orientation') or 'Portrait'),
+        )
 
         out = args.output or f'{input_stem}.pdf'
         shutil.copy2(pdf_file, out)
