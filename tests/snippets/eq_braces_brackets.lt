@@ -1,0 +1,35 @@
+###########################################################################
+#  eq_braces_brackets - @Eq exercising the three fence shapes (parens,    #
+#  square brackets, curly braces) together in one display, each driven   #
+#  by the `left ... right ...` grow operator so the fences scale with    #
+#  the body they wrap.  Companion to eq_braced_systems.lt (which pins    #
+#  the piecewise-system case) and eq_matrix.lt (single-shape brackets);  #
+#  this fills the multi-shape, single-line gap.                          #
+###########################################################################
+
+@SysInclude { eq }
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+A single expression nesting all three of Lout's fence shapes, each
+grown by @Code "left .. right .." to wrap its body:
+@DP
+@CentredDisplay @Eq {
+   f ( x ) = left "{"
+      a left [
+         b left ( x sup 2 + 1 right )
+         + c left ( x - 1 right )
+      right ]
+      + d
+   right "}"
+}
+@DP
+With nested fractions inside the brackets to force vertical growth:
+@DP
+@CentredDisplay @Eq {
+   y = left [
+      { 1 } over { 1 + { x sup 2 } over { 1 - x } }
+   right ]
+   + left "{" { a + b } over { c + d } right "}"
+}
+@End @Text

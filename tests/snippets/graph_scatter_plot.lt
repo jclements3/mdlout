@@ -1,0 +1,34 @@
+###########################################################################
+#  graph_scatter_plot - @Graph with @Data using `points { filledcircle }` #
+#  and `pairs { none }`, producing a pure scatter plot (markers only, no  #
+#  connecting line).  Existing graph snippets cover linear/quadratic      #
+#  pairs, dashed/solid line overlays, bar histograms, log axes, and       #
+#  origin-crossing axes -- none exercises the points-without-pairs path   #
+#  where @Graph emits a per-point glyph but no stroke between them.       #
+###########################################################################
+
+@SysInclude { graph }
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+A scatter plot: data points drawn as filled-circle markers, with no
+line connecting them.
+@DP
+@CentredDisplay -2p @Font @Graph
+   style { axes }
+   xorigin { 0 }
+   yorigin { 0 }
+   width { 8c }
+   height { 5c }
+   xticks { 0@ 2@ 4@ 6@ 8@ 10@ }
+   yticks { 0@ 2@ 4@ 6@ 8@ }
+   belowcaption { x }
+   leftcaption { y }
+{
+   @Data points { filledcircle } pairs { none }
+   {
+      1 2   2 3   3 1   4 5   5 4
+      6 6   7 3   8 7   9 5  10 6
+   }
+}
+@End @Text

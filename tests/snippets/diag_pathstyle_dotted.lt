@@ -1,0 +1,26 @@
+###########################################################################
+#  diag_pathstyle_dotted - @Diag @Link with `pathstyle { dotted }`, the   #
+#  short-dash variant of Lout's link-line styles.  Existing diag         #
+#  snippets cover solid (diag_arrow_solid), curvedsolid (diag_arrow_     #
+#  curved), and dashed (diag_dashed_lines); the dotted style routes      #
+#  through a different `ldiagdotted` PostScript proc in diagf and so    #
+#  exercises a separate dash-pattern table on z53.c's stroke path.       #
+#                                                                         #
+#  Swap rationale: the originally-proposed `diag_arrowstyle_curvedopen`  #
+#  duplicates the curvedopen row already in diag_arrowstyle_gallery.lt,  #
+#  so this fills a genuine pathstyle gap instead.                         #
+###########################################################################
+
+@SysInclude { diag }
+@SysInclude { doc }
+@Doc @Text @Begin
+
+@CentredDisplay @Diag {
+A:: @Node { begin } ||3c B:: @Node { end }
+// @Link from { A } to { B }
+   arrow { yes }
+   pathstyle { dotted }
+   pathwidth { 0.5p }
+}
+
+@End @Text

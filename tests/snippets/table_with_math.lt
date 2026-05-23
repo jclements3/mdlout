@@ -1,0 +1,45 @@
+###########################################################################
+#  table_with_math - @Tbl whose cells contain inline @Eq formulas         #
+#  alongside plain text.  Tests the interaction between @Tbl's cell-      #
+#  layout galley and @Eq's typesetter -- in particular that fraction      #
+#  bars, sup/sub, and integral glyphs render correctly inside a Tbl       #
+#  @Cell A/B/C body without disturbing the cell's baseline alignment      #
+#  or the table's row rules.                                              #
+#                                                                         #
+#  Existing table snippets cover plain text, alignment, spanning, rules,  #
+#  colour and rotation, but none exercises @Eq inside Tbl cells, which    #
+#  is a common documentation pattern (math reference tables, derivatives, #
+#  integrals, etc.) and routes the math through two stacked galleys.     #
+###########################################################################
+
+@SysInclude { tbl }
+@SysInclude { eq }
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+A small reference table of derivatives, with each rule typeset by
+@Code "@Eq" inside a {@Code "@Tbl"} cell.
+@DP
+@CentredDisplay @Tbl
+   rule { yes }
+   aformat { @Cell A | @Cell B | @Cell C }
+{
+@Rowa A { @B { Function } } B { @B { Derivative } } C { @B { Domain } }
+@Rowa
+   A { @Eq { f ( x ) = x sup n } }
+   B { @Eq { f prime ( x ) = n x sup { n - 1 } } }
+   C { @Eq { n in bold Z } }
+@Rowa
+   A { @Eq { f ( x ) = sin x } }
+   B { @Eq { f prime ( x ) = cos x } }
+   C { @Eq { x in bold R } }
+@Rowa
+   A { @Eq { f ( x ) = e sup x } }
+   B { @Eq { f prime ( x ) = e sup x } }
+   C { @Eq { x in bold R } }
+@Rowa
+   A { @Eq { f ( x ) = { 1 } over { x } } }
+   B { @Eq { f prime ( x ) = - { 1 } over { x sup 2 } } }
+   C { @Eq { x != 0 } }
+}
+@End @Text

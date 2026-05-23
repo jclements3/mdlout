@@ -1,0 +1,17 @@
+###########################################################################
+#  text_underline_word - exercises Lout's @Underline primitive on a       #
+#  single word in the middle of a flowing sentence.  Existing snippets    #
+#  cover bold / italic / oblique (text_styles.lt), kerning and ligatures, #
+#  small-caps synthesis, and old-style figures, but none exercises the    #
+#  underline-rule emission path in z53.c (drawn as a horizontal <line>    #
+#  or <rect> beneath the run, in the current text-fill colour).           #
+###########################################################################
+
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+The middle word in this sentence is @Underline { emphasised } using
+the {@Code "@Underline"} primitive, while the surrounding text remains
+plain.  Underlining inherits the current text colour and font metrics,
+so the rule sits one descender-width below the baseline.
+@End @Text
