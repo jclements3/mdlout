@@ -148,16 +148,17 @@ Both are stdlib-only and meant for the markdown author's edit loop.
 
 Headings (H1-H6, ATX and setext), **bold**, *italic*, `inline code`, ~~strikethrough~~, ^superscript^, [links](url), images, bullet/numbered/task/definition lists, blockquotes, fenced code blocks, pipe and grid tables, horizontal rules, math blocks (`$$` or ````math`), inline math (`$..$` and `\(..\)`), admonitions (`!!! type "title"`), page breaks (`\newpage`), `[TOC]` placeholders, HTML entities, and backslash escapes.
 
-### Math, music, raw SVG (HTML mode)
+### Math, music, diagrams, raw SVG (HTML mode)
 
 In HTML mode these route through the new passthrough macros:
 
 - `$..$` / `\(..\)` / `$$..$$` / ` ```math ` fences → `@Math { ... }` → KaTeX in the browser
 - ` ```abc ` fences → `@ABC { ... }` → abcjsharp in the browser
+- ` ```mermaid ` fences → `@Mermaid { ... }` → mermaid.js in the browser
 - ` ```svg ` fences → `@SVG { ... }` → raw inline SVG
 - `![alt](file.svg)` → `@SVGFile { file.svg }` → inline `<image>`
 
-In PDF mode the same documents still build (svgmacros has fallback definitions); math goes through the placeholder, ABC blocks render as an `[ABC music notation: ...]` literal, and SVG is omitted with a note.
+The mermaid engine is lazy-loaded — it only ships with the HTML when at least one ` ```mermaid ` fence is present in the document. Prefer a local copy at `/usr/lib/node_modules/mermaid/dist/mermaid.min.js`; otherwise fall back to the `mermaid@10` CDN URL (overridable via the `MDLOUT_MERMAID_URL` env var). `--no-mermaid-engine` suppresses the script injection entirely. In PDF mode the same documents still build (svgmacros has fallback definitions); math goes through the placeholder, ABC blocks render as an `[ABC music notation: ...]` literal, Mermaid blocks render as a `[Mermaid diagram omitted in non-SVG back-end]` literal, and SVG is omitted with a note.
 
 ### Raw Lout passthrough
 

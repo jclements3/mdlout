@@ -1,0 +1,12 @@
+@SysInclude { doc }
+@SysInclude { svgmacros }
+@Doc @Text @Begin
+@PP
+Inline Mermaid passthrough -- the SVG back end should emit a
+foreignObject wrapping a div.mermaid carrying the source. The
+diagram itself only renders in a browser; rsvg-convert paints
+the foreignObject as empty space, which is why this snippet is
+classified graphics-heavy.
+@LP
+@Mermaid { "graph LR; A->B" }
+@End @Text

@@ -1,0 +1,13 @@
+@SysInclude { doc }
+@SysInclude { svgmacros }
+@Doc @Text @Begin
+@PP
+Four-node Mermaid flowchart routed through the @Mermaid macro.
+The PostScript reference rendering is a placeholder note; the
+SVG render places a div.mermaid inside a foreignObject for
+mermaid.js to engrave at view-time.  Lines inside the literal
+are separated with octal newlines so Lout's lexer accepts the
+string -- mermaid parses newlines or semicolons interchangeably.
+@LP
+@Mermaid { "flowchart TD\012A[Start] --> B{Ready?}\012B -->|Yes| C[Run]\012B -->|No| D[Wait]" }
+@End @Text

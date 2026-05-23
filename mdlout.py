@@ -137,6 +137,11 @@ _highlight_enabled: bool = True
 # loading highlight.js at all. Populated by _block_to_lout in HTML mode.
 _highlight_langs: set[str] = set()
 
+# True when at least one ```mermaid fence appeared in the document. Read by
+# the HTML scaffold to decide whether to inject the mermaid.js engine.
+# Cleared by _reset_xref_state at the start of every build.
+_has_mermaid: bool = False
+
 
 def _reset_xref_state() -> None:
     _cite_order.clear()
@@ -148,9 +153,10 @@ def _reset_xref_state() -> None:
     _html_headings.clear()
     _highlight_langs.clear()
     _html_image_alts.clear()
-    global _cite_format, _html_toc_requested
+    global _cite_format, _html_toc_requested, _has_mermaid
     _cite_format = 'numeric'
     _html_toc_requested = False
+    _has_mermaid = False
 
 
 def _cite_render_number(n: int) -> str:
@@ -685,6 +691,7 @@ class BlockType(Enum):
     ADMONITION = auto()
     ABC = auto()
     SVG_RAW = auto()
+    MERMAID_BLOCK = auto()
 
 
 @dataclass
@@ -801,6 +808,8 @@ def parse_markdown(text: str) -> list[Block]:
                 blocks.append(Block(type=BlockType.ABC, content=code_text))
             elif lang == 'svg':
                 blocks.append(Block(type=BlockType.SVG_RAW, content=code_text))
+            elif lang == 'mermaid':
+                blocks.append(Block(type=BlockType.MERMAID_BLOCK, content=code_text))
             else:
                 blocks.append(Block(type=BlockType.CODE_BLOCK, content=code_text, language=lang))
             continue
@@ -1643,7 +1652,7 @@ def _generate_slides_body(blocks: list[Block]) -> list[str]:
 
 
 def _block_to_lout(block: Block) -> str:
-    global _needs_svgmacros
+    global _needs_svgmacros, _has_mermaid
     match block.type:
         case BlockType.PARAGRAPH:
             return f'@PP\n{convert_inline(block.content)}'
@@ -1730,6 +1739,10 @@ def _block_to_lout(block: Block) -> str:
         case BlockType.ABC:
             _needs_svgmacros = True
             return f'@LP\n@ABC {{ "{_lout_string_encode(block.content)}" }}'
+        case BlockType.MERMAID_BLOCK:
+            _needs_svgmacros = True
+            _has_mermaid = True
+            return f'@LP\n@Mermaid {{ "{_lout_string_encode(block.content)}" }}'
         case BlockType.SVG_RAW:
             _needs_svgmacros = True
             return f'@LP\n@SVG {{ "{_lout_string_encode(block.content)}" }}'
@@ -1887,6 +1900,19 @@ _ABCJS_DIST_CANDIDATES = (
 )
 
 _ABCJS_CDN = 'https://cdn.jsdelivr.net/npm/abcjs@6.4.4/dist/abcjs-basic-min.js'
+
+# Mermaid.js -- flowchart / sequence / class diagram rendering.
+# Mirrors the abcjs pattern: prefer a local copy if present, otherwise CDN.
+# The CDN URL is overridable via the MDLOUT_MERMAID_URL env var so air-gapped
+# builds (or pinning to a specific minor version) need no code change.
+_MERMAID_DIST_CANDIDATES = (
+    '/usr/lib/node_modules/mermaid/dist/mermaid.min.js',
+    '/usr/share/javascript/mermaid/mermaid.min.js',
+)
+_MERMAID_CDN = os.environ.get(
+    'MDLOUT_MERMAID_URL',
+    'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js',
+)
 
 # highlight.js -- syntax highlighting for fenced code blocks in HTML mode.
 # The full common bundle ships ~30 languages and is small enough (~50 kB
@@ -2464,6 +2490,7 @@ def _build_html_scaffold(
     external_assets: bool = False,
     math_engine: bool = True,
     music_engine: bool = True,
+    mermaid_engine: bool = True,
     embed_fonts: bool = True,
     highlight: bool = True,
     lang: str = 'en',
@@ -2481,6 +2508,7 @@ def _build_html_scaffold(
         'katex_js': None,
         'katex_autorender': None,
         'abcjs': None,
+        'mermaid': None,
         'embedded_fonts': None,
         'highlightjs_css': None,
         'highlightjs_js': None,
@@ -2522,6 +2550,8 @@ def _build_html_scaffold(
         '.math{display:inline-block}'
         '.abc-music{display:block;width:100%}'
         '.abc-music svg{max-width:100%;height:auto}'
+        '.mermaid{display:block;width:100%;text-align:center}'
+        '.mermaid svg{max-width:100%;height:auto}'
         '.mdlout-code{margin:0;padding:.6em 1em;background:#f6f8fa;'
         'border:1px solid #ddd;border-radius:4px;font-family:Courier,'
         '"Liberation Mono",monospace;font-size:.9em;line-height:1.4;'
@@ -2639,6 +2669,32 @@ def _build_html_scaffold(
                 head_parts.append(f'<script defer src="{_ABCJS_CDN}"></script>')
                 info['abcjs'] = f'{_ABCJS_CDN} (CDN fallback)'
 
+    # ---- mermaid.js ---------------------------------------------------------
+    # Only load when the document actually has a ```mermaid``` block, mirroring
+    # the highlight.js gating below. Prefer a locally installed copy (so
+    # offline builds work); otherwise fall back to the CDN, which is itself
+    # overridable via MDLOUT_MERMAID_URL.
+    if mermaid_engine and _has_mermaid:
+        if external_assets:
+            head_parts.append(
+                f'<script defer src="{_MERMAID_CDN}" '
+                f'onload="if(window.mermaid)mermaid.initialize({{startOnLoad:false}});'
+                f'window.renderMermaid&&renderMermaid();"></script>'
+            )
+            info['mermaid'] = f'{_MERMAID_CDN} (CDN)'
+        else:
+            mer_text, mer_path = _read_text_if_exists(_MERMAID_DIST_CANDIDATES)
+            if mer_text is not None:
+                head_parts.append(f'<script>{mer_text}</script>')
+                info['mermaid'] = f'{mer_path} (inlined)'
+            else:
+                head_parts.append(
+                    f'<script defer src="{_MERMAID_CDN}" '
+                    f'onload="if(window.mermaid)mermaid.initialize({{startOnLoad:false}});'
+                    f'window.renderMermaid&&renderMermaid();"></script>'
+                )
+                info['mermaid'] = f'{_MERMAID_CDN} (CDN fallback)'
+
     # ---- highlight.js -------------------------------------------------------
     # Only load if (a) the user hasn't disabled it AND (b) at least one
     # code block actually wants highlighting. Otherwise we'd ship ~150 kB
@@ -2718,10 +2774,30 @@ def _build_html_scaffold(
             "});"
             "};"
         )
+    if mermaid_engine and _has_mermaid:
+        # Lout's SVG back-end nests every page's content inside an outer
+        # <svg>, so each .mermaid <div> lives inside a <foreignObject>. We
+        # call mermaid.run() with the explicit node list (auto-discovery
+        # walks the DOM but misses foreignObject descendants in some
+        # browsers). Initialize is gated so the engine doesn't auto-render
+        # before our explicit pass.
+        init_js_parts.append(
+            "window.renderMermaid=function(){"
+            "if(typeof mermaid==='undefined')return;"
+            "try{mermaid.initialize({startOnLoad:false});}catch(e){}"
+            "var nodes=document.querySelectorAll('div.mermaid');"
+            "if(!nodes.length)return;"
+            "try{mermaid.run({nodes:nodes});}"
+            "catch(e){nodes.forEach(function(n){"
+            "n.textContent='[mermaid error: '+e.message+']';});}"
+            "};"
+        )
     init_js_parts.append(
         "function _mdloutInit(){"
         + ("window.renderMath&&renderMath();" if math_engine else "")
         + ("window.renderMusic&&renderMusic();" if music_engine else "")
+        + ("window.renderMermaid&&renderMermaid();"
+           if (mermaid_engine and _has_mermaid) else "")
         + "}"
         "if(document.readyState==='loading')"
         "document.addEventListener('DOMContentLoaded',_mdloutInit);"
@@ -3183,6 +3259,7 @@ def _build_once(args) -> str | None:
                 external_assets=args.external_assets,
                 math_engine=not args.no_math_engine,
                 music_engine=not args.no_music_engine,
+                mermaid_engine=not args.no_mermaid_engine,
                 embed_fonts=not args.no_font_embedding,
                 highlight=not args.no_highlight,
                 lang=html_lang,
@@ -3763,6 +3840,11 @@ def main() -> None:
     parser.add_argument(
         '--no-music-engine', action='store_true',
         help='Omit abcjs from the generated HTML (smaller output)',
+    )
+    parser.add_argument(
+        '--no-mermaid-engine', action='store_true',
+        help='Omit mermaid.js from the generated HTML (smaller output; '
+             '```mermaid blocks will not render in the browser)',
     )
     parser.add_argument(
         '--no-font-embedding', action='store_true',
