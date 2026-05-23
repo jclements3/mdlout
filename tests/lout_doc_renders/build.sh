@@ -26,12 +26,23 @@ PASSES=${PASSES:-7}
 
 build_doc() {
     local d=$1
-    local src_dir=$REPO/lout/doc/$d
+    local orig_dir=$REPO/lout/doc/$d
+    local src_dir=$WORK/src/$d
     local start_ps end_ps start_svg end_svg
 
     echo "============================================================"
-    echo "==> $d (source: $src_dir)"
+    echo "==> $d (source: $orig_dir -> scratch $src_dir)"
     echo "============================================================"
+
+    # Copy doc sources to a per-run scratch dir before invoking lout.
+    # Lout writes *.li / *.ldx / lout.lix to the cwd as it resolves
+    # cross-references; concurrent agents running lout against the
+    # shared lout/doc/$d/ would race on those files, causing symptoms
+    # like "assert failed in Parse: *token!", "rename failed", or
+    # "line too long" (diagnosed by agent #142 on 2026-05-23).
+    rm -rf "$src_dir"
+    mkdir -p "$src_dir"
+    cp -r "$orig_dir"/. "$src_dir"/
 
     ( cd "$src_dir" && rm -f ./*.li ./*.ldx ./*.lpc )
 
