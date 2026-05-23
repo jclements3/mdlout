@@ -1860,6 +1860,181 @@ gutter (`column-gap`) tightens proportionally. Working example:
 the "Two engines, side by side" block in
 [`examples/textbook.md`](../examples/textbook.md).
 
+## 33. Including SVG diagrams from external files
+
+Hand-authored or tool-generated vector diagrams (Inkscape, Mermaid
+via `mmdc`, `dot -Tsvg`, etc.) belong on disk next to the source,
+not inlined into the markdown. mdlout routes `![alt](file.svg)`
+through Lout's `@SVGFile` macro, which inlines the file as an
+`<image href="...">` in HTML mode and rasterises via
+`rsvg-convert` for PDF. Raster images (PNG/JPG) take the same
+syntax but a different path: HTML carries the `<image>` reference
+verbatim (the browser fetches the file) unless `--inline-raster`
+is passed, which base64-embeds the bytes for a self-contained
+artefact.
+
+```yaml
+---
+type: report
+title: System Architecture
+author: J. L. Clements
+font: Times Base 11p
+page: A4
+---
+
+# Data flow
+
+The pipeline has three stages, shown in
+*Figure 1*.
+
+![Pipeline overview](figures/pipeline.svg)
+
+The hot path is the middle stage; cache hit-rate
+measurements appear in *Figure 2*.
+
+![Cache hit-rate](figures/cache.png)
+```
+
+Built with `mdlout report.md --inline-raster`, both figures
+embed directly in the output HTML -- the `.svg` inlines as a
+vector `<image>` referencing the file, while the `.png` becomes a
+base64 `data:` URI. Paths are resolved relative to the markdown
+source's directory, so the `figures/` subdirectory is found
+without a `--asset-root` flag.
+
+**Gotcha:** path resolution is *source-relative*, not
+working-directory-relative -- `mdlout subdir/report.md` looks for
+`subdir/figures/pipeline.svg`, not `./figures/pipeline.svg`.
+Without `--inline-raster` the HTML carries a *relative* `<image
+href>` that breaks the moment you move the `.html` away from its
+`figures/` neighbour; pass the flag (or set `inline-raster: true`
+in the frontmatter) for any document that will be emailed,
+uploaded, or served from a different URL. `@SVGFile` accepts
+`.svg`, `.png`, `.jpg`, `.gif`; `.eps` is **not** supported in
+SVG/HTML mode (the back-end falls back to a placeholder rectangle
+with the filename inside). For PDF builds, `rsvg-convert` must
+be on `PATH` -- the build still completes if it's missing, but
+every external SVG renders as a stub frame with the path as a
+caption. Working example:
+[`examples/figures_external.md`](../examples/figures_external.md).
+
+## 34. Using `@Strike` (strikethrough) from Markdown
+
+Markdown's `~~text~~` syntax is the natural way to mark deleted
+copy; mdlout maps it to an inline strikethrough using the same
+`@OverStrike` primitive that recipe #27 builds on for full
+revision-mark tracking. The difference is scope: recipe #27 wants
+*two* macros (`@Strike` for deletions, `@Insert` for additions)
+and lives in `mydefs`; this recipe is just the deletion half,
+driven straight from `~~...~~` with no extra macros required.
+
+```yaml
+---
+type: doc
+title: Style Guide Notes
+font: Times Base 11p
+page: A4
+para-indent: 0f
+para-gap: 1.0v
+---
+
+# Strikethrough conventions
+
+The trapezoidal rule converges at ~~linear~~ quadratic
+rate in the step size.
+
+Avoid hedge words: ~~it seems that~~ the algorithm
+terminates after `n` iterations.
+
+For tracked-change review with both deletions *and*
+insertions, see recipe 27.
+```
+
+Rendered: each `~~...~~` span appears with a horizontal rule
+through the middle of the x-height. The line inherits the current
+foreground colour, so a red-on-white paragraph yields a red strike
+rule. Line height is preserved (the rule has zero vertical
+extent), and surrounding prose flows normally.
+
+**Gotcha:** mdlout's strikethrough emits `@OverStrike { text } {
+@HContract @Rule }` inline, not a `@Strike` macro call -- so a
+`mydefs` redefinition of `@Strike` does **not** affect bare
+`~~...~~`. To use the recipe-27 macros instead, write
+`@Strike { text }` inside a ` ```lout ` fence (or an inline raw
+Lout span); reserve `~~...~~` for the plain default. The `@Rule`
+inside `@OverStrike` ignores any `@Colour` set on the *outer*
+span, so red strike-through of a black word requires
+`@Colour { red } { @OverStrike { word } { @HContract @Rule } }`
+in raw Lout -- the markdown shortcut always uses the current
+foreground. Multi-line strikes (spans that wrap across a line
+break) render with a single rule across the full bounding box,
+which looks wrong on the second line; keep `~~...~~` spans short
+or wrap the whole sentence in a `@Display` from raw Lout. PDF
+mode honours the strike exactly; the SVG back-end emits a
+`<line>` element at the correct y-offset.
+
+## 35. Combining `columns: 2` with multi-page content
+
+`type: doc` is fundamentally a *single-page* layout: when
+`columns: 2` is set, the page geometry balances two flows on one
+sheet and silently drops anything that overflows (see recipes #11
+and #32 for the failure mode). Multi-page documents that need
+two-column body text must switch to `type: report` or
+`type: book` -- both paginate normally and carry the column
+configuration through every page. The frontmatter knobs are
+identical; only `type:` changes the pagination model.
+
+```yaml
+---
+type: report
+title: Field Survey 2026
+author: J. L. Clements
+font: Times Base 10p
+page: A4
+columns: 2
+column-gap: 0.7c
+para-gap: 0.8v
+para-indent: 0f
+section-numbers: Yes
+---
+
+# Introduction
+
+Two-column body flows from page 1 onto page 2, page 3,
+and so on -- `type: report` paginates normally even with
+`columns: 2` active.
+
+# Methodology
+
+Each `#` heading opens an `@Section`, numbered 1, 2, 3
+across the whole report. Headings span both columns by
+default; long sections balance across the gutter and
+continue onto the next page when the current one fills.
+```
+
+Rendered: A4 portrait, two even body columns from page 1 onwards,
+section headings spanning the full text width above each
+two-column body, page numbers and running heads carried by
+`type: report`'s default headers. Overflow is *not* dropped --
+text continues to page 2, page 3, etc., balanced across columns
+on each.
+
+**Gotcha:** the key distinction is `type: doc` (single page,
+overflow dropped) versus `type: report`/`type: book` (paginated,
+overflow continues). The diagnostic for the wrong choice is the
+classic "too little horizontal space for galley @DocumentBody"
+warning on stderr plus a truncated rendering -- always means
+`type: doc` was used where pagination was needed. To make a
+single heading or display *span* both columns inside a `report`
+(say a banner figure or a wide table), wrap it in
+`@StartHSpan ... @EndHSpan` in raw Lout; plain `@CentredDisplay`
+respects the column boundary and the figure ends up squeezed into
+one column. The opposite is also true: a `@Section` heading
+*always* spans both columns regardless of nesting. For three
+columns the same rule applies -- `columns: 3` works in `report`
+and `book` but is single-page in `doc`. Working example:
+[`examples/field_survey.md`](../examples/field_survey.md).
+
 ## Where to look next
 
 - [`docs/best_practices.md`](best_practices.md) -- idiom guide:
