@@ -7,10 +7,16 @@ For each HTML in examples/out/ this script:
      Linux builds; falls back to the Windows binary when running under WSL).
   2. Drives headless Chrome with --dump-dom to get the post-JS DOM.
   3. Compares input markup vs the rendered DOM:
-       - KaTeX:   every <span class="math"> in input -> a .katex element
-                  in the rendered DOM.
+       - KaTeX:   every <span class="math"> in input -> a `katex-html`
+                  element in the rendered DOM. `katex-html` is the
+                  outermost katex container (one per rendered equation),
+                  which avoids over-counting the nested `.katex` spans
+                  that KaTeX layers inside itself.
        - abcjs:   every <div class="abc-music"> in input -> exactly one
                   child <svg> in the same div in the rendered DOM.
+       - mermaid: every <div class="mermaid"> in input -> a child <svg>
+                  in the same div (mermaid.js replaces div text content
+                  with rendered SVG). Threshold: at least 50% rendered.
        - hljs:    for every <code class="language-X"> (where X is a
                   language hljs ships by default) we look for evidence
                   that highlight.js ran -- either an `hljs` class /
@@ -126,8 +132,15 @@ RE_ID_ATTR = re.compile(r'\sid\s*=\s*"\s*([A-Za-z][\w:.-]*)\s*"', re.I)
 RE_SCRIPT_BODY = re.compile(r'<script\b[^>]*>.*?</script>', re.I | re.S)
 RE_HTML_ENTITY = re.compile(r'&(?:#[0-9]+|#x[0-9A-Fa-f]+|[A-Za-z][A-Za-z0-9]*);')
 RE_KATEX = re.compile(r'class\s*=\s*"[^"]*\bkatex\b[^"]*"', re.I)
+# katex-html is the outermost container KaTeX emits per rendered expression.
+# Counting these (instead of every `.katex` element) avoids over-counting the
+# multiple nested `.katex*` layers KaTeX inserts within a single equation.
+RE_KATEX_HTML = re.compile(r'class\s*=\s*"[^"]*\bkatex-html\b[^"]*"', re.I)
 RE_HLJS_TOKEN = re.compile(r'<span\s+class\s*=\s*"\s*hljs-[\w-]+', re.I)
 RE_SVG = re.compile(r'<svg\b', re.I)
+# The lout HTML emitter spaces attributes out as `class=  "  mermaid  "`, so
+# mirror the abc-music tolerance for surrounding whitespace inside the value.
+RE_DIV_MERMAID = re.compile(r'<div[^>]*\bclass\s*=\s*"[^"]*\bmermaid\b[^"]*"', re.I)
 
 
 @dataclass
@@ -526,6 +539,28 @@ def count_abc_with_svg(dom_html: str) -> int:
     return n
 
 
+def count_mermaid_with_svg(dom_html: str) -> tuple[int, int]:
+    """Return (div_count, rendered_count) for <div class="mermaid"> elements.
+
+    `div_count` is how many mermaid divs appear in the (post-render) DOM;
+    `rendered_count` is how many of them contain a child <svg> (mermaid.js
+    replaces the inner text with an SVG once its initialiser runs). The
+    window heuristic mirrors `count_abc_with_svg`: search the slice
+    between successive mermaid div openers for an <svg> tag.
+    """
+    starts = [m.end() for m in re.finditer(
+        r'<div[^>]*\bclass\s*=\s*"[^"]*\bmermaid\b[^"]*"[^>]*>',
+        dom_html, flags=re.I)]
+    div_count = len(starts)
+    starts.append(len(dom_html))
+    rendered = 0
+    for i in range(div_count):
+        body = dom_html[starts[i]:starts[i + 1]]
+        if RE_SVG.search(body):
+            rendered += 1
+    return div_count, rendered
+
+
 # Languages that highlight.js ships in its default "common" bundle (the one
 # mdlout pulls in via the bundled hljs payload). Code blocks tagged with
 # languages outside this set won't tokenise, so penalising them here would
@@ -617,6 +652,10 @@ def run_chrome(chrome: str, html_path: Path, work_dir: Path,
         else:
             url = "file://" + str(html_path.resolve())
 
+    # mermaid.js is noticeably slower to initialise than katex/abcjs: it
+    # waits for DOMContentLoaded, runs a layout pass per diagram, and only
+    # then injects the rendered <svg>. Bump the virtual-time-budget so
+    # mermaid pages finish rendering before --dump-dom snapshots the DOM.
     cmd = [
         chrome,
         "--headless=new",
@@ -624,7 +663,7 @@ def run_chrome(chrome: str, html_path: Path, work_dir: Path,
         "--disable-gpu",
         "--hide-scrollbars",
         "--disable-features=Translate,MediaRouter",
-        "--virtual-time-budget=20000",
+        "--virtual-time-budget=22000",
         "--run-all-compositor-stages-before-draw",
         "--dump-dom",
         url,
@@ -681,16 +720,16 @@ def evaluate_example(html_path: Path, chrome: str, work_dir: Path,
     # --- check 2: KaTeX rendered math blocks ---
     # The lout HTML emitter wraps every math expression in `<span class="math">`
     # (typically inside a <foreignObject>). KaTeX rewrites that span into a
-    # `.katex` tree. We accept any element carrying the `katex` class because
-    # different KaTeX versions emit different inner wrappers.
+    # tree whose outermost container carries `katex-html` (one per rendered
+    # equation). Earlier this check counted `.katex` elements, but KaTeX
+    # nests `.katex` spans inside themselves, which silently over-counted.
     math_in = len(RE_SPAN_MATH.findall(src))
-    math_out = len(RE_KATEX.findall(dom))
-    # KaTeX produces a flurry of nested .katex* elements per equation; require
-    # at least one per input span. (We don't insist on equality.)
+    math_out = len(RE_KATEX_HTML.findall(dom))
     math_ok = math_in == 0 or math_out >= math_in
     result.checks.append(CheckResult(
         name="katex", ok=math_ok, expected=math_in, found=math_out,
-        detail="" if math_ok else f"only {math_out} .katex matches for {math_in} spans"))
+        detail="" if math_ok else
+        f"only {math_out} katex-html matches for {math_in} spans"))
 
     # --- check 3: abcjs rendered every <div class="abc-music"> ---
     abc_in = len(RE_DIV_ABC.findall(src))
@@ -699,6 +738,27 @@ def evaluate_example(html_path: Path, chrome: str, work_dir: Path,
     result.checks.append(CheckResult(
         name="abcjs", ok=abc_ok, expected=abc_in, found=abc_out,
         detail="" if abc_ok else f"{abc_out}/{abc_in} abc-music divs gained an <svg>"))
+
+    # --- check 3b: mermaid rendered every <div class="mermaid"> ---
+    # mermaid.js scans for `.mermaid` divs and replaces the inner text
+    # source with an inline <svg>. Pages with no mermaid divs report
+    # mermaid=ok(0/0) (N/A), the same shape as the abcjs zero pattern.
+    # We tolerate partial render (>=50%) because the headless render
+    # occasionally drops the last diagram if it crosses the virtual-time
+    # budget right at the boundary; failing the whole example for one
+    # missing diagram would be flaky given Chrome's scheduling.
+    merm_divs, merm_svgs = count_mermaid_with_svg(dom)
+    if merm_divs == 0:
+        merm_ok = True
+        merm_detail = ""
+    else:
+        ratio = merm_svgs / merm_divs
+        merm_ok = ratio >= 0.5
+        merm_detail = "" if merm_ok else (
+            f"{merm_svgs}/{merm_divs} mermaid divs gained an <svg>")
+    result.checks.append(CheckResult(
+        name="mermaid", ok=merm_ok, expected=merm_divs, found=merm_svgs,
+        detail=merm_detail))
 
     # --- check 4: every #anchor href resolves to an id in the DOM ---
     # Strip <script> bodies (which may carry escaped href strings inside

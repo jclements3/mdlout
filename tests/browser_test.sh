@@ -4,6 +4,9 @@
 # Exits 0 on all-pass, 1 on any failure, 77 when no Chromium binary is
 # available (autotools "skipped" convention -- friendly for CI).
 #
+# Default-on per-page checks:
+#   loaded, katex, abcjs, mermaid, anchors, hljs
+#
 # Forwards CLI args verbatim, so:
 #   tests/browser_test.sh                            # all examples in examples/out/
 #   tests/browser_test.sh --only 04_math.html,05_music.html
@@ -15,6 +18,7 @@
 #
 # Environment:
 #   MDLOUT_CHROME=/path/to/chrome           # override auto-detection
+#   MDLOUT_BROWSER_TIMEOUT=240              # per-page Chrome wall-clock seconds
 #   MDLOUT_BROWSER_AXE_URL=https://.../axe.min.js   # override axe-core CDN
 
 set -u
