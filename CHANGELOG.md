@@ -9,6 +9,20 @@ Entries cover both this repository (the mdlout converter and its docs) and
 the `lout/` submodule (branch `svg-backend` on the jclements3/lout fork).
 Submodule-only changes are tagged `[lout]`.
 
+## Releases
+
+- [Unreleased](#unreleased)
+- [0.2.8 (2026-05-23)](#028---2026-05-23)
+- [0.2.7 (2026-05-23)](#027---2026-05-23)
+- [0.2.6 (2026-05-23)](#026---2026-05-23)
+- [0.2.5 (2026-05-23)](#025---2026-05-23)
+- [0.2.4 (2026-05-23)](#024---2026-05-23)
+- [0.2.3 (2026-05-23)](#023---2026-05-23)
+- [0.2.2 (2026-05-23)](#022---2026-05-23)
+- [0.2.1 (2026-05-22)](#021---2026-05-22)
+- [0.2.0 (2026-05-22)](#020---2026-05-22)
+- [0.1.0 (2026-03-16)](#010---2026-03-16)
+
 ## [Unreleased]
 
 ## [0.2.8] - 2026-05-23
@@ -1601,7 +1615,12 @@ submodule:
 - 2024-01-26: lout 3.43 (the version vendored at the time of initial
   commit).
 
-[Unreleased]: https://github.com/jclements3/mdlout/compare/v0.2.3...HEAD
+[Unreleased]: https://github.com/jclements3/mdlout/compare/v0.2.8...HEAD
+[0.2.8]: https://github.com/jclements3/mdlout/compare/v0.2.7...v0.2.8
+[0.2.7]: https://github.com/jclements3/mdlout/compare/v0.2.6...v0.2.7
+[0.2.6]: https://github.com/jclements3/mdlout/compare/v0.2.5...v0.2.6
+[0.2.5]: https://github.com/jclements3/mdlout/compare/v0.2.4...v0.2.5
+[0.2.4]: https://github.com/jclements3/mdlout/compare/v0.2.3...v0.2.4
 [0.2.3]: https://github.com/jclements3/mdlout/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/jclements3/mdlout/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/jclements3/mdlout/compare/v0.2.0...v0.2.1
