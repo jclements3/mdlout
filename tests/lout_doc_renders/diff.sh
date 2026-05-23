@@ -2,6 +2,13 @@
 # Per-doc sample-10 side-by-side gallery (PS vs SVG via z53.c).
 # Reads /tmp/${d}.pdf and /tmp/${d}.svg produced by build.sh and writes
 # tests/lout_doc_renders/${d}_diff.html plus tests/lout_doc_renders/${d}_samples/.
+#
+# DPI (default 100) controls the raster resolution for both pdftoppm
+# (PS->PNG) and rsvg-convert (SVG->PNG). 150 lifts mean SSIM by
+# shrinking the sub-pixel antialiasing floor; see
+# tests/user_guide_diff/README.md "DPI sensitivity" (#172) and the
+# 100-vs-150 column in tests/lout_doc_renders/README.md. Override via
+# `DPI=150 bash tests/lout_doc_renders/diff.sh`.
 set -euo pipefail
 
 REPO=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
@@ -10,6 +17,7 @@ WORK=/tmp/loutdocs
 
 DOCS=(design expert slides user)
 SAMPLE_N=${SAMPLE_N:-10}
+DPI=${DPI:-100}
 
 mkdir -p "$WORK"
 
@@ -18,15 +26,15 @@ build_diff_for() {
     local doc_work=$WORK/$d
     mkdir -p "$doc_work"/{ps,svg,diff,svg_split}
 
-    echo "-- $d: rasterising PDF -> PNG (100dpi)"
+    echo "-- $d: rasterising PDF -> PNG (${DPI}dpi)"
     rm -f "$doc_work"/ps/ps-*.png
     # Force 3-digit zero-padding so our zip-by-page name scheme is
     # uniform across docs of any page count.
     local pdf_pages
     pdf_pages=$(pdfinfo "$OUT/${d}.pdf" | awk '/^Pages:/{print $2}')
-    pdftoppm -r 100 -png -forcenum \
+    pdftoppm -r "$DPI" -png -forcenum \
         -f 1 -l "$pdf_pages" "$OUT/${d}.pdf" "$doc_work/ps/ps" 2>/dev/null \
-        || pdftoppm -r 100 -png "$OUT/${d}.pdf" "$doc_work/ps/ps"
+        || pdftoppm -r "$DPI" -png "$OUT/${d}.pdf" "$doc_work/ps/ps"
     # Normalise filenames to 3-digit padding regardless of what
     # pdftoppm chose. (pdftoppm picks padding by digit-count of total
     # pages: 2 digits for <100, 3 for >=100. We want 3 across the board
@@ -77,7 +85,7 @@ print(' '.join(f'{p:03d}' for p in out))
     for p in $pages; do
         local svgf="$doc_work/svg_split/page-${p}.svg"
         if [[ -f "$svgf" ]]; then
-            rsvg-convert -d 100 -p 100 -f png "$svgf" \
+            rsvg-convert -d "$DPI" -p "$DPI" -f png "$svgf" \
                 -o "$doc_work/svg/svg-${p}.png" 2>/dev/null || true
         fi
     done

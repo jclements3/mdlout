@@ -5,6 +5,18 @@
 # Wall-time is ~25-40 min depending on the doc; PostScript pass is fast,
 # SVG (z53.c) is currently the bottleneck. Outputs land in
 # tests/lout_doc_renders/.
+#
+# DPI (default 100) controls the raster resolution for the sample
+# pixel-diff stage (passed through to diff.sh -> pdftoppm + rsvg-convert).
+# 150 lifts mean SSIM by shrinking the sub-pixel antialiasing floor;
+# see tests/user_guide_diff/README.md "DPI sensitivity" (#172) and the
+# 100-vs-150 column in tests/lout_doc_renders/README.md. Override via
+# `DPI=150 bash tests/lout_doc_renders/build.sh`.
+#
+# SKIP_DOC_BUILD=1 reuses the existing /tmp/{design,expert,slides,user}.{ps,svg}
+# artifacts (and the published per-doc PDFs/HTMLs) and only re-runs the
+# diff stage. Handy when iterating on diff-stage parameters (e.g. DPI)
+# without paying the ~25-40 min PS/SVG rebuild cost.
 
 set -euo pipefail
 
@@ -23,6 +35,9 @@ mkdir -p "$WORK" "$OUT"
 
 DOCS=(design expert slides user)
 PASSES=${PASSES:-7}
+DPI=${DPI:-100}
+SKIP_DOC_BUILD=${SKIP_DOC_BUILD:-0}
+export DPI
 
 build_doc() {
     local d=$1
@@ -161,16 +176,29 @@ build_doc() {
     } > "$WORK/${d}.stats"
 }
 
-for d in "${DOCS[@]}"; do
-    build_doc "$d"
-done
+if [[ "$SKIP_DOC_BUILD" == "1" ]]; then
+    echo "==> SKIP_DOC_BUILD=1: reusing /tmp/{design,expert,slides,user}.{ps,svg}"
+    for d in "${DOCS[@]}"; do
+        for ext in ps svg; do
+            if [[ ! -s "/tmp/${d}.${ext}" ]]; then
+                echo "error: SKIP_DOC_BUILD=1 but /tmp/${d}.${ext} missing." >&2
+                echo "       Run without SKIP_DOC_BUILD to rebuild." >&2
+                exit 1
+            fi
+        done
+    done
+else
+    for d in "${DOCS[@]}"; do
+        build_doc "$d"
+    done
+fi
 
 echo
 echo "============================================================"
-echo "==> all four documents built. Now building diff pages."
+echo "==> all four documents built. Now building diff pages (DPI=$DPI)."
 echo "============================================================"
 
-bash "$OUT/diff.sh"
+DPI="$DPI" bash "$OUT/diff.sh"
 
 echo "============================================================"
 echo "==> aggregating README"

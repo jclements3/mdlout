@@ -78,8 +78,15 @@ def main() -> int:
         pdf = OUT / f"{d}.pdf"
         html = OUT / f"{d}.html"
         sample_manifest = WORK / d / "sample_manifest.tsv"
+        sample_manifest_150 = WORK / d / "sample_manifest_150dpi.tsv"
         pages = page_count_from_pdf(pdf)
         ssim_m, diff_m = sample_ssim_mean(sample_manifest)
+        # Optional 150-dpi alternate snapshot: written by
+        # `DPI=150 bash diff.sh`, which copies its output into
+        # sample_manifest_150dpi.tsv. Present after a deliberate
+        # 150 dpi rerun; absent for fresh builds. See README.md
+        # "DPI sensitivity" + tests/user_guide_diff/ #172.
+        ssim_m_150, diff_m_150 = sample_ssim_mean(sample_manifest_150)
         rows.append({
             "doc": d,
             "pages": pages,
@@ -92,6 +99,8 @@ def main() -> int:
             "biggest_svg_pass": stats.get("biggest_svg_pass", "?"),
             "ssim_mean": ssim_m,
             "diff_pct_mean": diff_m,
+            "ssim_mean_150": ssim_m_150,
+            "diff_pct_mean_150": diff_m_150,
         })
 
     lines = []
@@ -109,16 +118,20 @@ def main() -> int:
     lines.append("Reproduce with:")
     lines.append("")
     lines.append("```bash")
-    lines.append("bash tests/lout_doc_renders/build.sh")
+    lines.append("bash tests/lout_doc_renders/build.sh                       # default 100 dpi diff pass")
+    lines.append("DPI=150 bash tests/lout_doc_renders/build.sh               # 150 dpi rerun (#172 DPI insight)")
+    lines.append("SKIP_DOC_BUILD=1 DPI=150 bash tests/lout_doc_renders/build.sh   # reuse /tmp/*.{ps,svg}, just rerun the diff stage")
     lines.append("```")
     lines.append("")
     lines.append("## Per-document summary")
     lines.append("")
-    lines.append("| Doc | Pages | PS | PDF | SVG | HTML | PS wall | SVG wall | Sample SSIM | Diff %|")
-    lines.append("|-----|------:|---:|----:|----:|-----:|--------:|---------:|------------:|------:|")
+    lines.append("| Doc | Pages | PS | PDF | SVG | HTML | PS wall | SVG wall | SSIM @100dpi | Diff% @100dpi | SSIM @150dpi | Diff% @150dpi |")
+    lines.append("|-----|------:|---:|----:|----:|-----:|--------:|---------:|-------------:|--------------:|-------------:|--------------:|")
     for r in rows:
         ssim = f"{r['ssim_mean']:.4f}" if r["ssim_mean"] is not None else "—"
         diff = f"{r['diff_pct_mean'] * 100:.2f}%" if r["diff_pct_mean"] is not None else "—"
+        ssim150 = f"{r['ssim_mean_150']:.4f}" if r["ssim_mean_150"] is not None else "—"
+        diff150 = f"{r['diff_pct_mean_150'] * 100:.2f}%" if r["diff_pct_mean_150"] is not None else "—"
         lines.append(
             f"| [{r['doc']}](./{r['doc']}.html) | {r['pages']} | "
             f"{human_bytes(r['ps_bytes'])} | "
@@ -126,15 +139,20 @@ def main() -> int:
             f"{human_bytes(r['svg_bytes'])} | "
             f"[{human_bytes(r['html_bytes'])}](./{r['doc']}.html) | "
             f"{r['ps_wall']}s | {r['svg_wall']}s | "
-            f"{ssim} | {diff} |"
+            f"{ssim} | {diff} | {ssim150} | {diff150} |"
         )
     lines.append("")
     lines.append("Sample SSIM is the mean of scikit-image `structural_similarity` (Wang "
                  "et al. 2004) over 10 evenly-spaced sampled pages per document on "
                  "luminance, data_range=255 (1.0 = pixel-identical, >0.95 = visually "
-                 "indistinguishable at 100 dpi, <0.85 = actually different). Diff % is "
-                 "the ImageMagick AE pixel-diff ratio at 5% fuzz averaged over the same "
-                 "samples. Side-by-side galleries:")
+                 "indistinguishable, <0.85 = actually different). Diff % is the "
+                 "ImageMagick AE pixel-diff ratio at 5% fuzz averaged over the same "
+                 "samples. The @150dpi columns rerun the same sampled pages with "
+                 "`pdftoppm -r 150` / `rsvg-convert -d 150 -p 150` (override via "
+                 "`DPI=150 bash tests/lout_doc_renders/build.sh`); higher sampling "
+                 "shrinks the sub-pixel antialiasing floor, as established for the "
+                 "User's Guide in #172 (`tests/user_guide_diff/README.md` "
+                 "\"DPI sensitivity\"). Side-by-side galleries (canonical 100 dpi):")
     lines.append("")
     for r in rows:
         lines.append(f"- [{r['doc']}_diff.html](./{r['doc']}_diff.html)")
