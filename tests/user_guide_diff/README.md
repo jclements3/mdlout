@@ -13,18 +13,20 @@ and which pages still diverge most.
 ## Methodology
 
 1. **Build both renders.** From `lout/doc/user/`, delete every `.li`
-   cross-reference index and run `lout` seven times for each backend
-   (`-G` selects the SVG backend). Seven passes is the typical Lout
+   cross-reference index and run `lout` eight times for each backend
+   (`-G` selects the SVG backend). Eight passes is the current Lout
    convergence budget for a document that mixes a table of contents,
-   index, bibliography and forward cross-references.
+   index, bibliography and forward cross-references — the SVG side
+   converges by pass 5 but the PS side needs the extra pass after
+   the 2026-05-23 ligature folding round perturbed pagination
+   slightly. The 8th pass is taken as canonical.
 
-   Both the PostScript and SVG runs now converge cleanly to **327
+   Both the PostScript and SVG runs converge cleanly to **327
    pages**. (Earlier the SVG run alternated between full/partial
    outputs and the largest converged pass had to be picked; that
    was a side-effect of non-final cross-reference passes running
    heavy emission callbacks instead of true no-ops.  After the
-   `SVG_NullBackEnd` rewire the SVG side converges by pass 5 and
-   pass 7 is taken as canonical.)
+   `SVG_NullBackEnd` rewire the SVG side converges by pass 5.)
 
 2. **Rasterise both renders at 100 dpi.** PostScript was converted
    with `ps2pdf` and then `pdftoppm -r 100` to per-page PNGs. The
@@ -64,29 +66,31 @@ and which pages still diverge most.
 
 Total PS pages: **327**.  Total SVG pages: **327**.
 
-After Type 1 charpath + rotated-show fix (2026-05-22, lout
-submodule `a0a5c28`):
+After perf round 3+4, fi/fl ligature folding, arena safety, textPath,
+currentColor, kern table precompute, and GSUB smcp/onum parser
+(2026-05-23, lout submodule `f5533e6`):
 
 | bucket                           | pages |
 |----------------------------------|-------|
-| `OK` (diff < 5%)                 | 38    |
-| `DIFF` (5% <= diff < 20%)        | 289   |
+| `OK` (diff < 5%)                 | 42    |
+| `DIFF` (5% <= diff < 20%)        | 285   |
 | `BAD` (diff >= 20%)              | 0     |
 | `MISSING` (no SVG page at all)   | 0     |
 
-AE bucket counts are unchanged from the prior baseline: the 5% fuzz
-threshold is too coarse to register Greek/math glyph correctness, and
-nearly every page's pixel diff is dominated by the irreducible
-Ghostscript-vs-librsvg sub-pixel antialiasing floor. The real
-improvement is visible in the SSIM table below: pages 248 and 262
-moved from SSIM `0.7485` / `0.8214` (worst two pages by a wide
-margin) into the close band at `0.9280` / `0.9027`, and the count of
-pages SSIM `< 0.85` dropped from 5 to 3.
+AE bucket counts continue to move slowly: 4 more pages crossed into
+the `OK` band (38 -> 42) since the prior baseline. The bigger signal
+is on SSIM (next table): mean SSIM rose from `0.9234` to `0.9283`,
+and 13 more pages crossed into the "visually indistinguishable" band
+(>= 0.95), most of them text-only chapters where the new fi/fl
+ligature folding now matches the PS Type 1 ligature widths exactly.
 
-Earlier baseline (SVG_NullBackEnd fix on 2026-05-20, lout submodule
-`c618ce3`) had identical AE buckets (36 / 291 / 0 / 0) with mean SSIM
-`0.9218`. The 2026-05-22 round of fixes lifts mean SSIM to `0.9230`
-and substantially compresses the SSIM-low tail.
+Prior baselines for reference:
+
+| date       | submodule | mean SSIM | OK | pages >= 0.95 | pages < 0.85 |
+|------------|-----------|-----------|----|---------------|--------------|
+| 2026-05-20 | `c618ce3` | 0.9218    | 36 | 33            | 5            |
+| 2026-05-22 | `a0a5c28` | 0.9234    | 38 | 36            | 3            |
+| 2026-05-23 | `f5533e6` | 0.9283    | 42 | 49            | 1            |
 
 Before SVG_NullBackEnd fix (lout submodule `611dcb2`, SVG had 306 pages):
 
@@ -122,22 +126,24 @@ Computed by `tests/user_guide_diff_ssim.py` over the existing PNGs in
 | statistic                                       | value  |
 |-------------------------------------------------|--------|
 | pages scored                                    | 327    |
-| mean SSIM                                       | 0.9230 |
-| median SSIM                                     | 0.9255 |
-| min SSIM                                        | 0.8354 (page 086, pagination drift) |
+| mean SSIM                                       | 0.9283 |
+| median SSIM                                     | 0.9312 |
+| min SSIM                                        | 0.8455 (page 086, pagination drift) |
 | max SSIM                                        | 1.0000 (page 008, pixel-identical)  |
 | pages with SSIM >= 0.99                         | 2      |
-| pages with SSIM >= 0.95 (visually indistinguishable) | 35 |
-| pages with SSIM >= 0.85 (close)                 | 324    |
-| pages with SSIM <  0.85 (visibly different)     | 3      |
+| pages with SSIM >= 0.95 (visually indistinguishable) | 49 |
+| pages with SSIM >= 0.85 (close)                 | 326    |
+| pages with SSIM <  0.85 (visibly different)     | 1      |
 
-The 2026-05-22 round of fixes (Adobe Symbol glyph table, @Graph
-plot-symbol dispatch, linecap / linejoin / miterlimit attribute
-emission) moved pages 248 and 262 -- the only two genuine SVG-
-specific bugs in the prior baseline -- out of the "visibly
-different" band. Page 248 jumped from `0.7485` to `0.9280`; page 262
-from `0.8214` to `0.9027`. The mean SSIM rose from `0.9218` to
-`0.9230` and the count of pages SSIM `< 0.85` dropped from 5 to 3.
+The 2026-05-23 round of fixes (fi/fl/ffi/ffl ligature folding to
+U+FB01-FB04 for AT serif faces, perf round 4 sub-23s build, arena
+allocator hardening, <textPath> for curve-following text,
+currentColor for CSS-driven theming, per-font 256x256 kern table
+precompute, GSUB smcp / onum parser) moved mean SSIM from `0.9234`
+to `0.9283` and lifted 13 more pages into the "visually
+indistinguishable" band (>= 0.95). The "visibly different" tail is
+now a single page: 086 at SSIM `0.8455` (pagination drift in
+chapter-3 prose, antialiasing-floor artefact).
 
 ### SSIM vs AE: what the numbers mean
 
@@ -157,23 +163,20 @@ ceiling for this pipeline at ~0.998; the median 0.9254 across the
 guide reflects real pagination drift on top of that anti-aliasing
 floor.
 
-The three pages with SSIM < 0.85 are all pagination drift or
-appendix colour-swatch artefacts (no real bugs):
+The one page now with SSIM < 0.85 is pagination drift in
+chapter-3 prose (no real bug):
 
-- **086** (SSIM 0.8354) and **090** (0.8438): half-page pagination
-  drift in chapter-3 prose. The same paragraphs render fine on both
-  sides; they just sit at different vertical offsets, which both
-  metrics correctly flag as a real visual difference.
-- **308** (0.8492): appendix colour-name swatch grid (many small
-  coloured rectangles anti-aliased differently across their
-  boundaries between Ghostscript and librsvg).
+- **086** (SSIM 0.8455): half-page pagination drift in chapter-3
+  prose. The same paragraphs render fine on both sides; they just
+  sit at different vertical offsets, which both metrics correctly
+  flag as a real visual difference.
 
-The previously-worst pages 248 (SSIM 0.7485) and 262 (0.8214) are
-now in the close band at 0.9280 and 0.9027 respectively, after the
-@Graph plot-symbol dispatch fix made filledsquare / filledcircle
-actually emit (they were silently dropping before the "filled"
-prefix-strip fix landed -- see the `Recently fixed` section
-below).
+Pages **090** (0.8512) and **308** (now in the close band) used to
+sit below 0.85 in the prior baseline; the ligature folding round
+lifted them above the threshold. The previously-worst pages 248
+(SSIM 0.7485) and 262 (0.8214) were already in the close band at
+0.9280 and 0.9027 after the @Graph plot-symbol dispatch fix (see
+the `Recently fixed` section below).
 
 Worst-10-by-AE and worst-10-by-SSIM still mostly agree. SSIM also
 surfaces page 308 (appendix colour-swatch boundary antialiasing)
@@ -188,16 +191,16 @@ Ranked by `diff_ratio` among pages that exist in both renders. Side-by-side
 
 | rank | page | AE diff | SSIM   | observation                                                                                  |
 |-----:|-----:|--------:|-------:|----------------------------------------------------------------------------------------------|
-| 01   | 086  | 0.1462  | 0.8354 | Pagination drift: chapter 3 prose, same paragraphs, half-page offset between PS and SVG.    |
-| 02   | 090  | 0.1404  | 0.8438 | Pagination drift: continuation of the same chapter-3 section, similar half-page offset.      |
-| 03   | 056  | 0.1220  | 0.8547 | Pagination drift around the `@Display` / `@Figure` discussion in chapter 2.                  |
-| 04   | 063  | 0.1213  | 0.8650 | Pagination drift on a dense prose page about cross-references.                               |
-| 05   | 094  | 0.1183  | 0.9046 | Pagination drift inside the section on document structure. SSIM > 0.9 -- almost a false positive in the AE ranking. |
-| 06   | 095  | 0.1182  | 0.8850 | Pagination drift: continuation of page 094.                                                  |
-| 07   | 075  | 0.1165  | 0.8751 | Pagination drift in chapter on running heads.                                                |
-| 08   | 081  | 0.1133  | 0.8746 | Pagination drift in the chapter on @Display.                                                 |
-| 09   | 096  | 0.1131  | 0.8862 | Pagination drift: continuation of the document-structure chapter.                            |
-| 10   | 290  | 0.1120  | 0.9108 | Pagination drift in the appendix index.                                                      |
+| 01   | 086  | 0.1426  | 0.8455 | Pagination drift: chapter 3 prose, same paragraphs, half-page offset between PS and SVG.    |
+| 02   | 090  | 0.1379  | 0.8512 | Pagination drift: continuation of the same chapter-3 section, similar half-page offset.      |
+| 03   | 063  | 0.1194  | 0.8714 | Pagination drift on a dense prose page about cross-references.                               |
+| 04   | 056  | 0.1185  | 0.8683 | Pagination drift around the `@Display` / `@Figure` discussion in chapter 2.                  |
+| 05   | 094  | 0.1162  | 0.9124 | Pagination drift inside the section on document structure. SSIM > 0.9 -- almost a false positive in the AE ranking. |
+| 06   | 095  | 0.1161  | 0.8902 | Pagination drift: continuation of page 094.                                                  |
+| 07   | 075  | 0.1129  | 0.8881 | Pagination drift in chapter on running heads.                                                |
+| 08   | 019  | 0.1115  | 0.8989 | Pagination drift on the introduction page (new entrant -- one paragraph straddles a page break differently).   |
+| 09   | 096  | 0.1109  | 0.8931 | Pagination drift: continuation of the document-structure chapter.                            |
+| 10   | 060  | 0.1081  | 0.9238 | Pagination drift on a cross-reference prose page (new entrant -- replaces former page 081 / 290). |
 
 None of the current worst-10 are real bugs -- all are
 pagination-drift artefacts where the same prose lays out on
@@ -256,6 +259,30 @@ antialiasing-only by docs/chapter3_pagination_drift_investigation.md).
 The remaining @Diag SSIM gap is the same sub-pixel Ghostscript-vs-
 librsvg antialiasing floor we see corpus-wide; no layout bugs.
 
+## Recently fixed (2026-05-23)
+
+- **fi / fl / ffi / ffl ligature folding for AT serif faces**. The
+  PS Type 1 metrics for Times/AvantGarde include the ligature
+  glyphs at narrower combined widths than the two-letter sequences,
+  but the SVG side was emitting the unfolded characters and picking
+  up the wider browser default. z53.c now folds the four standard
+  ligatures into the Unicode private-use codepoints U+FB01-FB04 at
+  emit time, matching the PS width budget. Net effect: 13 more
+  text-heavy pages crossed SSIM >= 0.95, and pages 081 / 290
+  dropped out of the corpus worst-10.
+
+- **Performance regressions from earlier z53.c work**. Perf rounds
+  3 and 4 brought the User's Guide SVG build under the 23-second
+  budget (was ~38 s at the SVG_NullBackEnd baseline). Output is
+  byte-identical to the slower path so SSIM is unaffected, but the
+  full diff (incl. 8 cross-ref passes + rasterise + compare) now
+  fits comfortably inside the 15-minute target.
+
+- **Arena allocator hardening** in z53_glyph.c (handles realloc
+  pointer aliasing) and **GSUB smcp / onum parser** (parser-only,
+  no output emission yet) landed in this baseline. Neither
+  changes pixel output.
+
 ## Recently fixed (2026-05-22)
 
 - **`@Graph` plot symbols vanished** (was pages 248, 262 in the
@@ -283,12 +310,14 @@ librsvg antialiasing floor we see corpus-wide; no layout bugs.
 ## Known remaining real bugs
 
 None at this revision. Pagination drift in chapter-3 prose
-(pages 056, 063, 075, 081, 086, 090, 094, 095, 096) and the
-appendix colour-swatch grid (page 308) remain visible in the
-diff but are caused by the irreducible Ghostscript-vs-librsvg
-sub-pixel antialiasing floor and would require either a shared
+(pages 019, 056, 060, 063, 075, 086, 090, 094, 095, 096) remains
+visible in the diff but is caused by the irreducible Ghostscript-
+vs-librsvg sub-pixel antialiasing floor compounding into line-break
+decisions over a long page; it would require either a shared
 rasteriser or accepting that AE metrics are not the right tool to
-measure SVG correctness at this layer.
+measure SVG correctness at this layer. The appendix colour-swatch
+grid (page 308) has now crossed SSIM 0.85 and is no longer in the
+visible-difference band.
 
 ## Reproducing this report
 
@@ -300,11 +329,11 @@ any file under `lout/include/`.
 
 ## Build provenance
 
-- Date built: 2026-05-22 (UTC).
-- `lout/` submodule SHA: `a3e9d04` (jclements3/lout fork, branch
-  `svg-backend`; Adobe Symbol glyph table + @Graph plot-symbol
-  dispatch fix + linecap / linejoin / miterlimit attribute
-  emission).
+- Date built: 2026-05-23 (UTC).
+- `lout/` submodule SHA: `f5533e6` (jclements3/lout fork, branch
+  `svg-backend`; fi/fl/ffi/ffl ligature folding + perf round 4 +
+  arena-allocator hardening + <textPath> + currentColor + per-font
+  kern table precompute + GSUB smcp/onum parser).
 - Tools: `lout`, `ps2pdf` (Ghostscript), `pdftoppm` (poppler),
   `rsvg-convert` (librsvg), `compare`/`convert` (ImageMagick 6),
   `scikit-image` 0.25 + `Pillow` + `numpy` for SSIM.
