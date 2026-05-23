@@ -21,14 +21,19 @@ fallbacks; a WCAG 2.1 AA accessibility scaffold in the HTML wrapper
 (landmarks, ARIA, skip-link, alt-text manifest, image-alt sidecar);
 URW++ Nimbus base-35 fonts inlined as `@font-face` data URLs so
 browser rendering matches Ghostscript's font substitution -- with
-opt-in `--subset-fonts` (v0.2.2) trimming each face to the
-codepoints actually referenced (~50% HTML size reduction); a
+font subsetting default-ON in v0.2.3 (`--no-subset-fonts` opts
+out), trimming each face to the codepoints actually referenced
+(~56% HTML size reduction across the example corpus); a
 headless-Chrome regression runner that verifies KaTeX, abcjsharp,
-mermaid, anchors, and highlight.js execute client-side; opt-in
-dark-mode CSS (`--dark` / `theme: dark`, v0.2.2); a PEP 621
+mermaid, anchors, and highlight.js execute client-side; dark-mode
+CSS (`--dark` / `theme: dark`) via a `currentColor` cascade
+(v0.2.3) so embedded raster `<image>`s keep their luminance and
+authored colours are preserved; SVG `<textPath>` for curve-
+following text in `@Graphic` bodies (v0.2.3); a PEP 621
 `pyproject.toml` that builds a clean sdist + wheel; and end-to-end
 SVG renders of all four documents that ship with the Lout source
-tree (`design`, `expert`, `slides`, `user`, v0.2.2). The 327-page
+tree (`design`, `expert`, `slides`, `user`, with zero residual SVG
+`@Case` warnings as of v0.2.3). The 327-page
 User's Guide PS-vs-SVG diff sits at mean SSIM 0.9234 (38 OK / 289
 DIFF / 0 BAD / 0 MISSING); the 65-snippet single-feature suite is
 100% Pass-Excellent under the post-v0.2 tightened thresholds (5% AE
@@ -37,6 +42,51 @@ lout binary, 150 KB single-file mdlout.py. User's Guide SVG build:
 ~26-29 s wall time on the reference host (v0.2.2 perf round 2,
 beats the original v0.4 < 30 s target; was ~32 s in v0.2.1 and
 ~7 min mid-v0.2 cycle).
+
+## Shipped in v0.2.3
+
+These items were on the v0.3 candidate list (and a few were
+surfaced for v0.3 by issue #135); they landed during the v0.2.3
+cycle and are no longer roadmap candidates.
+
+- **Font subsetting default-ON** (was v0.3). `--subset-fonts`
+  flipped to default after re-running the full example corpus
+  and `browser_test.sh` suite with subsetting forced on:
+  `examples/out/` shrank from ~57.6 MB to ~25.3 MB (56%
+  reduction; font payload ~81% smaller). Opt-out via
+  `--no-subset-fonts` / `subset-fonts: false`.
+- **SVG `@Case` branches in `lout/include/`** (was v0.3). Every
+  diagram-helper-package `@BackEnd @Case` block now has an
+  explicit SVG arm.
+- **SVG `@Case` branches in `doc/{design,expert}`** (was v0.3,
+  surfaced by all-Lout-docs render). 96 + 235 "replacing unknown
+  @Case option SVG by PostScript" warnings -> 0. The `expert` PS
+  pipeline now also converges across all 7 passes instead of
+  asserting in `Parse()` at pass 4.
+- **`@Graphic` ops `lightgrey` / `lfig` / `solid`** (was v0.3,
+  from issue #135). Folded into the `svg_graphic_concat` spacing
+  fix so all three no longer surface as rate-limited XML
+  comments.
+- **SVG `<textPath>` for curved text** (new, not on prior
+  roadmap). When the embedded PS interpreter sees `show` against
+  a path containing at least one `curveto`, `z53.c` emits the
+  text via `<textPath href>` instead of static `<text x y>`.
+- **Dark mode via proper `currentColor` cascade** (v0.2.2
+  follow-on). `z53.c` now folds default-black ink to
+  `fill="currentColor"`, so the dark theme retints by setting a
+  `color:` on the page wrapper instead of inverting each page
+  wholesale; embedded rasters keep their luminance, authored
+  colours are preserved.
+- **CFF / TrueType outline parser follow-ups** (carry-over from
+  v0.2.2 -- audit comments + `NEXT_OPTIMIZATIONS.md` Expert /
+  ExpertSubset known-gap note, now stable in v0.2.3).
+- **gprof profile of the User's Guide SVG build**
+  (`tests/profile/` + `tests/profile_ug_build.sh`). Sets up the
+  next perf round with a ranked candidate list.
+- **All four Lout docs rendered through z53.c with a landing
+  page** (`tests/lout_doc_renders/index.html` + per-doc summary
+  tables). Concurrent-runner damage in `build.sh` fixed via
+  per-run scratch dirs.
 
 ## Shipped in v0.2.2
 
@@ -63,39 +113,16 @@ during the v0.2.2 cycle and are no longer roadmap candidates.
   `FontKernLength` between successive characters and emits the
   kern delta as a `<tspan dx>` inside the `<text>` element.
 
-## Near-term (v0.3 target)
+## Near-term (v0.3 remainder, post-v0.2.3)
 
-Items surfaced by the v0.2.2 all-Lout-docs render
-(`tests/lout_doc_renders/`) plus the still-pending packaging item.
+The v0.2.3 cycle cleared the bulk of the original v0.3 candidate
+list (see "Shipped in v0.2.3" above). Items still pending:
 
-- **SVG `@Case` branches in `lout/include/`.** The all-Lout-docs
-  render flagged a small set of `@BackEnd @Case` blocks under
-  `lout/include/*` that still lack an explicit SVG arm (today they
-  fall through to PostScript or to a generic else). The audit at
-  `lout/SVG_INCLUDES_AUDIT.md` enumerates them; the v0.2.2 cycle
-  cleared the `bsf` `LoutPageDict` family but the remaining
-  arms (mostly diagram-helper packages used by `doc/design`) are
-  still pending.
-- **More `@Graphic` ops in `z53.c`.** The all-Lout-docs render
-  surfaced three under-implemented ops the User's Guide had not
-  exercised at the same density: `lightgrey` (used as a fill
-  shorthand by several `@Diag` callers), `lfig` (the
-  let-fig label-placement helper in `figf.lpg`), and the bare
-  `solid` keyword (vs the parameterised `solid 1` already
-  implemented). All three are currently rate-limited XML comments
-  in the SVG; each is a 5-15 LOC `svg_op_seed[]` entry.
-- **Font subsetting default-ON.** v0.2.2 shipped `--subset-fonts`
-  as opt-in; the measured savings (~50% HTML size, ~81% font
-  payload) and the absence of regressions across the example
-  corpus make the default flip a v0.3 candidate. Gate: confirm the
-  subset pass survives a full `tests/lout_doc_renders/` build
-  (`design` / `expert` / `slides` / `user`) with no glyph
-  drop-outs.
 - **`LoutMargShift` translate(x, y).** The v0.2.2 hashed-op work
   cleared the operand-stack drift but did not yet implement the
   margin-note shift itself, so SVG-mode `@MargNote` / `@OuterNote`
-  still render at the page origin. Tracked as a v0.3 follow-on in
-  the `z53.c` op-dispatch table.
+  still render at the page origin. Tracked as a follow-on in the
+  `z53.c` op-dispatch table.
 - **PyPI publish.** The `pyproject.toml` from v0.2.1 builds a
   clean wheel, but the user has not yet pushed it to PyPI. Action
   is manual:
@@ -106,6 +133,10 @@ Items surfaced by the v0.2.2 all-Lout-docs render
   Requires the user's PyPI token in `~/.pypirc`. Once published,
   `pip install mdlout` becomes the recommended install path for
   non-contributors.
+- **More cookbook recipes.** Recipe count is 30 after v0.2.3;
+  the next batch targets bibliography / citation idioms,
+  multi-language documents at the Lout-language level (not just
+  `@Char` / `@Sym`), and longer-form `@Diag` walkthroughs.
 
 ## Mid-term (v0.4 target)
 

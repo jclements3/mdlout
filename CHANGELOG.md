@@ -11,6 +11,230 @@ Submodule-only changes are tagged `[lout]`.
 
 ## [Unreleased]
 
+## [0.2.3] - 2026-05-23
+
+Font subsetting flips default ON (~56% HTML size reduction across
+the example corpus, no regressions); dark mode rewritten on a proper
+`currentColor` cascade (raster `<image>`s keep their luminance and
+authored colours are preserved); SVG `<textPath>` for curve-following
+text in `@Graphic` bodies; all four Lout source-tree documents
+(`doc/design`, `doc/expert`, `doc/slides`, `doc/user`) now build
+through `z53.c` with zero residual `@Case` warnings (`design`
+96 -> 0, `expert` 235 -> 0); a `tests/lout_doc_renders/` landing
+page + per-doc summary tables; a `tests/profile/` gprof hot-spot
+report for the next perf round; concurrent-runner damage in
+`tests/lout_doc_renders/build.sh` fixed via per-run scratch dirs;
+seven new cookbook recipes (24-29) plus four new examples
+(`svg_diagram.md`, `chord_chart.md`, `presentation.md`,
+`textbook.md`). `z49.c` (PostScript) and the legacy PDF pipeline
+remain frozen and bit-identical to v0.2.0.
+
+### Added
+
+- **mdlout: dark mode via CSS `currentColor` cascade.** Replaces the
+  v0.2.2 `filter: invert(1) hue-rotate(180deg)` mechanism. With
+  `z53.c` now folding default-black ink to `fill="currentColor"` /
+  `stroke="currentColor"` (lout 346b335), the dark theme retints
+  glyphs and rules by setting a `color:` on the page wrapper instead
+  of inverting each rendered page wholesale. Embedded raster
+  `<image>`s keep their original luminance and hue; authored colours
+  (charts, syntax highlighting, callouts) are preserved -- only the
+  implicit body ink is themed. CSS rewritten to the spec'd shape:
+  `body.mdlout-dark { background:#1a1a1a; color:#e8e8e8 }`,
+  `body.mdlout-dark .lout-page { background:#1a1a1a }`,
+  `body.mdlout-dark .lout-page svg { color:#e8e8e8 }`,
+  `body.mdlout-dark a { color:#88c0ff }`, plus dark code-block
+  styling. Pre-v0.2.3 builds carrying literal `fill="rgb(0,0,0)"`
+  stay black in dark mode; re-render to pick up the cascade
+  (lout 346b335 -> mdlout b6baaa4).
+- **mdlout: `--no-subset-fonts` opt-out flag** and
+  `subset-fonts: false` frontmatter key. The pre-v0.3 opt-in path
+  (`--subset-fonts` / `subset-fonts: true`) is kept as a backwards-
+  compatible no-op so existing scripts keep working. Precedence is
+  explicit-CLI > frontmatter > default. fontTools remains an
+  optional dependency: when missing, the helper warns once and falls
+  through to full-font inline, so default-on doesn't break builds
+  (deaa546).
+- **[lout] SVG `<textPath>` for curve-following text in `@Graphic`
+  bodies.** When the embedded PostScript interpreter sees a `show`
+  against a path that has accumulated at least one
+  `curveto` / `rcurveto` since the last `newpath` / `stroke` /
+  `fill`, `z53.c` emits the text via SVG `<textPath href>`
+  referencing a `<defs> <path d=...>` built from the path
+  accumulator, instead of the static `<text x y>` at the post-curve
+  current point. Targeted PS pattern:
+  `newpath ... moveto ... curveto (...) show`. New state plumbing:
+  `svg_ps_state.has_curve` (set in `svg_ps_curveto`, cleared in
+  `svg_ps_init`, `SVG_OP_NEWPATH`, `svg_ps_emit_path`'s
+  stroke/fill and clip-empty branches, the new textPath emitter,
+  and `SVG_PrintGraphicObject`'s per-call reset);
+  `svg_textpath_id_next` (monotonic counter, reset by
+  `SVG_PrintInitialize` so back-to-back builds in the same process
+  are byte-identical); `svg_ps_emit_textpath_show` (new helper
+  sibling to `svg_ps_show`). `SVG_OP_SHOW` branches on
+  `(had_geom && has_curve)`; the legacy static-text path is
+  unchanged for straight-line and no-path cases. New test snippet
+  `tests/snippets/text_on_path.lt` exercises the heuristic
+  (lout 60405f9 -> mdlout 0b90137).
+- **[lout] `z53.c` folds default-black ink to `currentColor`**.
+  When the active fill or stroke RGB resolves to the SVG-default
+  black -- the implicit ink colour Lout reaches for whenever no
+  explicit `setrgbcolor` / `LoutSetRGBColor` has been issued --
+  `SVG_PrintWord`, `SVG_PrintUnderline`, `svg_ps_emit_path`, and
+  the `svg_ps_show`-style text emit now write
+  `fill="currentColor"` / `stroke="currentColor"` instead of
+  `rgb(0,0,0)`. Non-default colours still emit the explicit rgb()
+  triple. Per the SVG spec, `currentColor` with no inherited
+  `color:` resolves to black, so an unstyled standalone .svg
+  renders identically to the prior output. Embedded inside an HTML
+  document with a `color:` cascade (mdlout's dark-mode body class),
+  glyphs and rules pick up the ambient hue without inverting
+  embedded rasters or shifting authored colours (lout 346b335).
+- **[lout] SVG `@Case` branches in `lout/include/`**. Every
+  `@BackEnd @Case` block in the diagram-helper packages that
+  previously lacked an SVG arm now has an explicit `@Yield` branch.
+  Trace audit in `lout/SVG_INCLUDES_AUDIT.md` (lout 5db1585 ->
+  mdlout 441095f).
+- **[lout] SVG `@Case` branches in `doc/{design,expert}`.** Every
+  `@BackEnd @Case` block in the doc/design and doc/expert source
+  trees (96 + 235 "replacing unknown @Case option SVG by
+  PostScript" warnings) now has a peer SVG `@Yield` branch, copying
+  the PostScript body verbatim. `z53.c`'s embedded PostScript
+  interpreter handles the operators used in these bodies
+  (`moveto` / `lineto` / `closepath` / `stroke` / `fill` /
+  `setgray` / `setdash` / etc.), so mirroring the PS arm renders
+  correctly. Sites touched: `doc/design/mydefs` (`@HLine`,
+  `@VDashLine`, `@LBox`, `@LittlePage`); `doc/design/s2_3`;
+  `doc/expert/mydefs` (the same four plus `@ShowMarks`,
+  `@ShowVMark`, `@ShowHMark`, `@TightBox`, `@GreyBox`);
+  `doc/expert/pre_colo` (`@SetColour` setrgbcolor demo);
+  `doc/expert/pre_grap` (three worked `@Graphic` examples);
+  `doc/expert/pri_obje`. Warning counts after rebuild:
+  `doc/design/all` 96 -> 0; `doc/expert/all` 235 -> 0. Side
+  benefit: the expert PS pipeline now converges across all 7
+  passes instead of asserting in `Parse()` at pass 4, fixing the
+  PDF page-count regression flagged in
+  `lout_doc_renders/README.md` note #4 (lout df54ae1 -> mdlout
+  f7cf6f6).
+- **`tests/profile/` gprof hot-spot report** + new
+  `tests/profile_ug_build.sh`. Rebuilds lout with `-pg
+  -fno-omit-frame-pointer` (and `-no-pie` at link time), runs a
+  single SVG pass over `doc/user/all` to collect `gmon.out`, and
+  writes `gprof_full.txt`, `gprof_brief.txt`, and a sorted
+  `gprof_z53_hot.txt`. Top hot `z53.c` functions on the current
+  baseline (~25.83 s user): `svg_ps_exec_op` 8.73% / 1.62 s;
+  `SVG_PrintBetweenPages` 7.38% / 1.37 s; `SVG_LinkDest` 4.58% /
+  0.85 s. `tests/profile/README.md` walks through the output
+  (including why all `SVG_*` entries are `<spontaneous>` -- they
+  are dispatched via the `BACK_END` function-pointer table in
+  `z01.c`) and ranks the next-round optimisation candidates:
+  replace `fprintf` with hand-rolled itoa/ftoa3 + `fwrite` for
+  page/link chrome, fold the bottom-left -> top-left wrapper into
+  glyph coordinates, function-pointer dispatch for the ~20 hot
+  PostScript ops inside `svg_ps_exec_op`. The script restores the
+  optimised binary on exit so `tests/run_all.sh` baseline is
+  unchanged (98d99ad).
+- **`tests/lout_doc_renders/index.html` landing page** (vanilla
+  HTML + CSS, no JS) with a 4-up hero strip of first-page
+  thumbnails and a per-doc summary table: pages, HTML/PDF/SVG
+  sizes, sample SSIM, diff %, and links to each render plus the
+  doc's source tree on jclements3/lout/svg-backend. Thumbnails
+  live in `tests/lout_doc_renders/thumbs/` and are generated from
+  `<doc>.pdf` via `pdftocairo` + ImageMagick `convert`.
+  `build.sh` gains a stricter pass-picking rule (prefer the
+  latest converged pass with matching size over "just take the
+  largest", filter out passes whose stderr contains `internal
+  error`) (1f9cc91).
+- **Seven new cookbook recipes** in `docs/cookbook.md` (lifting
+  the count from 23 to 30). Recipes 24-26: hand-rolled `@Graphic`
+  SVG diagram (using ```svg fenced blocks for figures
+  `@Mermaid` / `@Diag` cannot express -- gradients, hex grids,
+  phase portraits, custom logos); embedded ABC sheet music with
+  chord names (multi-line scores, multi-voice arrangements,
+  double-quoted chord symbols above each bar); reusable `mydefs`
+  macros (shared `--mydefs` path, symlink farm,
+  `$LOUT_HOME/lib` wrapping for cross-document macro libraries).
+  Recipes 27-29: tracking changes via `@Strike` / `@Insert`;
+  calendar grid via raw `@Tab`; back-matter index plus glossary
+  via `@Index` / `@PageOf` (1fce2f9, 155a7aa).
+- **Four new examples**:
+  `examples/svg_diagram.md` (traffic-light state machine, phase
+  portrait, gold-gradient logo, gridded floor plan; every figure
+  inline via ```svg fences); `examples/chord_chart.md` (twelve-
+  bar blues, eight-bar folk phrase, two-voice arrangement,
+  16-bar jazz changes, and a harp grand-staff with chord
+  symbols; 5 ABC blocks); `examples/presentation.md` (ten-slide
+  `type: slides` deck mixing prose, raw-Lout math, code-as-prose,
+  and an inline mermaid diagram); `examples/textbook.md` (1fce2f9,
+  155a7aa).
+- **`tests/lout_doc_renders/README.md`** -- per-doc render notes,
+  pass-picking heuristic, scratch-dir build, and the residual
+  warning audit cross-referenced into `SVG_INCLUDES_AUDIT.md`.
+
+### Changed
+
+- **mdlout: `--subset-fonts` default ON for the v0.3 cycle.** Font
+  subsetting (`--subset-fonts`, e42b157) landed in v0.2.2 as opt-in.
+  After re-running the full example corpus and the
+  `browser_test.sh` suite with subsetting forced on, every example
+  builds cleanly and renders identically in headless Chromium, so
+  the default flips. Refreshed `examples/out/` shrinks from
+  ~57.6 MB to ~25.3 MB total across the 27 main HTML files -- a
+  56% reduction, with per-file savings in the 50-60% band (font
+  payload alone shrinks ~81%, from 1.10 MB to ~210 KB per
+  document). No example broke (deaa546).
+- **`tests/lout_doc_renders/` build.sh pass-picker.** Stricter
+  convergence rule (latest two-consecutive-passes with matching
+  size, with stderr-`internal error` filter) replaces the
+  "largest file wins" heuristic. Net result vs. previously
+  committed renders: `design` SSIM 0.656 -> 0.912 (now converging
+  on a later pass); `expert` SSIM 0.920 -> 0.706, page count
+  120 -> 115 (PS pipeline crashes before convergence at lout HEAD;
+  cleared by f7cf6f6 above); `slides` 0.980 unchanged (bit-
+  identical); `user` 0.929 unchanged with minor SVG size growth
+  (+1.2%) (1f9cc91).
+
+### Fixed
+
+- **`tests/lout_doc_renders/build.sh` concurrent-runner damage.**
+  `lout` writes `*.li` / `*.ldx` / `lout.lix` into the cwd as it
+  resolves cross-references across passes. When multiple agents
+  drive lout against the same `lout/doc/$d/` directory in
+  parallel, they race on those files and produce symptoms like
+  `"assert failed in Parse: *token!"`,
+  `"rename(<name>.ldx, <name>.ld) failed"`, and `"fatal error:
+  line too long when reading index file lout.lix"`. Isolated
+  reproduction (`cp -r doc/expert` to a private dir, no
+  concurrency) shows 7/7 PS passes succeed cleanly. `build_doc`
+  now copies `$REPO/lout/doc/$d` to a per-run scratch
+  `$WORK/src/$d` before running lout; the original source is
+  untouched and parallel agent processes no longer race
+  (a4a20df).
+
+### Tests
+
+- **`tests/profile/` gprof report** + `tests/profile_ug_build.sh`
+  (98d99ad).
+- **`tests/lout_doc_renders/index.html`** landing page +
+  refreshed renders for all four Lout source-tree documents
+  (1f9cc91).
+- **`tests/snippets/text_on_path.lt`** exercises the new
+  `<textPath>` heuristic (0b90137).
+- Regression suite stays Pass-Excellent through every commit in
+  the cycle (`bash tests/run_all.sh` 65/65 -> 66/66 with the
+  text-on-path addition; `bash tests/browser_test.sh` 53-55 PASS
+  / 0 FAIL).
+
+### Docs
+
+- `docs/cookbook.md`: recipes 24-29 (1fce2f9, 155a7aa).
+- `examples/README.md`: gallery regenerated for the four new
+  examples.
+- `tests/lout_doc_renders/README.md`: per-doc render notes.
+- `tests/profile/README.md`: gprof output walkthrough.
+- `[lout] SVG_INCLUDES_AUDIT.md`: residual SVG `@Case` warnings
+  traced to `doc/` (lout 5db1585).
+
 ## [0.2.2] - 2026-05-23
 
 Sub-30 s User's Guide build, real TrueType (`.ttf`) outlines for
@@ -771,7 +995,8 @@ submodule:
 - 2024-01-26: lout 3.43 (the version vendored at the time of initial
   commit).
 
-[Unreleased]: https://github.com/jclements3/mdlout/compare/v0.2.2...HEAD
+[Unreleased]: https://github.com/jclements3/mdlout/compare/v0.2.3...HEAD
+[0.2.3]: https://github.com/jclements3/mdlout/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/jclements3/mdlout/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/jclements3/mdlout/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/jclements3/mdlout/compare/v0.1.0...v0.2.0
