@@ -1,0 +1,29 @@
+###########################################################################
+#  graph_bar_chart - @Graph using the `filledyhisto` style to plot bars  #
+#  along the x axis.  Five categorical values rendered as filled bars   #
+#  (Lout's histogram-style data plot).                                   #
+###########################################################################
+
+@SysInclude { graph }
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+A simple bar chart, drawn with the @Code "filledyhisto" pairs style:
+@DP
+@CentredDisplay -2p @Font @Graph
+   style { axes }
+   xorigin { 0 }
+   yorigin { 0 }
+   width { 8c }
+   height { 5c }
+   xticks { 1@ 2@ 3@ 4@ 5@ }
+   yticks { 0@ 5@ 10@ 15@ 20@ }
+   belowcaption { category }
+   leftcaption { count }
+{
+   @Data pairs { filledyhisto } paint { gray }
+   {
+      1 7   2 12   3 4   4 17   5 9
+   }
+}
+@End @Text

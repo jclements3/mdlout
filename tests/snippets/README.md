@@ -47,6 +47,7 @@ fixture rather than a slice of the User's Guide.
 
 | Snippet                       | Doc-source chapter          | Feature(s)                                              | Tier      | Notes |
 |---|---|---|---|---|
+| `abc_chords.lt`               | --                          | Two-row `@Tab` standing in for an ABC music progression (chord names over beat counts) | strict    | `@ABC` itself diverges between back ends (SVG passes the source to abcjs; PS prints a bracketed fallback), so the snippet uses a plain table that both back ends can render. |
 | `arrow_into_circle.lt`        | Diagrams: arrowheads        | Curved arrowhead tangency on circle boundary           | graphics  |       |
 | `box_curve.lt`                | Basic objects: shapes       | `@CurveBox`                                            | strict    |       |
 | `box_shadow.lt`               | Basic objects: shapes       | `@ShadowBox`                                           | graphics  |       |
@@ -61,6 +62,7 @@ fixture rather than a slice of the User's Guide.
 | `diag_arrow_curved.lt`        | Diagrams: arrowheads        | `arrowstyle { curvedsolid }`                           | strict    |       |
 | `diag_arrow_solid.lt`         | Diagrams: arrowheads        | `arrowstyle { solid }`                                 | strict    |       |
 | `diag_arrowstyle_gallery.lt`  | Diagrams: arrowheads        | Full arrowstyle audit (solid / open / halfopen / solidwithbar / curvedsolid / curvedopen / curvedhalfopen) | strict    | Audit-style snippet; flips colour the moment any arrowhead shape regresses in `z53.c`. |
+| `diag_dashed_lines.lt`        | Diagrams: links             | `@Link` with `pathstyle { dashed }`                    | strict    |       |
 | `diag_ellipse_with_tag.lt`    | Diagrams: nodes             | `@Ellipse` + external `nodelabel`                      | strict    |       |
 | `diag_labels_complex.lt`      | Diagrams: labels            | `nodelabel` / `clabel` / `alabel` / `blabel` / `linklabel` | graphics  |       |
 | `diag_multi_link.lt`          | Diagrams                    | K3 node graph                                          | strict    |       |
@@ -68,6 +70,7 @@ fixture rather than a slice of the User's Guide.
 | `diag_syntax.lt`              | Diagrams: syntax diagrams   | `@SyntaxDiag` `@Loop`                                  | strict    |       |
 | `diag_tree_simple.lt`         | Diagrams: trees             | `@Tree`, three children                                | strict    |       |
 | `display_overhead.lt`         | Displays                    | `@Overhead` (slides) with nested `@Display`            | strict    |       |
+| `eq_alignment.lt`             | Equations: matrices         | Multi-line equation system aligned on `=` via `matrix` + `rcol`/`ccol`/`lcol` | strict    |       |
 | `eq_basic.lt`                 | Equations                   | `sup` / `sub` baseline cases                           | strict    |       |
 | `eq_braced_systems.lt`        | Equations: large fences     | Piecewise function with `left "{"`, column vector with `left [ ... right ]` | strict    |       |
 | `eq_continued_fraction.lt`    | Equations: fractions        | Three-level nested `over` (continued + compound)       | strict    |       |
@@ -78,19 +81,24 @@ fixture rather than a slice of the User's Guide.
 | `eq_nested_supsub.lt`         | Equations                   | Deep `sub` / `sup` nesting                             | strict    |       |
 | `fig_multi.lt`                | Figures                     | Three `@Fig` figures laid out side-by-side             | graphics  |       |
 | `fig_numbering.lt`            | Figures                     | Numbered `@Figure` / `@Table` references               | strict    |       |
+| `figure_with_caption.lt`      | Figures                     | `@Figure` float with formal `@Caption` wrapping a `@Diag` | strict    |       |
+| `footnote_multiple.lt`        | Footnotes                   | Three `@FootNote` bodies attached to one paragraph     | strict    |       |
 | `footnote_wired.lt`           | --                          | mdlout's pandoc-style `@FootNote` wiring               | strict    |       |
 | `graph_axes_negative.lt`      | Graphs                      | `@Graph` with origin-crossing axes and negative tick labels (`y = x^3 / 20`) | strict    |       |
+| `graph_bar_chart.lt`          | Graphs                      | `@Graph` with `filledyhisto` pairs (bar chart variant) | strict    |       |
 | `graph_log_scale.lt`          | Graphs                      | `@Graph` with `ylog { 10 }` exponential plot           | strict    |       |
 | `graphic_circle.lt`           | Graphics                    | Filled circle via raw PostScript                       | graphics  |       |
 | `graphic_line.lt`             | Graphics                    | Horizontal line via raw PostScript                     | graphics  |       |
 | `graphic_stress.lt`           | Graphics                    | CTM + curves + fills + strokes                         | graphics  |       |
 | `graphic_trig.lt`             | Graphics                    | Sin/cos/atan inside raw `@Graphic`                     | strict    |       |
 | `headings.lt`                 | Displays                    | Three sizes of centred display headings                | strict    |       |
+| `include_basic.lt`            | --                          | `@Include` of a tiny fragment file (`include_basic_frag`) co-located in the snippets dir, quoted because of the `../` separator | strict    |       |
 | `indented_code.lt`            | --                          | mdlout's `@IndentedDisplay @F @Verbatim` form          | strict    |       |
 | `index_basic.lt`              | Indexes                     | `@MakeIndex` + multiple `@Index` entries               | strict    | Single-pass build leaves the index part empty in both back ends; identical symmetric output. |
 | `multi_column.lt`             | Galley layout               | Two text blocks composed horizontally                  | strict    |       |
 | `numbered_list.lt`            | Lists                       | `@NumberedList` / `@ListItem`                          | strict    |       |
 | `paragraph_fill.lt`           | Paragraph breaking          | Lorem ipsum line breaking                              | strict    |       |
+| `raw_postscript.lt`           | Graphics                    | Minimal raw-PS `@Graphic`: moveto / lineto / stroke + Times-Roman `show`, exercising the four core primitives of z53.c's PS interpreter | graphics  |       |
 | `references_basic.lt`         | References                  | `@SysDatabase` + `@Cite { ... }`                       | strict    | Single-pass build leaves bibliography slot empty in both back ends. |
 | `rule_full.lt`                | Displays: rules             | `@FullWidthRule`                                       | graphics  |       |
 | `rule_local.lt`               | Displays: rules             | `@LocalWidthRule`                                      | graphics  |       |
@@ -100,11 +108,13 @@ fixture rather than a slice of the User's Guide.
 | `table_align.lt`              | Tables                      | `@Cell A indent { left | ctr | right }`                | strict    |       |
 | `table_longtable.lt`          | Tables                      | Multi-page `@Tbl` via `@NP`                            | strict    |       |
 | `table_multi_row.lt`          | Tables                      | Inter-row rules + simulated header band                | strict    |       |
+| `table_rotated.lt`            | Tables                      | `@Tab` with `@Rotate { 60d }` header cells             | strict    |       |
 | `table_simple.lt`             | Tables                      | `@Tab` with three columns                              | strict    |       |
 | `table_spanned_columns.lt`    | Tables: spanning            | `@StartHSpan` / `@HSpan` + `@StartVSpan` / `@VSpan`    | strict    |       |
 | `text_basic.lt`               | Galley layout               | Plain paragraph, simple line breaking                  | strict    |       |
 | `text_sizes.lt`               | Fonts                       | Six sizes from 8 p to 24 p                             | strict    |       |
 | `text_styles.lt`              | Fonts                       | `@B` / `@I` / `@II` runs                               | strict    |       |
+| `text_subscript_superscript.lt` | --                        | Chained plain-text `@Sub` / `@Sup` (chemistry, ordinals, indexed bounds) | strict    |       |
 | `toc_auto.lt`                 | --                          | mdlout's `[TOC]` placeholder round-trip                | strict    |       |
 | `transform_rotate.lt`         | Graphics                    | `@Rotate { 30d }` text                                 | graphics  |       |
 | `tree_4level.lt`              | Diagrams: trees             | Four-level `@Tree` with mixed leaf decorations         | strict    |       |

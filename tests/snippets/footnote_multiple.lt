@@ -1,0 +1,15 @@
+###########################################################################
+#  footnote_multiple - three distinct @FootNote bodies attached to a    #
+#  single paragraph, each producing its own bottom-of-page entry.  The  #
+#  PostScript and SVG back ends should agree on numbering and on the    #
+#  vertical placement of the footnote band.                              #
+###########################################################################
+
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+Aristotle@FootNote { Greek philosopher, 384-322 BCE. } wrote about
+ethics@FootNote { Nicomachean Ethics, c. 340 BCE. } and politics,@FootNote {
+Politics, eight books on the polis. } leaving a deep mark on the
+medieval scholastic tradition.
+@End @Text

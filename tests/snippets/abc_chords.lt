@@ -1,0 +1,23 @@
+###########################################################################
+#  abc_chords - a stand-in for ABC music notation with chord names.     #
+#  The svgmacros @ABC macro diverges between back ends (SVG passes the  #
+#  ABC text to the client-side abcjs renderer; PS prints a bracketed   #
+#  fallback), so we use a @Tab instead: a row of bolded chord names    #
+#  over a row of beat counts, sketching a I-IV-V-I progression.        #
+###########################################################################
+
+@SysInclude { tbl }
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+A C-major I-IV-V-I progression sketched as labelled beats:
+@DP
+@CentredDisplay @Tab
+   vmargin { 0.2v }
+   hmargin { 0.8c }
+   @Fmta { @Col A | @Col B | @Col C | @Col D }
+{
+@Rowa A { @B { C } }    B { @B { F } }    C { @B { G } }    D { @B { C } }
+@Rowa A { 1 2 3 4 }     B { 1 2 3 4 }     C { 1 2 3 4 }     D { 1 2 3 4 }
+}
+@End @Text

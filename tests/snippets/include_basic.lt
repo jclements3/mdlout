@@ -1,0 +1,16 @@
+###########################################################################
+#  include_basic - the @Include directive pulling in a tiny fragment    #
+#  file co-located with this snippet.  Builds from the tests/out/       #
+#  working directory, so the include path reaches back into             #
+#  ../snippets/.  Verifies that both back ends agree on text emitted    #
+#  from an @Included file.                                              #
+###########################################################################
+
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+Before the include directive.
+@Include { "../snippets/include_basic_frag" }
+@PP
+After the include directive.
+@End @Text

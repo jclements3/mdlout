@@ -1,0 +1,24 @@
+###########################################################################
+#  raw_postscript - the most minimal exercise of the embedded PS        #
+#  interpreter in z53.c: a moveto, a lineto/stroke, and a show with     #
+#  Times-Roman.  No transforms, no curves, no clipping - just the four #
+#  primitives that the SVG back-end's PS interpreter has to support.   #
+###########################################################################
+
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+A raw PostScript figure exercising moveto, lineto, stroke and show:
+@DP
+@CentredDisplay {
+   "gsave"
+   "  /Times-Roman findfont 12 pt scalefont setfont"
+   "  0.6 setlinewidth"
+   "  10 ysize 2 div moveto"
+   "  xsize 10 sub ysize 2 div lineto"
+   "  stroke"
+   "  xsize 2 div ysize 2 div 6 add moveto"
+   "  (hello) show"
+   "grestore"
+} @Graphic { 6c @Wide 1.5c @High }
+@End @Text

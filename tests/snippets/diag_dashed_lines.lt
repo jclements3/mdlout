@@ -1,0 +1,20 @@
+###########################################################################
+#  diag_dashed_lines - @Diag with two nodes connected by a dashed line   #
+#  using `pathstyle { dashed }`.  Exercises the dashed-stroke code path  #
+#  in z53.c (stroke-dasharray attribute on the SVG <path>).             #
+###########################################################################
+
+@SysInclude { diag }
+@SysInclude { doc }
+@Doc @Text @Begin
+
+@CentredDisplay @Diag {
+A:: @Node { source } ||3c B:: @Node { target }
+// @Link from { A } to { B }
+   arrow { yes }
+   pathstyle { dashed }
+   pathdashlength { 0.15f }
+   pathwidth { 0.5p }
+}
+
+@End @Text

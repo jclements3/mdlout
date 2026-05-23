@@ -1,0 +1,25 @@
+###########################################################################
+#  table_rotated - @Tab with rotated header text. Each header cell holds#
+#  a @Rotate { 60d } label, exercising graphics-state rotation inside   #
+#  table cells in both back ends.                                       #
+###########################################################################
+
+@SysInclude { tbl }
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+@CentredDisplay @Tab
+   vmargin { 0.2v }
+   hmargin { 0.3c }
+   @Fmta { @Col A | @Col B | @Col C | @Col D }
+{
+@Rowa
+   A { 60d } @Rotate { @B { Apples } }
+   B { 60d } @Rotate { @B { Berries } }
+   C { 60d } @Rotate { @B { Cherries } }
+   D { 60d } @Rotate { @B { Dates } }
+@Rowa A {  4 } B {  7 } C { 12 } D {  3 }
+@Rowa A {  9 } B {  2 } C {  5 } D {  8 }
+@Rowa A {  6 } B { 11 } C {  1 } D { 10 }
+}
+@End @Text

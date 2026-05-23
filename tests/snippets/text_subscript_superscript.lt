@@ -1,0 +1,16 @@
+###########################################################################
+#  text_subscript_superscript - chained @Sub / @Sup runs (the plain-text#
+#  versions from bsf, not the @Eq versions).  Covers chemistry-style    #
+#  formulae and ordinal markers, exercising baseline shift + font-size  #
+#  reduction in both back ends.                                         #
+###########################################################################
+
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+Plain-text scripts: water is H @Sub 2 O, glucose is C @Sub 6 H @Sub { 12 }
+O @Sub 6, and Einstein's relation is E = mc @Sup 2.
+@PP
+Mixed runs: the 1 @Sup st, 2 @Sup nd, and 3 @Sup rd entries map to the
+n @Sup th case in general, with bounds x @Sub 0, x @Sub 1, ..., x @Sub n.
+@End @Text

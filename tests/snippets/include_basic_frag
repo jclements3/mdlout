@@ -1,0 +1,3 @@
+@PP
+This sentence comes from a small fragment file that the main document
+pulls in via Lout's include directive.

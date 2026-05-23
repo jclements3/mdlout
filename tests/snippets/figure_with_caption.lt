@@ -1,0 +1,25 @@
+###########################################################################
+#  figure_with_caption - a @Figure floating environment with an @Caption #
+#  containing arbitrary text, exercising the formal caption pathway      #
+#  (not just hand-typed "Figure 1." labels as in fig_numbering.lt).      #
+###########################################################################
+
+@SysInclude { diag }
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+The figure below is wrapped in a real @Code "@Figure" float with a
+formal @Code "@Caption".
+
+@Figure
+   @Caption { A small diagram with two connected nodes. }
+@Begin
+@CentredDisplay @Diag {
+A:: @Circle { a } ||2c B:: @Circle { b }
+// @Link from { A } to { B } arrow { yes }
+}
+@End @Figure
+
+@PP
+Text continues after the caption.
+@End @Text

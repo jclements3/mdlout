@@ -1,0 +1,20 @@
+###########################################################################
+#  eq_alignment - multi-line aligned system of equations.  Uses the @Eq  #
+#  matrix construct with `rcol` / `lcol` columns so the equals signs and #
+#  right-hand sides line up vertically (equivalent to a LaTeX align     #
+#  environment).  Exercises matrix layout with left/right column        #
+#  alignment, not just centred matrices like eq_matrix.lt.              #
+###########################################################################
+
+@SysInclude { eq }
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+A two-equation system, aligned on the equals sign:
+@DP
+@CentredDisplay @Eq {
+   matrix
+      row rcol { 2 x + 3 y } ccol { = } lcol { 5 }
+      row rcol { x - y }     ccol { = } lcol { 1 }
+}
+@End @Text
