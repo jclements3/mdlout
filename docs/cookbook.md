@@ -2723,6 +2723,214 @@ children -- e.g. `/Count -3` for a chapter with three sections
 below it; this is the single most-skipped detail in pdfmark
 tutorials and the reason nested outlines so often render flat.
 
+## 45. Bulk-rendering a folder of examples via shell loop
+
+A personal site, a course-notes repository, or a CI job often
+needs to rebuild *every* `.md` in a directory whenever any of
+them changes. mdlout is fast enough (single-digit seconds per
+page on warm caches) that a naive shell loop is the right answer
+for any corpus under a few hundred documents -- no need for a
+proper build graph. The pattern below skips re-rendering files
+whose output is newer than the source, prints a per-file timing
+line, and exits non-zero if any conversion fails so it slots
+into CI without modification.
+
+```bash
+#!/usr/bin/env bash
+# build_all.sh -- rebuild every Markdown file in this folder
+set -euo pipefail
+shopt -s nullglob
+fail=0
+for f in *.md; do
+  out="${f%.md}.html"
+  if [[ -f "$out" && "$out" -nt "$f" ]]; then
+    continue   # output newer than source -- skip
+  fi
+  printf '%-40s ' "$f"
+  start=$(date +%s)
+  if ./mdlout.py "$f" >/dev/null 2>&1; then
+    printf 'ok (%ds)\n' "$(( $(date +%s) - start ))"
+  else
+    printf 'FAIL\n' && fail=1
+  fi
+done
+exit "$fail"
+```
+
+For Make-driven projects the equivalent is a one-line pattern
+rule plus a phony aggregate target:
+
+```make
+HTML := $(patsubst %.md,%.html,$(wildcard *.md))
+all: $(HTML)
+%.html: %.md
+	./mdlout.py $<
+.PHONY: all clean
+clean:
+	rm -f *.html *.lt *.svg
+```
+
+Rendered: each `.md` becomes a sibling `.html` (or `.pdf` if you
+pass `--format=pdf` in the loop body). Re-running is a no-op
+when nothing changed -- the `-nt` check (shell) or Make's
+timestamp logic short-circuits.
+
+**Gotcha:** mdlout writes intermediate files (`*.lt`, `*.svg`,
+`*.ps`) next to the source by default. In a CI working tree this
+clutters the diff; either pass `-o out/$f.html` to redirect the
+final artefact and live with the intermediates, or `cd` into a
+scratch directory first and pass an absolute path to the input.
+The loop above also serialises -- on multi-core CI runners,
+`find . -maxdepth 1 -name '*.md' -print0 | xargs -0 -n1 -P4
+./mdlout.py` cuts wall-clock time by ~3x for a 50-file corpus,
+but be aware that mdlout's `--watch`/`--serve` modes are *not*
+parallel-safe (they share a file-mtime cache), so reserve the
+`-P4` form for one-shot builds only.
+
+## 46. Linking specific lines of a code block
+
+mdlout's anchor-id work (introduced in v0.2.6 to support
+`[TOC]` deep-linking) extends to fenced code blocks: each block
+gets an `id="code-N"` on the surrounding `<pre>` element, and
+individual lines are wrapped in `<span id="code-N-LK">` where
+`K` is the 1-based line number. The result is that a URL
+fragment like `…/api.html#code-3-L42` scrolls to and highlights
+line 42 of the third code block on the page -- the same
+convention GitHub uses for blob views. This is invaluable for
+documentation that needs to point a reader at "the import on
+line 7" without screenshotting it.
+
+```markdown
+# Worked example: tracing a request
+
+The full handler is below. The interesting bit is
+[line 12](#code-1-L12), where we tag the span with the
+caller's trace ID before the database round-trip.
+
+```python
+from opentelemetry import trace
+from fastapi import FastAPI, Request
+
+app = FastAPI()
+tracer = trace.get_tracer(__name__)
+
+@app.get("/user/{uid}")
+async def read_user(uid: int, request: Request):
+    span = trace.get_current_span()
+    span.set_attribute("user.id", uid)
+    trace_id = request.headers.get("x-trace-id")
+    span.set_attribute("trace.id", trace_id)
+    row = await db.fetch_one(
+        "SELECT * FROM users WHERE id = :id",
+        {"id": uid},
+    )
+    return row
+```
+
+See also [the schema in line 14](#code-1-L14).
+```
+
+Rendered (HTML): clicking the "line 12" link jumps the viewport
+so line 12 (`span.set_attribute("trace.id", trace_id)`) sits
+near the top, and a CSS `:target` rule (mdlout ships a default
+yellow background) flashes it for the reader. The fragment
+survives copy-paste -- mail a colleague the URL and their
+browser lands on the same line. In PDF mode the fragments are
+emitted as named destinations via the PostScript back-end's
+`@Tag` mechanism, so `pdf-viewer#code-1-L12` works in any
+reader that understands PDF named-destination URIs (Acrobat,
+SumatraPDF, qpdf-based tools).
+
+**Gotcha:** the block index `N` in `code-N` is *global to the
+document, in source order, counting from 1* -- not per-section
+and not stable across edits. If you insert a new fenced block
+above an existing one, every downstream link breaks silently
+(no warning, the fragment just lands on the wrong block). For
+durable cross-references, override the anchor with an explicit
+`{#myid}` attribute on the fence: ` ```python {#tracer-handler} `
+yields `id="tracer-handler"` on the `<pre>` and the lines become
+`tracer-handler-L1`, `tracer-handler-L2`, etc. The line-span
+overlay also assumes a monospaced font with no soft-wrap; if
+your CSS turns on `white-space: pre-wrap`, a single logical line
+may visually occupy two rows, and the `:target` highlight only
+covers the first one. The default mdlout stylesheet sets
+`white-space: pre` precisely to avoid this.
+
+## 47. Including a Lout figure file from outside the source tree
+
+Sometimes the figure lives in a shared assets repo, a Git LFS
+mount, or `/srv/diagrams/` that several documents pull from. The
+two mechanisms differ by source kind: raw Lout source (a `.lt`
+fragment with `@Box`, `@Diag`, an `@Eq` expression, anything
+that needs to be *typeset* in the host document's context) goes
+through `@SysInclude` or `@Include`; an opaque asset (PNG, JPG,
+or a self-contained SVG that the back-end should drop in as-is)
+goes through `@SVGFile` or `@IncludeGraphic`. Both accept
+absolute paths, so the figure doesn't need to live in the build
+directory.
+
+```markdown
+---
+type: report
+title: Q4 Architecture Review
+---
+
+# System overview
+
+The runtime topology has not changed since the v3.2 rollout;
+the canonical diagram lives in the platform-diagrams repo and
+is re-used verbatim here:
+
+```lout
+@SysInclude { /srv/diagrams/lout/runtime-topology.lt }
+@CentredDisplay @RuntimeTopologyFigure
+```
+
+# Data plane
+
+The current data-plane wiring is captured in the SVG below,
+which is regenerated nightly from the live config:
+
+![runtime data plane](/srv/diagrams/svg/dataplane-2026q2.svg)
+
+# Sequence diagram
+
+For a raster-only asset (a screenshot, say), the same path
+syntax works -- `@IncludeGraphic` is what `![alt](path)`
+desugars to under the hood:
+
+```lout
+@CentredDisplay @IncludeGraphic { "/srv/screenshots/grafana-incident-2026-04-18.png" }
+```
+```
+
+Rendered: the first inclusion pulls `runtime-topology.lt` into
+the document and typesets it with the report's font and colour
+palette -- if the included file uses `@Diag`, the result picks
+up `@DiagFont` from the host. The second inclusion (the SVG via
+`![…]`) is dropped into the HTML output as an inline `<image
+href="file:///srv/diagrams/svg/dataplane-2026q2.svg">` in SVG
+mode, or rasterised through Ghostscript in PDF mode. The third
+inclusion (the PNG) is `<image>` in HTML, EPS-converted in PDF.
+
+**Gotcha:** `@SysInclude` searches Lout's library path first
+(`/usr/local/share/lout-3.43/lib/` and friends) and only treats
+its argument as a filesystem path if that lookup fails -- so a
+bare `runtime-topology.lt` will silently resolve to a stale
+library copy if one exists. Always use an absolute path (leading
+`/`) or `@Include` (which is path-literal, no library search)
+when sourcing from outside the tree. Second, mdlout copies its
+input directory into a scratch build dir, so *relative* paths
+inside the markdown resolve against the scratch dir, not the
+source dir -- another reason absolutes are the only safe choice
+for cross-tree includes. Third, in HTML mode the `<image
+href="file:///…">` URL works when you open the output in a local
+browser, but breaks when you serve the HTML over HTTP (the
+browser's same-origin / `file:` policy blocks the load); for
+served content, copy the asset into the output tree and use a
+relative URL, or pass `--external-assets` to inline a base64
+data URI instead (`mdlout.py --external-assets --inline-svg`).
+
 ## Where to look next
 
 - [`docs/best_practices.md`](best_practices.md) -- idiom guide:
