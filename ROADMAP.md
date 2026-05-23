@@ -34,15 +34,64 @@ following text in `@Graphic` bodies (v0.2.3); a PEP 621
 SVG renders of all four documents that ship with the Lout source
 tree (`design`, `expert`, `slides`, `user`, with zero residual SVG
 `@Case` warnings as of v0.2.3). The 327-page
-User's Guide PS-vs-SVG diff sits at mean SSIM 0.9283 (49 OK / 277
-DIFF / 1 BAD / 0 MISSING after v0.2.5); the 65-snippet single-feature suite is
-100% Pass-Excellent under the post-v0.2 tightened thresholds (5% AE
-for text, 2% AE / SSIM 0.95 for graphics-heavy). Build size: ~848 KB
+User's Guide PS-vs-SVG diff sits at mean SSIM **0.9441** at the new
+150 DPI baseline (was 0.9283 at 100 DPI on the same corpus, after
+v0.2.5); the 70-snippet single-feature suite is 100% Pass-Excellent
+under the post-v0.2 tightened thresholds (5% AE for text, 2% AE /
+SSIM 0.95 for graphics-heavy). Build size: ~848 KB
 lout binary, 150 KB single-file mdlout.py. User's Guide SVG build:
 ~22.6 s real / ~19.8 s user on the reference host after v0.2.4
 perf round 4 (was ~26-29 s in v0.2.2 round 2, ~32 s in v0.2.1,
 ~7 min mid-v0.2 cycle; the original v0.4 < 30 s stretch target
 is now cleared by ~7 s).
+
+## Shipped in v0.2.6
+
+Same-day follow-on to v0.2.5. Closes the smcp/onum consumer-side
+item that v0.2.5's GSUB parser was waiting on, and re-baselines the
+regression harness at 150 DPI.
+
+- **smcp/onum consumer-side emission** (was the second half of
+  v0.4 "text shaping", and the explicit "queued for v0.2.6 under
+  PR #167" carry-over from v0.2.5). `z53.c` now emits GSUB-
+  substituted glyphs as `<path d="...">` outlines for body text:
+  substituted glyphs have no Unicode codepoint, so a `<text>`-based
+  emission could not reference them; the consumer switches whole
+  words that contain at least one substituted byte over to path
+  mode. Activation is opt-in via frontmatter
+  `font-features: smcp,onum` (mdlout.py sets
+  `LOUT_SVG_FONT_FEATURES` in the child process) or via the raw
+  env var for `.lt` authoring. Snippet `text_smcp_active.lt` lands
+  PASS-EXCELLENT at AE-ratio 0.19%, SSIM 0.9947.
+- **Path-emit hot-loop LRU cache** (perf follow-on to the consumer
+  landing). Caches decoded glyph `d`-strings per `(font, gid,
+  size)`; ~2.4-2.7x speedup on smcp-heavy builds. SVG output
+  byte-identical to the pre-cache build across the regression
+  suite.
+- **DPI investigation → 150 DPI default** (was an open
+  measurement question from the chapter-3 pagination-drift
+  investigation: how much of the 5% AA floor is rasteriser-
+  resolution-bound?). All regression rasters now run at 150 DPI;
+  mean SSIM on the 327-page UG diff lifts 0.9283 → **0.9441** on
+  the same corpus. Snippet pass / fail verdicts byte-identical to
+  the 100 DPI run; 100 DPI numbers retained in
+  `snippet_history.jsonl` for trend continuity.
+- **`tests/user_guide_diff` default PASSES 7 → 8** (commit
+  `7fefdcd`). The v0.2.5 ligature width shifts pushed the
+  cross-reference loop past 7 passes; defaulting to 8 restores
+  convergence.
+- **`tests/lout_doc_renders` refresh against v0.2.5 fixes**
+  (commit `b170c22`). SSIMs tick up modestly across the four
+  documents; SVG byte sizes shrink (design 2.4 → 2.0 MiB, expert
+  6.0 → 5.1 MiB); User SVG wall time **319 s → 237 s**.
+- **`tests/snippet_history_sparklines.html` + deep-link routing**
+  (commit `621c3a7`). 70-card CSS-grid landing page with inline
+  SVG sparklines of the AE pixel-diff ratio over the last 20
+  runs; hash routing on the per-snippet detail viewer.
+- **Cookbook recipes 36-38** (commit `a7597e7`; recipe count
+  35 → **38**), **`examples/index.md` docs landing page**
+  (`f03d5e1`), and **`examples/cv.md` single-column rewrite**
+  (`b220c58`).
 
 ## Shipped in v0.2.5
 
@@ -199,16 +248,20 @@ list (see "Shipped in v0.2.3" above). Items still pending:
 Harder, longer-tail items that haven't started yet.
 
 - **Text shaping: ligatures and combining marks** -- partially
-  shipped in v0.2.5. fi/fl/ffi/ffl ligature substitution lands
-  via a 2-3 byte lookahead on the Lout-word side (Adobe-Type
-  serif allowlist; Unicode codepoints U+FB01-U+FB04). The GSUB
-  table parser for `smcp` / `onum` is in place but parser-only
-  (consumer queued for v0.2.6 under PR #167). Still open:
-  combining-mark positioning (combining acute / grave / cedilla
-  on Latin Extended-A; visible on `multilingual.md`), GSUB
-  Lookup types beyond Type 1 (ligature subtables, contextual,
-  chained, extension), TrueType GSUB, and GPOS-anchor mark
-  attachment. Pulling in the remaining stages closes the gap.
+  shipped across v0.2.5 / v0.2.6. fi/fl/ffi/ffl ligature
+  substitution landed in v0.2.5 via a 2-3 byte lookahead on the
+  Lout-word side (Adobe-Type serif allowlist; Unicode codepoints
+  U+FB01-U+FB04). The GSUB table parser for `smcp` / `onum`
+  landed parser-only in v0.2.5, and the consumer side
+  (path-emission for substituted glyphs without Unicode
+  codepoints, with an LRU `(font, gid, size)` cache) shipped in
+  v0.2.6 -- so frontmatter `font-features: smcp,onum` is now an
+  end-to-end working knob. Still open: combining-mark positioning
+  (combining acute / grave / cedilla on Latin Extended-A; visible
+  on `multilingual.md`), GSUB Lookup types beyond Type 1
+  (ligature subtables, contextual, chained, extension), TrueType
+  GSUB, and GPOS-anchor mark attachment. Pulling in the remaining
+  stages closes the gap.
 - **Shared rasteriser for true pixel parity.** The current ~5%
   antialiasing floor on the User's Guide diff is rsvg vs
   Ghostscript painting the same glyph outlines with different
@@ -288,6 +341,6 @@ project-redefining choice, not an incremental release.
 
 ---
 
-Last updated: 2026-05-23 (v0.2.5). See [CHANGELOG.md](CHANGELOG.md) for
+Last updated: 2026-05-23 (v0.2.6). See [CHANGELOG.md](CHANGELOG.md) for
 the release history this roadmap projects from, and
 [TODO.md](TODO.md) for the working-engineer task list.

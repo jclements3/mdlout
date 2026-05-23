@@ -11,6 +11,147 @@ Submodule-only changes are tagged `[lout]`.
 
 ## [Unreleased]
 
+## [0.2.6] - 2026-05-23
+
+Same-day follow-on to v0.2.5. Lands the **smcp/onum consumer side** in
+`z53.c` (PR #167): GSUB-substituted glyphs that have no Unicode
+codepoint are now emitted as `<path d="...">` outlines for body text,
+so frontmatter `font-features: smcp,onum` actually renders small-caps
+/ old-style figures in the SVG. The path-emit hot loop picks up an
+LRU cache for decoded glyph `d`-strings (~2.4-2.7x faster on
+smcp-heavy builds). The User's Guide PS-vs-SVG diff PASSES count
+bumps 7 -> 8 (ligature width shifts pushed the cross-reference loop
+past 7) and the regression harness re-baselines at **150 DPI**, lifting
+the mean SSIM from 0.9283 (100 DPI) to **0.9441** (150 DPI) on the
+same corpus. `tests/lout_doc_renders` refreshed against the v0.2.5
+fixes -- User SVG wall time 319 s -> 237 s. Three new cookbook recipes
+(36-38; total now **38**), a polished single-column `cv.md`, and a
+docs landing page (`examples/index.md`) round out the docs / examples
+upkeep. `z49.c` (PostScript) and the legacy PDF pipeline remain frozen
+and bit-identical to v0.2.0.
+
+### Added
+
+- **[lout] `z53.c` smcp/onum consumer-side emission** (commits
+  `8f6c536`, `fd89ea5`). Wires the SVG back-end so the OpenType GSUB
+  `smcp` / `onum` substitutions parsed in v0.2.5 are emitted as
+  `<path d="..."/>` outlines for body text. Substituted glyphs have
+  no Unicode codepoint, so a `<text>`-based emission could not
+  reference them; the consumer side switches whole words that
+  contain at least one substituted byte over to path mode. Activation
+  is opt-in via frontmatter `font-features: smcp,onum`
+  (mdlout.py sets `LOUT_SVG_FONT_FEATURES` in the child Lout
+  process) or via the raw env var for `.lt` authoring. Documents
+  without the env var are byte-identical to the prior build.
+  Snippet `text_smcp_active.lt` exercises the path-emission branch
+  end to end (uses the `LOUT_SVG_FONT_FEATURES_SYNTH=smcp,onum`
+  fallback so the snippet works against the URW base35 Type 1 set,
+  which has no GSUB, by remapping lowercase -> uppercase glyph
+  entries). Verdict: PASS-EXCELLENT at AE-ratio 0.19%, SSIM 0.9947.
+  Regression suite stays at 70 Pass-Excellent / 0 Fail. Closes
+  v0.2.5's "phase 2 consumer queued for v0.2.6 under PR #167".
+- **[lout] `z53.c` path-emit hot-loop LRU cache** (commits
+  `590ad2b`, `87dd48c`). The glyph path-emit consumer decodes the
+  CFF Type-2 charstring for each substituted glyph into an SVG
+  `d`-string. The cache keys on `(font, gid, size)` and avoids
+  re-decoding the same glyph at the same size across word
+  boundaries. Wall-time on a 200-paragraph pangram smcp build
+  drops from 5.0x baseline (consumer landing, pre-cache) to 2.1x
+  baseline (median of 5 runs); the standalone `z53.c` improvement
+  is 2.7x on the same workload. SVG output byte-identical to the
+  pre-cache build across the regression suite.
+- **`tests/snippet_history_sparklines.html` + deep-link routing**
+  (commit `621c3a7`). 76 KB CSS-grid landing page with 70
+  sparklines, one per snippet: snippet name + verdict badge +
+  80x20 inline-SVG sparkline of AE pixel_diff_ratio over the last
+  20 runs + footer with latest diff_ratio + SSIM + run count.
+  Red / green dots mark worst / best in series; blue dot marks the
+  latest run. Sort modes: worst-diff-first (default), best-first,
+  alphabetical. Text filter + "graphics-heavy only" toggle. The
+  per-snippet detail viewer (`snippet_history.html`) grows hash
+  routing so links like `snippet_history.html#snippet=name`
+  pre-select that snippet, and the sparkline grid card click-
+  through lands on the right detail view. Generator at
+  `tests/render_snippet_sparklines.py` is stdlib-only and emits
+  the static HTML from `tests/snippet_history.jsonl`. Worst-diff
+  snippets right now: `mermaid_flowchart` 1.698%,
+  `table_longtable` 1.460%, `paragraph_fill` 1.146%,
+  `diag_multicol` 1.071%, `multi_column` 0.960%.
+- **`docs/cookbook.md`: 3 new recipes (36-38)** (commit `a7597e7`).
+  Recipe count goes 35 -> 38; closes another "more cookbook
+  recipes" turn of the crank.
+- **`examples/index.md` docs landing page** (commit `f03d5e1`).
+  Single landing page linking every doc entry point (tutorial,
+  cookbook, gallery, FAQ, CONTRIBUTING, PUBLISHING, PYPI,
+  best-practices, ARCHITECTURE, z53_internals, CI, README,
+  CHANGELOG, ROADMAP) plus the test reports (snippet results, UG
+  diff, lout_doc_renders, profile, snippet history sparklines,
+  bench). Each link with a one-line description.
+
+### Changed
+
+- **`tests/user_guide_diff` default PASSES bumped 7 -> 8** (commit
+  `7fefdcd`). The v0.2.5 ligature width shifts push the User's
+  Guide cross-reference loop past 7 passes, so the final pass's
+  byte counts were still unstable. Defaulting to 8 restores
+  convergence; `PASSES` env var lets callers override. PS stage
+  now early-stops when two consecutive passes match byte-for-byte.
+  SVG stage's biggest-output glob widened to `.svg.[0-9]*` so it
+  remains correct for any PASSES value.
+- **Regression harness baseline DPI 100 -> 150.** All
+  `tests/run_compare.sh` snippet renders, the User's Guide diff,
+  and the four `tests/lout_doc_renders` documents now rasterise at
+  150 DPI instead of 100. Mean SSIM on the 327-page UG diff lifts
+  from 0.9283 (100 DPI) to **0.9441** (150 DPI) on the same
+  corpus -- not because rendering improved, but because the
+  per-pixel AA / hinting floor that dominated the 100 DPI raster
+  is finer-grained at 150 DPI. The 5% / 20% AE thresholds carry
+  over unchanged; pass / fail verdicts on the snippet suite are
+  byte-identical to the 100 DPI run. 150 DPI is now the default
+  for all comparison rasters; the historical 100 DPI numbers are
+  retained in `tests/snippet_history.jsonl` for trend continuity.
+- **`tests/lout_doc_renders` refresh against v0.2.5 fixes** (commit
+  `b170c22`). Per-doc SSIM movement (prior -> new): design
+  0.9190 -> 0.9201, expert 0.9202 -> 0.9206, slides
+  0.9804 -> 0.9805, user 0.9292 -> 0.9297. SVG byte sizes shrunk
+  modestly (design 2.4 -> 2.0 MiB, expert 6.0 -> 5.1 MiB, slides
+  264.7 -> 244.1 KiB) thanks to the fi/fl ligature folding plus
+  per-font kern table precompute being byte-accurate while
+  producing slightly shorter glyph runs. **User SVG wall time
+  319 s -> 237 s** -- perf round 4's coord-folded Y-flip and
+  `svg_itoa` / `svg_ftoa3` reach the doc-rendering scale once the
+  per-run scratch dir lets the run finish without contention.
+  PS pass count 7, no "internal error" stderr.
+- **`examples/cv.md` rewrite** (commit `b220c58`). Replaces the
+  previous `columns: 2` + `type: doc` layout (which silently
+  dropped the bottom of the CV per cookbook recipe 11/35) with a
+  tight single-column layout: Helvetica 9.5pt body, 1.2c top/foot
+  margins, 0.35v para-gap, six `###` sections from Summary to
+  Publications. Skills section uses bold-prefix rows instead of
+  `@TaggedList` for cleaner line wrapping. Header banner uses
+  `{ +8p } @Font @B` form. Result fits all sections (Summary,
+  Experience x3, Education x2, Technical skills x5, Publications
+  x4 + References note) on one A4 page with breathing room.
+- **mdlout package version bumped to 0.2.6.** `pyproject.toml`
+  and `mdlout.VERSION` both move 0.2.5 -> 0.2.6, carrying the
+  smcp/onum consumer-side activation knob (`font-features`
+  frontmatter -> `LOUT_SVG_FONT_FEATURES` env var) into PyPI.
+
+### Notes
+
+- PostScript output bit-identical to v0.2.5 for `doc/user/all`.
+  The `--format=pdf` pipeline (ps2pdf on the frozen `z49.c`
+  PostScript) remains bit-identical to v0.2.0.
+- The 150 DPI baseline is a measurement-side change, not a
+  rendering change. The pre-150-DPI mean SSIM (0.9283 at 100 DPI)
+  is the apples-to-apples number against v0.2.5; the 0.9441 at
+  150 DPI is the new headline because the higher-resolution
+  raster is what the v0.2.6+ trend will be measured against.
+- The 38-recipe cookbook total is the count after the v0.2.6
+  cycle (35 at v0.2.5 + 3 in this release). Recipe count is
+  expected to plateau here for the v0.3 line; further idioms
+  will land in `docs/best-practices.md` rather than the cookbook.
+
 ## [0.2.5] - 2026-05-23
 
 Same-day follow-on to v0.2.4. Adds the first wave of text-shaping
