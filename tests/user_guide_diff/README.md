@@ -66,23 +66,24 @@ and which pages still diverge most.
 
 Total PS pages: **327**.  Total SVG pages: **327**.
 
-After perf round 3+4, fi/fl ligature folding, arena safety, textPath,
-currentColor, kern table precompute, and GSUB smcp/onum parser
-(2026-05-23, lout submodule `f5533e6`):
+After gsave/grestore path save/restore (2026-05-23, lout submodule
+`6688249`, v0.3.0 release):
 
 | bucket                           | pages |
 |----------------------------------|-------|
-| `OK` (diff < 5%)                 | 42    |
-| `DIFF` (5% <= diff < 20%)        | 285   |
+| `OK` (diff < 5%)                 | 52    |
+| `DIFF` (5% <= diff < 20%)        | 275   |
 | `BAD` (diff >= 20%)              | 0     |
 | `MISSING` (no SVG page at all)   | 0     |
 
-AE bucket counts continue to move slowly: 4 more pages crossed into
-the `OK` band (38 -> 42) since the prior baseline. The bigger signal
-is on SSIM (next table): mean SSIM rose from `0.9234` to `0.9283`,
-and 13 more pages crossed into the "visually indistinguishable" band
-(>= 0.95), most of them text-only chapters where the new fi/fl
-ligature folding now matches the PS Type 1 ligature widths exactly.
+The v0.3.0 #208 fix snapshots the current path on `gsave` and
+restores it on `grestore`, repairing the `LoutBox gsave fill
+grestore stroke` idiom used ~559 times in the User's Guide.
+stroke= attribute count rose 6912 -> 7736 (+11.9%) -- those are
+the missing borders coming back.  Aggregate movement: OK 38 -> 52
+(+14), pages SSIM>=0.95 49 -> 87 (+38), mean SSIM 0.9283 -> 0.9376.
+Specific pages: 308 colour-swatch grid 0.85ish -> 0.9113 (borders
+restored), 248 0.9280 -> 0.9641, 262 0.9027 -> 0.9530.
 
 Prior baselines for reference:
 
@@ -91,6 +92,7 @@ Prior baselines for reference:
 | 2026-05-20 | `c618ce3` | 0.9218    | 36 | 33            | 5            |
 | 2026-05-22 | `a0a5c28` | 0.9234    | 38 | 36            | 3            |
 | 2026-05-23 | `f5533e6` | 0.9283    | 42 | 49            | 1            |
+| 2026-05-23 | `6688249` | 0.9376    | 52 | 87            | 1            |
 
 Before SVG_NullBackEnd fix (lout submodule `611dcb2`, SVG had 306 pages):
 
@@ -126,12 +128,12 @@ Computed by `tests/user_guide_diff_ssim.py` over the existing PNGs in
 | statistic                                       | value  |
 |-------------------------------------------------|--------|
 | pages scored                                    | 327    |
-| mean SSIM                                       | 0.9283 |
-| median SSIM                                     | 0.9312 |
+| mean SSIM                                       | 0.9376 |
+| median SSIM                                     | 0.9405 |
 | min SSIM                                        | 0.8455 (page 086, pagination drift) |
 | max SSIM                                        | 1.0000 (page 008, pixel-identical)  |
 | pages with SSIM >= 0.99                         | 2      |
-| pages with SSIM >= 0.95 (visually indistinguishable) | 49 |
+| pages with SSIM >= 0.95 (visually indistinguishable) | 87 |
 | pages with SSIM >= 0.85 (close)                 | 326    |
 | pages with SSIM <  0.85 (visibly different)     | 1      |
 
