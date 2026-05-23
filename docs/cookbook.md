@@ -1474,6 +1474,169 @@ you `--watch` a document and edit the shared `mydefs`, the
 watcher will not notice. Touch the input `.md` (or pass
 `--no-cache`) to force a rebuild.
 
+## 27. Tracking changes via `@Strike` / `@Insert`
+
+Lout has no built-in revision-mark macros, but the underlying
+primitives (`@OverStrike` for the crossing line, colour for the
+inserted-text highlight) compose into a tidy pair. Define them
+once in `mydefs`, then drop into a ` ```lout ` fence wherever a
+review marker is needed. The pattern is the typographic
+equivalent of `<del>` / `<ins>` in HTML: a horizontal line
+through the deleted span, a coloured underline beneath the
+insertion. Reviewers see what changed; the next revision strips
+the macros and the prose returns to clean copy.
+
+```lout
+def @Strike right x
+{
+  @Colour { red } @OverStrike { x } { @HContract @Rule }
+}
+def @Insert right x
+{
+  @Colour { darkgreen } { x &0.05f @Underline {} }
+}
+@LP
+The trapezoidal rule converges at @Strike { O(n) } @Insert { O(h sup 2) },
+not @Strike { linearly } @Insert { quadratically }, in the step size.
+@LP
+```
+
+Rendered: the two struck words appear in red with a horizontal
+line through them; the two inserted phrases appear in dark green,
+each followed by a thin underline. Surrounding prose is
+untouched, and the line height is preserved (the strike rule and
+underline both have zero vertical extent).
+
+**Gotcha:** `@Strike` and `@Insert` are *user-defined* -- they
+are not part of the Lout standard library, and the spelling is a
+convention from this cookbook. Keep them in your project
+`mydefs` (see recipe #26) so every chapter sees the same
+definition. The `@Rule` inside `@OverStrike` inherits the current
+foreground colour but ignores `@Colour { red }` set on the
+*outer* group, so wrap the whole construct in `@Colour { red }
+... `; do **not** try `@OverStrike { @Colour red x } @Rule` --
+the rule will still be black. For multi-line strikes (whole
+sentences across a line break) `@OverStrike` only renders one
+horizontal rule across the visual bounding box, which looks wrong
+when the span wraps; use `@Display @Strike { ... }` to force a
+single-line strike, or pre-break the paragraph by hand. PDF mode
+honours both macros exactly; the SVG back-end renders the strike
+rule and the underline as `<line>` elements at the correct
+y-offset.
+
+## 28. Calendar grid
+
+A month calendar -- seven columns of weekday names, five or six
+rows of date cells -- is one of the cases where raw `@Tab` beats
+both Markdown pipe tables and `@Tbl`. `@Tab` lets you declare a
+single seven-column format once via `@Fmta { @Col A ! @Col B !
+... }` and then stamp out each row with `@Rowa A { 1 } B { 2 }
+...`. Empty cells (leading blanks before the 1st of the month,
+trailing blanks after the 30th/31st) are just `A {}`.
+
+```lout
+@CentredDisplay @Font { +14p } @B { May 2026 }
+@CentredDisplay @Tab
+  hmargin { 0.5c }
+  above { yes } below { yes } between { yes } side { yes }
+  @Fmta { @Col @CC @B A ! @Col @CC B ! @Col @CC C ! @Col @CC D
+        ! @Col @CC E ! @Col @CC F ! @Col @CC G }
+{
+@Rowa A { Sun } B { Mon } C { Tue } D { Wed } E { Thu } F { Fri } G { Sat }
+@Rowa A {}    B {}    C {}    D {}    E {}    F { 1 }  G { 2 }
+@Rowa A { 3 } B { 4 } C { 5 } D { 6 } E { 7 } F { 8 }  G { 9 }
+@Rowa A {10 } B {11 } C {12 } D {13 } E {14 } F {15 }  G {16 }
+@Rowa A {17 } B {18 } C {19 } D {20 } E {21 } F {22 }  G {23 }
+@Rowa A {24 } B {25 } C {26 } D {27 } E {28 } F {29 }  G {30 }
+@Rowa A {31 } B {}    C {}    D {}    E {}    F {}     G {}
+}
+```
+
+Rendered: a seven-column grid with ruled borders on all four
+sides and between every cell, the weekday names in bold across
+the header row, the date numerals centred (`@CC`) within each
+cell, and two leading blank cells before "1" plus six trailing
+blank cells after "31".
+
+**Gotcha:** `@Tab` cell content is *one Lout object* -- a bare
+number like `1` works because it is a single word, but a date
+string with a space (`"May 1"`) must be either braced (`A { May
+1 }`) or quoted, or `@Tab` reads only the first token as the cell
+value and stumbles on the second. The `!` separators in `@Fmta`
+must match the number of `@Col` declarations *plus one* between
+each; an off-by-one shows up as "expected `!` got `@Col`" on
+stderr. The `between { yes }` flag turns on *both* vertical and
+horizontal interior rules; pass `between { vertical }` (or
+`horizontal`) to get just one set. For a full year, wrap twelve
+`@Tab` instances in `@StartHSpan ... @EndHSpan` if you want them
+to flow across columns, or in a 4x3 outer `@Tab` for a wall
+calendar layout. The width of each cell is set by the *widest*
+content in its column -- pad numerals to two characters
+(`A { @HExpand { 09 } }`) if you want every cell identical.
+
+## 29. Index and glossary at the back
+
+Long-form technical documents benefit from an alphabetised back
+index ("see *galley*, page 14") and a flat glossary
+("**galley**: a stream of typeset material..."). Lout's `@Index`
+macro (defined in `docf`, see [`include/dsf`](../lout/include/dsf)
+lines 4651-4699) handles the index half: place `@Index { term }`
+inline next to every occurrence and a single `@MakeIndex` call
+in the preamble emits the alphabetised back matter on the second
+cross-reference pass. The glossary is hand-rolled: a `@List` of
+definition entries with each term tagged via `@Tag` so prose can
+back-reference with `@PageOf { tag }`.
+
+```lout
+@SysInclude { doc }
+@Doc @Text @Begin
+@PP
+A {@Index { galley } galley} is a stream of typeset material that
+flows into a target frame. The {@Index { box } box-and-glue}
+model of TeX is the historical alternative.
+@PP
+For the canonical definitions see the {Glossary @PageOf glossary }
+at the back of this report.
+@BeginSections
+@Section
+  @Title { Glossary }
+  @Tag { glossary }
+@Begin
+@List
+@LI { @B { galley } -- a lazy stream of typeset material;
+       Lout's central layout abstraction. See page @PageOf galley. }
+@LI { @B { box-and-glue } -- the TeX layout model. }
+@EndList
+@End @Section
+@RawEndSections
+@End @Text
+```
+
+Rendered: the body picks up unobtrusive `@Index { ... }` markers
+(invisible at run time -- they only emit to the `.li` database),
+on the second pass the alphabetised "Index" section auto-appears
+in the back matter, and the hand-rolled "Glossary" section
+follows. In-prose cross-references like "page @PageOf galley"
+resolve to the live page number on the second pass.
+
+**Gotcha:** `@Index { term }` writes a sort key and a page number
+to the `.li` database -- not the visible word -- so wrap the
+visible occurrence in the *surrounding* braces (`{@Index { galley }
+galley}`), not inside the index call. Lout's index is enabled by
+the `@IndexPart` setup symbol in the document setup; for `type:
+doc` it is on by default but emits nothing if no `@Index` calls
+fire. For `type: report` / `type: book`, the index auto-attaches
+to the end of the document after the bibliography but *before*
+the back cover, if any. The first build pass produces "(no page
+number)" because the database is being populated for the first
+time; mdlout's three-pass loop already handles this. A duplicate
+`@Tag { glossary }` between a section heading and an in-prose
+`@Index` silently overrides the section's `@PageOf` -- pick
+distinct tag names. Multi-level entries use `@SubIndex { sub }`
+and `@SubSubIndex { sub-sub }` (also in `dsf`). For the markdown
+side, write the prose normally and switch into a ` ```lout `
+fence only where an `@Index` call needs to land.
+
 ## Where to look next
 
 - [`docs/best_practices.md`](best_practices.md) -- idiom guide:

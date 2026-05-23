@@ -52,6 +52,7 @@ FALLBACK_DESCRIPTIONS: dict[str, str] = {
     "letter": "Formal US business letter built on type: doc plus raw-Lout passthrough.",
     "scientific_paper": "Workshop paper comparing trapezoidal vs Simpson's rules for quadrature.",
     "slides_basic": "type: slides six-slide intro to Lout.",
+    "presentation": "type: slides ten-slide deck mixing prose, math, code, and a mermaid diagram.",
 }
 
 
