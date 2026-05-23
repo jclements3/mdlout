@@ -34,14 +34,40 @@ following text in `@Graphic` bodies (v0.2.3); a PEP 621
 SVG renders of all four documents that ship with the Lout source
 tree (`design`, `expert`, `slides`, `user`, with zero residual SVG
 `@Case` warnings as of v0.2.3). The 327-page
-User's Guide PS-vs-SVG diff sits at mean SSIM 0.9234 (38 OK / 289
-DIFF / 0 BAD / 0 MISSING); the 65-snippet single-feature suite is
+User's Guide PS-vs-SVG diff sits at mean SSIM 0.9278 (47 OK / 279
+DIFF / 1 BAD / 0 MISSING after v0.2.4); the 65-snippet single-feature suite is
 100% Pass-Excellent under the post-v0.2 tightened thresholds (5% AE
 for text, 2% AE / SSIM 0.95 for graphics-heavy). Build size: ~848 KB
 lout binary, 150 KB single-file mdlout.py. User's Guide SVG build:
-~26-29 s wall time on the reference host (v0.2.2 perf round 2,
-beats the original v0.4 < 30 s target; was ~32 s in v0.2.1 and
-~7 min mid-v0.2 cycle).
+~22.6 s real / ~19.8 s user on the reference host after v0.2.4
+perf round 4 (was ~26-29 s in v0.2.2 round 2, ~32 s in v0.2.1,
+~7 min mid-v0.2 cycle; the original v0.4 < 30 s stretch target
+is now cleared by ~7 s).
+
+## Shipped in v0.2.4
+
+Same-day perf + tests-hygiene cut on top of v0.2.3.
+
+- **User's Guide SVG build < 23 s** (originally a v0.4 stretch
+  beyond the v0.2.2 sub-30s target). `z53.c` perf round 4
+  (hand-rolled `svg_itoa` / `svg_ftoa3` for page/link chrome,
+  coord-folded Y-flip on text emission, function-pointer dispatch
+  for the 11 hottest PS ops) drops single-pass wall time from
+  41.2 s (v0.2.2 baseline) to 22.6 s real / 19.8 s user. -45%
+  cumulative over rounds 3-4; -13.5% SVG output size on
+  `doc/user/all` from the coord fold alone.
+- **`tests/lout_doc_renders/expert` SSIM recovery** (regression
+  surfaced post-v0.2.3). The per-run scratch-dir fix from v0.2.3
+  only takes effect on re-rendered output; refreshing all four
+  docs lifts expert from 0.7061 (`ssim-diff` red, mis-attributed
+  to back-end drift) to 0.9202 (`ssim-ok` amber). No back-end
+  change; the v0.2.3 in-doc `@BackEnd @Case` SVG-arm fix caused
+  a real layout shift, so `expert.pdf` grows 478 KB -> 508 KB.
+- **`tests/user_guide_diff` mean SSIM tick** (side effect of
+  round 4). 0.9234 -> 0.9278; pages SSIM >= 0.95 grow 36 -> 47
+  (+30%); pages SSIM < 0.85 drop 3 -> 1. The improvement comes
+  from removing a per-word `<g>` wrapper that was costing
+  sub-pixel rounding error on the rsvg flatten step.
 
 ## Shipped in v0.2.3
 

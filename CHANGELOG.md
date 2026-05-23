@@ -11,6 +11,82 @@ Submodule-only changes are tagged `[lout]`.
 
 ## [Unreleased]
 
+## [0.2.4] - 2026-05-23
+
+Same-day perf release: User's Guide SVG build drops from 41.2 s real
+(v0.2.2 baseline) to 22.6 s real after `z53.c` perf rounds 3 and 4
+(-45% wall, -13.5% SVG output size on `doc/user/all`); the
+`tests/lout_doc_renders/expert` SSIM recovers from 0.7061 (pre-fix,
+concurrent-runner damage on shared `*.li` / `*.ldx` files) to 0.9202
+once the per-run scratch-dir fix from v0.2.3 is reflected in the
+refreshed renders; the User's Guide PS-vs-SVG diff mean SSIM ticks
+up from 0.9234 to 0.9278 (+47 pages cross the 0.95 "visually
+indistinguishable" threshold). `z49.c` (PostScript) and the legacy
+PDF pipeline remain frozen and bit-identical to v0.2.0.
+
+### Added
+
+- **[lout] `z53.c` perf round 4 -- sub-23s User's Guide build.**
+  Applies the three recommendations from the v0.2.3
+  `tests/profile/gprof_z53_hot.txt` hot-spot report:
+  (1) hand-rolled `svg_itoa` / `svg_ftoa3` in `SVG_PrintBetweenPages`
+  and `SVG_LinkDest` replacing three `fprintf` calls per page/link
+  with direct buffer fills + one `fwrite` each;
+  (2) coord-folded Y-flip on text emission -- the per-word
+  `<g transform="translate(x,y) scale(1,-1)">` wrapper is gone,
+  replaced by an inline `transform="matrix(1 0 0 -1 x y)"` on the
+  `<text>` element (-13.5% SVG output size on the User's Guide);
+  (3) function-pointer dispatch table for the 11 hottest / simplest
+  PS ops (`newpath`, `moveto`, `lineto`, `rmoveto`, `rlineto`,
+  `closepath`, `setrgbcolor`, `setgray`, `setlinewidth`, `gsave`,
+  `grestore`); cold ops still flow through the legacy switch.
+  Combined with the round-3 stdio buffering / dispatch tightening
+  that landed earlier in v0.2.3 (`f1fdd77`), the User's Guide SVG
+  build now drops from 41.2 s real / 35.4 s user (v0.2.2 baseline)
+  to 22.6 s real / 19.8 s user (lout f234cde -> mdlout 94277d7).
+
+### Changed
+
+- **`tests/lout_doc_renders/expert`: SSIM 0.7061 -> 0.9202.** The
+  v0.2.3 per-run scratch-dir fix in
+  `tests/lout_doc_renders/build.sh` (reverses concurrent-runner
+  damage on shared `*.li` / `*.ldx` / `lout.lix` files when two
+  agents run the suite in the same checkout) only takes effect on
+  re-rendered output. The refresh in 38b66f2 re-runs all four docs
+  with the fixed scratch isolation, so the expert PostScript
+  baseline is no longer interleaved with stale cross-reference
+  state from a parallel run. Expert SSIM moves from 0.7061
+  (`ssim-diff` red) to 0.9202 (`ssim-ok` amber) on the landing
+  page; design ticks 0.9123 -> 0.9190; slides 0.9804 unchanged;
+  user 0.9292 unchanged. `expert.pdf` size grows from 478,385 to
+  507,915 bytes (the in-doc `@BackEnd @Case` SVG-arm fix from
+  v0.2.3 caused a real layout shift, so the previous PS render
+  diverged from the post-fix SVG).
+- **`tests/user_guide_diff` SSIM 0.9234 -> 0.9278.** Same 327-page
+  PS-vs-SVG diff over `doc/user/all`, re-rendered after lout perf
+  round 4. Median moves 0.9258 -> 0.9309; pages SSIM >= 0.95 grow
+  36 -> 47 (+30%); the visibly-different (< 0.85) count drops
+  3 -> 1. The improvement is a side effect of the round-4 coord
+  fold -- packing the Y-flip into an inline matrix on each
+  `<text>` removes a per-word group nesting level that was
+  shifting glyph positions by sub-pixel rounding artefacts when
+  rsvg flattened the transform stack.
+- **Example thumbnails refreshed** (`examples/out/thumb-*.png`,
+  27 files) after the round-4 SVG output change. No visible
+  difference at thumb resolution; the file-level pixel diffs are
+  AA noise from the absent `<g>` wrapper.
+
+### Notes
+
+- mdlout package version (`pyproject.toml`, `mdlout.VERSION`) is
+  not bumped in this release. The next mdlout-surface change (CLI
+  flags, output shape) will carry both a PyPI release and a tag
+  bump; v0.2.4 is a submodule + tests refresh.
+- PostScript output bit-identical to v0.2.3 for `doc/user/all`;
+  `expert.pdf` size changes as documented above. The `--format=pdf`
+  pipeline (ps2pdf on the frozen `z49.c` PostScript) remains
+  bit-identical to v0.2.0.
+
 ## [0.2.3] - 2026-05-23
 
 Font subsetting flips default ON (~56% HTML size reduction across
