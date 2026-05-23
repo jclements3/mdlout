@@ -45,6 +45,57 @@ perf round 4 (was ~26-29 s in v0.2.2 round 2, ~32 s in v0.2.1,
 ~7 min mid-v0.2 cycle; the original v0.4 < 30 s stretch target
 is now cleared by ~7 s).
 
+## Shipped in v0.2.9
+
+Same-day follow-on to v0.2.8. Lands the `ps2pdf` page-size
+passthrough in `mdlout.py` (closes the A0 / A3 / Legal clip-to-A4
+gotcha), grows the snippet corpus 85 → 90, adds three new
+full-document examples (`poster_a0.md` A0 scientific poster,
+`journal.md` single-column academic article, `article.md`
+catch-up), extends the cookbook 41 → **50** recipes (42-50), and
+formally defers cross-token kerning on slides p032 in
+`SVG_PORTING.md` (#188).
+
+- **mdlout `ps2pdf` page-size passthrough** (commit `04ac23a`,
+  issue #198). `--format=pdf` now reads `page:` / `orientation:`
+  from frontmatter and passes `-dDEVICEWIDTHPOINTS` /
+  `-dDEVICEHEIGHTPOINTS` / `-dPDFFitPage` to `ps2pdf`, so A0 /
+  A3 / Legal / Letter sheets no longer silently clip to A4.
+  Frontmatter without an explicit `page:` field keeps the A4
+  default — existing documents are byte-identical.
+- **Regression corpus 85 → 90** (commit `49b184e`). Five new
+  PASS-EXCELLENT snippets: `text_textpath_curveto_chain` (3-segment
+  `<textPath>` chain), `graphic_polar_plot` (polar rose via raw
+  PS), plus three more `@Diag` / `@Tab` / `@Eq` corner cases.
+- **`examples/poster_a0.md` + `examples/article.md`** (commit
+  `6096e35`). A0 portrait scientific poster (single 2380×3368 pt
+  page; exercises the new ps2pdf page-size passthrough end to end)
+  plus a catch-up commit of the 2-column scientific paper from
+  the parallel article-writing agent.
+- **`examples/journal.md`** (commit `f7aea00`). Single-column
+  academic journal article, 9-page Letter PDF / 8-page HTML,
+  seven `@Section` blocks with multi-line abstract via YAML
+  literal block.
+- **Cookbook recipes 45-47 + 48-50** (commits `5d6b720`,
+  `483d391`). Recipe count 41 → **50**: bulk-rendering folders,
+  line-level deep-links into fenced code blocks, external
+  figures via absolute-path `@SysInclude`, sharing a `mydefs`
+  file across documents, title-page logos, and mixed-cell
+  tables.
+- **`tests/improvements_summary.html`** (commit `29cc6e8`).
+  352-line session-at-a-glance dashboard with inline-SVG charts
+  (UG mean SSIM history, UG build wall time, snippet corpus,
+  cookbook count) and the v0.2.0-v0.2.8 release timeline.
+- **CHANGELOG TOC + compare-link footer completion** (commit
+  `60e9677`).
+- **[lout] `SVG_PORTING.md`: cross-token kerning on slides p032
+  formally deferred** (submodule commit `628c893`, mdlout commit
+  `58015b6`, #188). Only 2 of 70 `<text>` elements on p032 are
+  truly adjacent same-style pairs; SVG's positioning/kerning
+  coupling makes the merge-into-`<tspan>` fix net-negative.
+  Residual signal correctly re-attributed to the rasteriser-AA
+  floor.
+
 ## Shipped in v0.2.8
 
 Same-day follow-on to v0.2.7. Lands the `xml:space="preserve"`
@@ -424,6 +475,6 @@ project-redefining choice, not an incremental release.
 
 ---
 
-Last updated: 2026-05-23 (v0.2.8). See [CHANGELOG.md](CHANGELOG.md) for
+Last updated: 2026-05-23 (v0.2.9). See [CHANGELOG.md](CHANGELOG.md) for
 the release history this roadmap projects from, and
 [TODO.md](TODO.md) for the working-engineer task list.

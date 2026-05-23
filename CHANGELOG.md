@@ -12,6 +12,7 @@ Submodule-only changes are tagged `[lout]`.
 ## Releases
 
 - [Unreleased](#unreleased)
+- [0.2.9 (2026-05-23)](#029---2026-05-23)
 - [0.2.8 (2026-05-23)](#028---2026-05-23)
 - [0.2.7 (2026-05-23)](#027---2026-05-23)
 - [0.2.6 (2026-05-23)](#026---2026-05-23)
@@ -24,6 +25,194 @@ Submodule-only changes are tagged `[lout]`.
 - [0.1.0 (2026-03-16)](#010---2026-03-16)
 
 ## [Unreleased]
+
+## [0.2.9] - 2026-05-23
+
+Same-day follow-on to v0.2.8. Lands the **ps2pdf page-size passthrough**
+in `mdlout.py` (#198): the `--format=pdf` pipeline now reads
+`page:` / `orientation:` from frontmatter and passes
+`-dDEVICEWIDTHPOINTS` / `-dDEVICEHEIGHTPOINTS` / `-dPDFFitPage` to
+`ps2pdf`, so A0 / A3 / Legal / Letter sheets no longer silently
+clip to A4. Closes the "ps2pdf default ignores frontmatter page
+size" workaround documented in `poster_a0.md`. Grows the regression
+corpus 85 → **90** with five more single-feature snippets exercising
+remaining surface (text-on-curveto-chain, polar-plot `@Graphic`,
+plus three more), lands three new example documents (`poster_a0.md`
+A0 scientific poster, `journal.md` single-column journal article,
+`article.md` catch-up commit), extends `docs/cookbook.md` 41 → **47**
+(recipes 42-47) plus an additional batch of three (48-50), adds
+`tests/improvements_summary.html` (session-at-a-glance dashboard),
+and completes the CHANGELOG TOC + compare-link footer. On the
+submodule side, `lout/SVG_PORTING.md` gains a written-up
+investigation of the cross-token kerning question (issue #188) on
+slides p032: the SSIM signal is per-glyph rasteriser metric drift,
+not lost kerning, and merging adjacent `<text>` into `<tspan>` would
+trade existing-gap accuracy for hypothetical kerning gain — the
+item is therefore formally deferred. `z49.c` (PostScript) and the
+legacy PDF pipeline remain frozen and bit-identical to v0.2.0.
+
+### Added
+
+- **mdlout: `ps2pdf` page-size passthrough from frontmatter** (commit
+  `04ac23a`, issue #198). `--format=pdf` previously called `ps2pdf`
+  with no page-size hints, so Ghostscript defaulted to A4 and any
+  sheet larger than A4 (notably A0 posters, A3 spreads, Legal,
+  Tabloid) was silently clipped to the A4 media box even though the
+  underlying PostScript carried the correct `%%BoundingBox`. The fix
+  adds a `_page_size_pt(page, orientation)` lookup (A0-A5, Letter,
+  Legal, Tabloid, Executive — plus an explicit `<w>x<h>pt` / `mm`
+  parser for arbitrary sizes) and passes
+  `-dDEVICEWIDTHPOINTS=<w>` / `-dDEVICEHEIGHTPOINTS=<h>` /
+  `-dPDFFitPage` on the `ps2pdf` command line. Frontmatter without
+  an explicit `page:` field keeps the prior A4 default, so existing
+  documents are byte-identical. Closes the workaround documented in
+  `examples/poster_a0.md`; the A0 poster (2380×3368 pt) now produces
+  a single uncropped PDF page.
+- **`examples/poster_a0.md` + `examples/article.md`** (commit
+  `6096e35`). Two new full-document examples:
+  - `poster_a0.md` — A0 portrait, 3-column scientific poster on
+    "Sparse MoE Routing for Long-Context Transformers". 60pt
+    centred title, lightgrey-shaded abstract box via raw-Lout
+    `@Box`, five body sections, two inline ` ```svg ` figures
+    (routing pipeline + imbalance plot), two display equations, a
+    results table, four references. Single 2380×3368 pt page
+    (HTML 927 KB, PDF 1 page). Browser-test PASS (KaTeX 14/14).
+    Exercises the new ps2pdf page-size passthrough end to end.
+  - `article.md` — 6-page two-column scientific paper, the
+    `examples/index.md` catch-up commit that had been sitting
+    uncommitted from the parallel article-writing agent.
+  Gallery regenerated alongside (`examples/out/index.html`,
+  thumbnails, preview SVGs).
+- **`examples/journal.md`** (commit `f7aea00`). A complement to
+  `examples/article.md` (2-column): a single-column academic journal
+  article, 9-page Letter PDF / 8-page HTML, Times Base 11p,
+  `type: report` / `columns: 1` / `contents: Yes` /
+  `section-numbers: Arabic`. Seven `@Section` blocks: Introduction;
+  Background (with two sub-sections); Method (notation +
+  algorithm); Results (Theorem 1 upper bound + proof sketch,
+  Theorem 2 lower bound + proof sketch, one figure, one table,
+  diagnostic experiment, robustness study); Related Work;
+  Conclusions; References. Multi-line abstract via YAML literal
+  block. Both `--format=html` and `--format=pdf` build clean.
+- **`tests/snippets/`: 5 more snippets exercising remaining feature
+  surface** (commit `49b184e`). Corpus 85 → **90** PASS-EXCELLENT /
+  0 Fail (SSIM ≥ 0.9923 across the new five). New:
+  - `text_textpath_curveto_chain.lt` — text along a 3-segment
+    cubic `curveto` chain (companion to the existing
+    `text_on_path` snippet, which uses one `curveto`). Exercises
+    `z53.c`'s `<textPath>` emitter on multi-segment paths.
+  - `graphic_polar_plot.lt` — polar rose `r = cos(3*theta)`
+    traced via a raw-PS `for` / `sin` / `cos` loop, pivoting
+    from the existing pie-chart-style `@Graphic` content. Hits
+    the embedded PS interpreter's transcendental ops.
+  - Three further single-feature snippets (`@Diag` /
+    `@Tab` / `@Eq` corner cases) locking in v0.2.7-v0.2.8 work.
+
+  All five are under 30 lines and land PASS-EXCELLENT under the
+  post-v0.2 tightened thresholds (5% AE for text, 2% AE / SSIM
+  0.95 for graphics-heavy).
+- **`tests/improvements_summary.html`** (commit `29cc6e8`). 352-line
+  session-at-a-glance static dashboard summarising the v0.2 cycle:
+  title + lede paragraph (SSIM ~0.85 era → 0.9510 @ 200 dpi; UG
+  build 7 min → 22.6 s; snippets 53 → 90; cookbook 10 → 47; nine
+  releases over two days); a 2×2 grid of inline-SVG charts (UG
+  mean SSIM history, UG SVG build wall time, snippet corpus count,
+  cookbook recipe count); and a release-timeline table covering
+  v0.2.0 through v0.2.8 with dates. Vanilla HTML + inline SVG +
+  ~30 lines of vanilla JS — no build step, no external assets.
+- **[lout] `SVG_PORTING.md`: cross-token kerning formally deferred**
+  (submodule commit `628c893`, mdlout commit `58015b6`, issue
+  #188). 67-line investigation appended to `SVG_PORTING.md`
+  explaining why merging adjacent same-style `<text>` elements
+  into `<tspan>` children on `doc/slides/all` p032 isn't a viable
+  fix for the residual SSIM signal. Only 2 of the 70 `<text>`
+  elements on p032 are truly adjacent same-style pairs
+  (`"nil"`/`"then"` and `"then"`/`"begin"` in the Pascal listing);
+  the remaining inter-token gaps are whitespace-sized. The
+  dominant PS-vs-SVG diff signal on this page is per-glyph
+  metric disagreement between Ghostscript and librsvg, not lost
+  cross-token kerning. Furthermore SVG couples explicit
+  positioning and automatic kerning (any glyph or `<tspan>` with
+  an explicit `x` attribute resets position and disables kerning
+  across that boundary), so merging adjacent `<text>` into
+  `<tspan>` children either drops Lout's pre-computed gap
+  (introducing new drift along the merged run) or keeps explicit
+  `x` and loses the kerning we set out to gain. Estimated SSIM
+  gain from a correct fix is small (~+0.005 to +0.01) and offset
+  by the new-error risk on every same-font run Lout already lays
+  out correctly — the item is therefore formally deferred to
+  the "shared rasteriser" mid-term work, which would close the
+  underlying glyph-metric gap directly.
+
+### Docs
+
+- **`docs/cookbook.md`: recipes 45-47** (commit `5d6b720`). Recipe
+  count 44 → **47**:
+  - **45. Bulk-rendering a folder of Markdown sources** — shell
+    `for`-loops and a small `Makefile` template for rebuilding
+    every `.md` in a directory tree in one pass.
+  - **46. Line-level deep-links into fenced code blocks** —
+    mdlout's anchor-id work makes `#L42` fragment links work
+    against `@Code` listings; recipe shows the URL shape and the
+    HTML-mode CSS hook for highlighting the targeted line.
+  - **47. Pulling figures from outside the source tree** —
+    `@SysInclude` / `@SVGFile` with absolute paths, including
+    the gotchas around relative-vs-absolute resolution when the
+    build is invoked from a different working directory.
+- **`docs/cookbook.md`: recipes 48-50** (commit `483d391`). Recipe
+  count 47 → **50**:
+  - **48. Sharing a `mydefs` file across many documents** — the
+    `--mydefs path/to/shared/mydefs` flag plus a recommended
+    repository layout for a team-wide macro library.
+  - **49. Title-page logo via `@IncludeGraphic`** — drop-in
+    recipe for an SVG or PNG logo on a `type: report` /
+    `type: book` title page, including the size / centre
+    incantation.
+  - **50. Mixed-cell tables** — `@Tab` with cells that contain
+    `@Graphic`, `@Eq`, and prose side by side; covers the
+    column-width tuning needed when one cell carries a wide
+    figure.
+- **`CHANGELOG.md`: Releases TOC + compare-link footer completion**
+  (commit `60e9677`). Adds a "Releases" table-of-contents block
+  at the top linking to all nine versioned sections plus
+  Unreleased; extends the bottom compare-link footer to cover
+  v0.2.4 through v0.2.8 (it had stopped at v0.2.3) and points
+  `[Unreleased]` at `v0.2.8...HEAD` instead of the stale
+  `v0.2.3...HEAD`. All release dates and 12 spot-checked
+  commit / submodule SHAs verified against `git tag` and
+  `git log`.
+- **`TODO.md`: refresh for the v0.2.x state** (commit `e940b0d`).
+  Moves all shipped v0.2 items (z53.c HTML/SVG, passthroughs,
+  watch/serve, font subsetting, dark mode, ligatures, smcp/onum,
+  90-snippet corpus, 50-recipe cookbook, sub-30s UG build) out
+  of the open task list and into the "shipped" header. Keeps
+  only the residuals: PR #208 path save/restore, more aggressive
+  `@Graphic` PS-to-SVG translation, cross-token kerning (now
+  formally deferred), shared rasteriser (mid-term), manual PyPI
+  publish, and CI OAuth refresh. Cross-references
+  [ROADMAP.md](ROADMAP.md) and [CHANGELOG.md](CHANGELOG.md) so
+  the three documents stay in sync.
+
+### Notes
+
+- PostScript output bit-identical to v0.2.8 for `doc/user/all`.
+  The legacy `--format=pdf` pipeline (`ps2pdf` over the frozen
+  `z49.c` PostScript) remains bit-identical to v0.2.0 *for
+  documents that don't set `page:` in frontmatter*. Documents
+  with an explicit `page:` field now produce a PDF media box
+  matching the requested sheet size; the underlying PostScript
+  is unchanged, so a `pdftops` round-trip recovers the v0.2.0
+  bytes.
+- The 90-snippet corpus stays at 100% PASS-EXCELLENT under the
+  post-v0.2 tightened thresholds (5% AE for text, 2% AE / SSIM
+  0.95 for graphics-heavy).
+- The cross-token kerning deferral in `SVG_PORTING.md` is a
+  written-up "no" rather than a "future work" — the SVG
+  positioning / kerning coupling makes the cost-benefit
+  unattractive even with infinite implementation time. The
+  residual signal on p032 is now correctly attributed to the
+  rasteriser-AA floor that the "shared rasteriser" mid-term
+  item is tracking.
 
 ## [0.2.8] - 2026-05-23
 
@@ -1615,7 +1804,8 @@ submodule:
 - 2024-01-26: lout 3.43 (the version vendored at the time of initial
   commit).
 
-[Unreleased]: https://github.com/jclements3/mdlout/compare/v0.2.8...HEAD
+[Unreleased]: https://github.com/jclements3/mdlout/compare/v0.2.9...HEAD
+[0.2.9]: https://github.com/jclements3/mdlout/compare/v0.2.8...v0.2.9
 [0.2.8]: https://github.com/jclements3/mdlout/compare/v0.2.7...v0.2.8
 [0.2.7]: https://github.com/jclements3/mdlout/compare/v0.2.6...v0.2.7
 [0.2.6]: https://github.com/jclements3/mdlout/compare/v0.2.5...v0.2.6
