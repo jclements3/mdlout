@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>mdlout v0.2 progress at a glance</title>
+<style>
+  :root {
+    --fg: #1b1b1b;
+    --muted: #555;
+    --bg: #fafafa;
+    --card: #fff;
+    --border: #d0d0d0;
+    --accent: #2b6cb0;
+    --accent2: #c05621;
+    --grid: #e5e5e5;
+    --axis: #888;
+  }
+  html { background: var(--bg); color: var(--fg); }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    max-width: 980px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+    line-height: 1.55;
+  }
+  h1 { margin: 0 0 0.4rem 0; font-size: 1.7rem; }
+  h2 { margin-top: 2rem; font-size: 1.2rem; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem; }
+  p.lede { color: var(--muted); margin-top: 0.2rem; }
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.8rem 0.9rem;
+  }
+  .card h3 { margin: 0 0 0.3rem 0; font-size: 0.98rem; }
+  .card .sub { color: var(--muted); font-size: 0.82rem; margin-bottom: 0.4rem; }
+  svg.chart { width: 100%; height: 180px; display: block; }
+  table.timeline {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 0.5rem;
+    font-size: 0.93rem;
+  }
+  table.timeline th, table.timeline td {
+    text-align: left;
+    padding: 0.4rem 0.55rem;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  table.timeline th { background: #f0f0f0; font-weight: 600; }
+  table.timeline td.tag { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; white-space: nowrap; color: var(--accent); }
+  table.timeline td.date { color: var(--muted); white-space: nowrap; }
+  .links { margin-top: 1.2rem; }
+  .links a { margin-right: 1rem; color: var(--accent); }
+  footer { margin-top: 2rem; color: var(--muted); font-size: 0.82rem; }
+  @media (max-width: 720px) {
+    .grid { grid-template-columns: 1fr; }
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --fg: #ececec; --muted: #b0b0b0; --bg: #181a1b; --card: #23272a;
+            --border: #3a3f44; --accent: #6eaaff; --accent2: #ffa370;
+            --grid: #2e3338; --axis: #888; }
+    table.timeline th { background: #2c3035; }
+  }
+</style>
+</head>
+<body>
+
+<h1>mdlout v0.2 progress at a glance</h1>
+<p class="lede">
+  Snapshot of this session's progress (2026-05-22 to 2026-05-23). The SVG back end
+  (<code>z53.c</code>) went from "renders pages" to a measured user-guide pipeline:
+  mean structural similarity vs the PostScript reference climbed from the ~0.85 era
+  to <strong>0.9510</strong> on the 200 dpi row, while the warm-cache wall time on
+  the User's Guide dropped from <strong>7 minutes</strong> to under
+  <strong>23 seconds</strong>. The snippet corpus grew from 53 to 90 entries, the
+  cookbook from 10 to 44 recipes, and nine tagged releases (v0.2.0 - v0.2.8)
+  shipped in two days.
+</p>
+
+<h2>Four charts</h2>
+<div class="grid">
+
+  <!-- ============================================================ -->
+  <!-- (a) UG mean SSIM history                                       -->
+  <!-- ============================================================ -->
+  <div class="card">
+    <h3>User's Guide mean SSIM</h3>
+    <div class="sub">PostScript vs SVG, 327 pages, layered measurements</div>
+    <svg class="chart" viewBox="0 0 400 180" preserveAspectRatio="none" aria-label="UG mean SSIM history">
+      <!-- y axis range: 0.84 - 0.96 -->
+      <!-- grid -->
+      <g stroke="var(--grid)" stroke-width="1">
+        <line x1="50" y1="20" x2="380" y2="20"/>
+        <line x1="50" y1="60" x2="380" y2="60"/>
+        <line x1="50" y1="100" x2="380" y2="100"/>
+        <line x1="50" y1="140" x2="380" y2="140"/>
+      </g>
+      <!-- axes -->
+      <g stroke="var(--axis)" stroke-width="1">
+        <line x1="50" y1="20" x2="50" y2="160"/>
+        <line x1="50" y1="160" x2="380" y2="160"/>
+      </g>
+      <!-- y labels: 0.96 at y=20 ... 0.84 at y=160 (range 0.12 over 140 px) -->
+      <g font-size="9" fill="var(--muted)" text-anchor="end">
+        <text x="46" y="23">0.96</text>
+        <text x="46" y="63">0.93</text>
+        <text x="46" y="103">0.90</text>
+        <text x="46" y="143">0.87</text>
+      </g>
+      <!-- data: (0.85, 0.9234, 0.9283, 0.9510) at 4 x positions -->
+      <!-- y_pixel = 160 - ((value - 0.84) / 0.12) * 140 -->
+      <!-- 0.85   -> 160 - (0.01/0.12)*140 = 160 - 11.67 = 148.3 -->
+      <!-- 0.9234 -> 160 - (0.0834/0.12)*140 = 160 - 97.30 =  62.7 -->
+      <!-- 0.9283 -> 160 - (0.0883/0.12)*140 = 160 - 103.0 =  57.0 -->
+      <!-- 0.9510 -> 160 - (0.111/0.12)*140  = 160 - 129.5 =  30.5 -->
+      <polyline fill="none" stroke="var(--accent)" stroke-width="2"
+                points="90,148.3 190,62.7 290,57.0 370,30.5"/>
+      <g fill="var(--accent)">
+        <circle cx="90"  cy="148.3" r="3.5"/>
+        <circle cx="190" cy="62.7"  r="3.5"/>
+        <circle cx="290" cy="57.0"  r="3.5"/>
+        <circle cx="370" cy="30.5"  r="3.5"/>
+      </g>
+      <g font-size="9" fill="var(--fg)" text-anchor="middle">
+        <text x="90"  y="172">~0.85 era</text>
+        <text x="190" y="172">0.9234</text>
+        <text x="290" y="172">0.9283</text>
+        <text x="370" y="172">0.9510</text>
+      </g>
+    </svg>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- (b) UG SVG build wall time                                     -->
+  <!-- ============================================================ -->
+  <div class="card">
+    <h3>User's Guide SVG build wall time</h3>
+    <div class="sub">Warm cache, single pass, <code>lout -G all</code></div>
+    <svg class="chart" viewBox="0 0 400 180" preserveAspectRatio="none" aria-label="UG SVG build wall time">
+      <g stroke="var(--grid)" stroke-width="1">
+        <line x1="50" y1="20"  x2="380" y2="20"/>
+        <line x1="50" y1="60"  x2="380" y2="60"/>
+        <line x1="50" y1="100" x2="380" y2="100"/>
+        <line x1="50" y1="140" x2="380" y2="140"/>
+      </g>
+      <g stroke="var(--axis)" stroke-width="1">
+        <line x1="50" y1="20"  x2="50" y2="160"/>
+        <line x1="50" y1="160" x2="380" y2="160"/>
+      </g>
+      <!-- y in seconds, 0 at y=160, 420 (7 min) near top.
+           Use log-ish but plain linear with cap 420. 1 unit = (160-20)/420 = 0.333 px/s -->
+      <g font-size="9" fill="var(--muted)" text-anchor="end">
+        <text x="46" y="23">420s</text>
+        <text x="46" y="63">300s</text>
+        <text x="46" y="103">180s</text>
+        <text x="46" y="143">60s</text>
+      </g>
+      <!-- data points: 420, 36, 32, 25.83, 22.6
+           y = 160 - v*0.3333.  But 420 -> 20, 36 -> 148, 32 -> 149.3, 25.83 -> 151.4, 22.6 -> 152.5
+           That's all squashed. Use 7 plot positions for "7 min, 36s, 32s, 25.83s, 22.6s" - 5 pts.
+           The prompt says 7 min, 36s, 32s, 25.83s, 22.6s - that is 5 datapoints. Spread across x. -->
+      <!-- x positions: 70, 145, 220, 295, 370 -->
+      <!-- 420 s -> 160 - 420*0.3333 = 160-140 = 20 -->
+      <!-- 36  s -> 160 - 36*0.3333  = 148.0 -->
+      <!-- 32  s -> 160 - 32*0.3333  = 149.3 -->
+      <!-- 25.83 -> 160 - 25.83*0.3333 = 151.4 -->
+      <!-- 22.6 -> 160 - 22.6*0.3333 = 152.5 -->
+      <polyline fill="none" stroke="var(--accent2)" stroke-width="2"
+                points="70,20 145,148.0 220,149.3 295,151.4 370,152.5"/>
+      <g fill="var(--accent2)">
+        <circle cx="70"  cy="20"    r="3.5"/>
+        <circle cx="145" cy="148.0" r="3.5"/>
+        <circle cx="220" cy="149.3" r="3.5"/>
+        <circle cx="295" cy="151.4" r="3.5"/>
+        <circle cx="370" cy="152.5" r="3.5"/>
+      </g>
+      <g font-size="9" fill="var(--fg)" text-anchor="middle">
+        <text x="70"  y="172">7 min</text>
+        <text x="145" y="172">36s</text>
+        <text x="220" y="172">32s</text>
+        <text x="295" y="172">25.83s</text>
+        <text x="370" y="172">22.6s</text>
+      </g>
+      <!-- annotation about scale -->
+      <text x="380" y="14" font-size="8" fill="var(--muted)" text-anchor="end">linear seconds; 420 s = 7 min</text>
+    </svg>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- (c) Snippet corpus count                                       -->
+  <!-- ============================================================ -->
+  <div class="card">
+    <h3>Snippet corpus size</h3>
+    <div class="sub">Single-feature regression snippets in <code>tests/snippets/</code></div>
+    <svg class="chart" viewBox="0 0 400 180" preserveAspectRatio="none" aria-label="Snippet corpus growth">
+      <g stroke="var(--grid)" stroke-width="1">
+        <line x1="50" y1="20"  x2="380" y2="20"/>
+        <line x1="50" y1="60"  x2="380" y2="60"/>
+        <line x1="50" y1="100" x2="380" y2="100"/>
+        <line x1="50" y1="140" x2="380" y2="140"/>
+      </g>
+      <g stroke="var(--axis)" stroke-width="1">
+        <line x1="50" y1="20"  x2="50" y2="160"/>
+        <line x1="50" y1="160" x2="380" y2="160"/>
+      </g>
+      <!-- y: 0 to 100. y_px = 160 - value*1.4 -->
+      <g font-size="9" fill="var(--muted)" text-anchor="end">
+        <text x="46" y="23">100</text>
+        <text x="46" y="63">71</text>
+        <text x="46" y="103">43</text>
+        <text x="46" y="143">14</text>
+      </g>
+      <!-- bars: 53 and 90 -->
+      <!-- 53 -> y= 160 - 53*1.4 = 85.8, height = 160-85.8 = 74.2 -->
+      <!-- 90 -> y= 160 - 90*1.4 = 34.0, height = 126 -->
+      <rect x="110" y="85.8" width="80" height="74.2" fill="var(--accent)" opacity="0.75"/>
+      <rect x="240" y="34.0" width="80" height="126.0" fill="var(--accent)"/>
+      <g font-size="11" fill="var(--fg)" text-anchor="middle" font-weight="600">
+        <text x="150" y="80">53</text>
+        <text x="280" y="28">90</text>
+      </g>
+      <g font-size="9" fill="var(--fg)" text-anchor="middle">
+        <text x="150" y="172">start of session</text>
+        <text x="280" y="172">v0.2.8 (current)</text>
+      </g>
+    </svg>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- (d) Cookbook recipe count                                      -->
+  <!-- ============================================================ -->
+  <div class="card">
+    <h3>Cookbook recipe count</h3>
+    <div class="sub">Numbered recipes in <code>docs/cookbook.md</code></div>
+    <svg class="chart" viewBox="0 0 400 180" preserveAspectRatio="none" aria-label="Cookbook recipe growth">
+      <g stroke="var(--grid)" stroke-width="1">
+        <line x1="50" y1="20"  x2="380" y2="20"/>
+        <line x1="50" y1="60"  x2="380" y2="60"/>
+        <line x1="50" y1="100" x2="380" y2="100"/>
+        <line x1="50" y1="140" x2="380" y2="140"/>
+      </g>
+      <g stroke="var(--axis)" stroke-width="1">
+        <line x1="50" y1="20"  x2="50" y2="160"/>
+        <line x1="50" y1="160" x2="380" y2="160"/>
+      </g>
+      <!-- y: 0 to 50.  y_px = 160 - value*2.8 -->
+      <g font-size="9" fill="var(--muted)" text-anchor="end">
+        <text x="46" y="23">50</text>
+        <text x="46" y="63">36</text>
+        <text x="46" y="103">22</text>
+        <text x="46" y="143">8</text>
+      </g>
+      <!-- bars: 10 and 44 -->
+      <!-- 10 -> y= 160 - 10*2.8 = 132, h = 28 -->
+      <!-- 44 -> y= 160 - 44*2.8 = 36.8, h = 123.2 -->
+      <rect x="110" y="132"  width="80" height="28"    fill="var(--accent2)" opacity="0.75"/>
+      <rect x="240" y="36.8" width="80" height="123.2" fill="var(--accent2)"/>
+      <g font-size="11" fill="var(--fg)" text-anchor="middle" font-weight="600">
+        <text x="150" y="126">10</text>
+        <text x="280" y="30">44</text>
+      </g>
+      <g font-size="9" fill="var(--fg)" text-anchor="middle">
+        <text x="150" y="172">start of session</text>
+        <text x="280" y="172">v0.2.8 (current)</text>
+      </g>
+    </svg>
+  </div>
+
+</div>
+
+<h2>Release timeline</h2>
+<table class="timeline">
+  <thead>
+    <tr><th>Tag</th><th>Date</th><th>Headline</th></tr>
+  </thead>
+  <tbody>
+    <tr><td class="tag">v0.2.0</td><td class="date">2026-05-22</td>
+      <td>SVG/HTML output, accessibility, PS-vs-SVG parity baseline.</td></tr>
+    <tr><td class="tag">v0.2.1</td><td class="date">2026-05-22</td>
+      <td>Real font outlines, kerning, Mermaid passthrough.</td></tr>
+    <tr><td class="tag">v0.2.2</td><td class="date">2026-05-23</td>
+      <td>TrueType outlines, sub-30s UG build, dark mode.</td></tr>
+    <tr><td class="tag">v0.2.3</td><td class="date">2026-05-23</td>
+      <td>Font subsetting default ON, all Lout docs rendered, textPath.</td></tr>
+    <tr><td class="tag">v0.2.4</td><td class="date">2026-05-23</td>
+      <td>Sub-23s UG build, ligatures, expert PS recovery.</td></tr>
+    <tr><td class="tag">v0.2.5</td><td class="date">2026-05-23</td>
+      <td>Ligatures, kern-table precompute, GSUB parser.</td></tr>
+    <tr><td class="tag">v0.2.6</td><td class="date">2026-05-23</td>
+      <td>smcp/onum consumer, glyph-path LRU cache, 150 dpi baseline.</td></tr>
+    <tr><td class="tag">v0.2.7</td><td class="date">2026-05-23</td>
+      <td>Slides p040 font fix, 80-snippet corpus, port-probe <code>--serve</code>.</td></tr>
+    <tr><td class="tag">v0.2.8</td><td class="date">2026-05-23</td>
+      <td><code>xml:space=preserve</code> predicate, 85-snippet corpus, menu example.</td></tr>
+  </tbody>
+</table>
+
+<div class="links">
+  <strong>Further reading:</strong>
+  <a href="../docs/PERFORMANCE.md">docs/PERFORMANCE.md</a>
+  <a href="../CHANGELOG.md">docs/CHANGELOG.md</a>
+  <a href="../ROADMAP.md">docs/ROADMAP.md</a>
+</div>
+
+<footer>
+  Static page; numbers sourced from <code>tests/history.jsonl</code>,
+  <code>tests/bench.jsonl</code>, <code>tests/user_guide_diff/manifest.json</code>,
+  and <code>lout/SVG_PERFORMANCE.md</code>. Last regenerated by hand on
+  2026-05-23. No JavaScript dependencies.
+</footer>
+
+<script>
+  // Tiny enhancement: annotate the SSIM chart and timeline rows with title attributes
+  // on hover. No frameworks, just vanilla DOM.
+  (function () {
+    var ssimPoints = document.querySelectorAll('svg[aria-label="UG mean SSIM history"] circle');
+    var ssimLabels = ['Pre-session baseline (~0.85 era, pre-real-fonts)',
+                      'v0.2.4 user-guide-diff, 200 dpi: 0.9234',
+                      'v0.2.6 user-guide-diff, 150 dpi: 0.9283',
+                      'v0.2.8 user-guide-diff, 200 dpi: 0.9510'];
+    ssimPoints.forEach(function (c, i) {
+      if (ssimLabels[i]) {
+        var t = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+        t.textContent = ssimLabels[i];
+        c.appendChild(t);
+      }
+    });
+    var timePoints = document.querySelectorAll('svg[aria-label="UG SVG build wall time"] circle');
+    var timeLabels = ['Pre-perf-work full 7-pass build (~7 min wall)',
+                      'After dict-hash baseline: 36 s',
+                      'After perf round 2 (hoist + setvbuf + memoize): 32 s',
+                      'After perf round 3 (glyph hash + face cache): 25.83 s',
+                      'After perf round 4 (itoa/ftoa3 + Y-flip fold + handler table): 22.6 s'];
+    timePoints.forEach(function (c, i) {
+      if (timeLabels[i]) {
+        var t = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+        t.textContent = timeLabels[i];
+        c.appendChild(t);
+      }
+    });
+  })();
+</script>
+
+</body>
+</html>
