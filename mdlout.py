@@ -2660,7 +2660,7 @@ def _build_html_scaffold(
     music_engine: bool = True,
     mermaid_engine: bool = True,
     embed_fonts: bool = True,
-    subset_fonts: bool = False,
+    subset_fonts: bool = True,
     highlight: bool = True,
     lang: str = 'en',
     a11y: bool = True,
@@ -3492,17 +3492,30 @@ def _build_once(args) -> str | None:
                 or _lout_lang_to_bcp47(frontmatter.get('language'))
                 or 'en'
             )
-            # `--subset-fonts` (CLI) or `subset-fonts: true` (frontmatter)
-            # restricts each inlined Nimbus face to the codepoints actually
-            # used by the SVG.  Off by default for this release; will be
-            # flipped on once verified across the example corpus.
-            _subset_fonts_flag = bool(
-                getattr(args, 'subset_fonts', False)
-                or str(frontmatter.get('subset-fonts', '')).strip().lower()
-                in ('true', 'yes', '1', 'on')
+            # `--subset-fonts` / `--no-subset-fonts` (CLI) or
+            # `subset-fonts: true|false` (frontmatter) controls whether
+            # each inlined Nimbus face is restricted to the codepoints
+            # actually used by the SVG.  ON by default since v0.3 -- the
+            # typical 50-90% HTML size reduction is worth the small
+            # fontTools dependency at build time (falls back gracefully
+            # to full-font inline when fontTools is missing).
+            # Precedence: explicit --no-subset-fonts wins, then explicit
+            # --subset-fonts, then frontmatter `subset-fonts: false`
+            # (opt-out), then the default (on).
+            _fm_subset = (
+                str(frontmatter.get('subset-fonts', '')).strip().lower()
                 or str(frontmatter.get('subset_fonts', '')).strip().lower()
-                in ('true', 'yes', '1', 'on')
             )
+            if getattr(args, 'no_subset_fonts', False):
+                _subset_fonts_flag = False
+            elif getattr(args, 'subset_fonts', False):
+                _subset_fonts_flag = True
+            elif _fm_subset in ('false', 'no', '0', 'off'):
+                _subset_fonts_flag = False
+            elif _fm_subset in ('true', 'yes', '1', 'on'):
+                _subset_fonts_flag = True
+            else:
+                _subset_fonts_flag = True
             # Resolve dark-mode preference. CLI `--dark[=MODE]` wins
             # over frontmatter. Frontmatter accepts either
             # `dark-mode: true|false|force|auto` or `theme: dark|light`.
@@ -4132,7 +4145,19 @@ def main() -> None:
              '50-90%% off the embedded font payload (~3.5 MB -> a few '
              'hundred KB).  Requires fontTools (pip install --user '
              'fonttools); falls back to full-font inline if unavailable. '
-             'Can also be enabled via `subset-fonts: true` in frontmatter.',
+             'ON by default since v0.3 -- this flag is now a no-op kept '
+             'for backwards compatibility.  Use --no-subset-fonts to opt '
+             'out, or `subset-fonts: false` in frontmatter.',
+    )
+    parser.add_argument(
+        '--no-subset-fonts', action='store_true',
+        help='Disable font subsetting and inline the full URW Nimbus '
+             'base-35 outlines (the pre-v0.3 default).  Use this if a '
+             'document mutates text content client-side (KaTeX with '
+             'runtime macros, abcjsharp dynamic re-render, etc.) and '
+             'needs every codepoint available in the inlined fonts.  '
+             'Adds ~1 MB to the HTML payload.  Can also be set via '
+             '`subset-fonts: false` in frontmatter.',
     )
     parser.add_argument(
         '--no-highlight', action='store_true',
